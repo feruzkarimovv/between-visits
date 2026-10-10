@@ -25,7 +25,8 @@ class QuotaExhausted(SystemExit):
 
 
 def agent_llm(variants: dict[str, Any]) -> str:
-    return os.environ.get("ELEVENLABS_LLM") or variants["llm"]
+    """Same resolution as agent/sync_agent.py: ELEVENLABS_LLM (shell or .env), else variants.json."""
+    return os.environ.get("ELEVENLABS_LLM") or _settings().elevenlabs_llm or variants["llm"]
 
 
 def tool_schemas(sources: Any, pace: str) -> list[dict[str, Any]]:
