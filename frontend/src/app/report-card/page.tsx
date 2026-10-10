@@ -86,7 +86,7 @@ function EvalView({ data }: { data: EvalLatest }) {
           </Meta>
           <Meta label="Personas">{personas.length}</Meta>
           <Meta label="Mode">{data.mode === "text" ? "Text simulation" : data.mode === "voice" || data.mode === "elevenlabs" ? "Voice" : data.mode}</Meta>
-          {data.model ? <Meta label="Model">{data.model}</Meta> : null}
+          {data.model ? <Meta label="Models">{formatModels(data.model)}</Meta> : null}
           <Meta label="Passed">
             {passed} of {personas.length}
           </Meta>
@@ -411,4 +411,12 @@ function ValidationBody({ v }: { v: ValidationSummary }) {
       ) : null}
     </>
   );
+}
+
+
+function formatModels(m: string | { agent?: string; patient?: string; judge?: string }): string {
+  if (typeof m === "string") return m;
+  return [m.agent && `agent ${m.agent}`, m.patient && `patient ${m.patient}`, m.judge && `judge ${m.judge}`]
+    .filter(Boolean)
+    .join(" · ");
 }

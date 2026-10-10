@@ -343,7 +343,9 @@ export interface EvalLatest {
   run_at: string;
   commit: string;
   mode: string;
-  model?: string;
+  /** a single model name (older runs) or the per-role models used */
+  model?: string | { agent?: string; patient?: string; judge?: string; postcall_provider?: string };
+  not_run?: string[];
   overall: EvalMetrics;
   by_language: Partial<Record<Lang, EvalMetrics>>;
   by_pace: Partial<Record<Pace, EvalMetrics>>;
