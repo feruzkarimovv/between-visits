@@ -1,0 +1,116 @@
+{
+  "_about": "Approved non-question lines the agent may say, keyed by purpose. The backend composes every `say` from these and from symptom_items.json. Placeholders use {name}. The ElevenLabs first message is generated from `first_message` by agent/sync_agent.py ({x} becomes {{x}}). Spanish uses the formal 'usted'. Changing wording here is a clinical-content change: tell the team. Emergency numbers are written digit by digit (9-1-1, 9-8-8) so text-to-speech reads them correctly. The voicemail line never mentions health or the study.",
+  "version": "1.0.0",
+  "lines": {
+    "first_message": {
+      "en": "Hello, this is an automated call from {study_team_name}. I'm an AI assistant, not a person, and you can ask to speak with a person at any time. May I speak with {patient_first_name}?",
+      "es": "Hola, esta es una llamada automática de {study_team_name}. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con {patient_first_name}?"
+    },
+    "consent_question": {
+      "en": "Thank you. I'm calling for your check-in about how you've been feeling since your last study visit. It takes about five minutes. Is now a good time?",
+      "es": "Gracias. Le llamo para su seguimiento sobre cómo se ha sentido desde su última visita del estudio. Toma unos cinco minutos. ¿Es un buen momento?"
+    },
+    "caregiver_allowed": {
+      "en": "Thank you, {caregiver_name}. You can answer for {patient_first_name} today. I'm calling for the check-in about how {patient_first_name} has been feeling since the last study visit. It takes about five minutes. Is now a good time?",
+      "es": "Gracias, {caregiver_name}. Usted puede responder por {patient_first_name} hoy. Le llamo para el seguimiento sobre cómo se ha sentido {patient_first_name} desde la última visita del estudio. Toma unos cinco minutos. ¿Es un buen momento?"
+    },
+    "caregiver_not_allowed": {
+      "en": "Thank you. I can only do this check-in with {patient_first_name}. Someone from the research team will call back to find a good time. Goodbye.",
+      "es": "Gracias. Solo puedo hacer este seguimiento con {patient_first_name}. Alguien del equipo de investigación le llamará para buscar un buen momento. Adiós."
+    },
+    "wrong_person_close": {
+      "en": "I'm sorry to bother you. I'll let the team know. Goodbye.",
+      "es": "Disculpe la molestia. Le avisaré al equipo. Adiós."
+    },
+    "consent_later": {
+      "en": "No problem. Someone from the research team will call you back. Thank you, goodbye.",
+      "es": "No hay problema. Alguien del equipo de investigación le devolverá la llamada. Gracias, adiós."
+    },
+    "intro_questions": {
+      "en": "Thank you. I'll ask about some common symptoms. For each one, tell me the answer that fits best.",
+      "es": "Gracias. Le voy a preguntar sobre algunos síntomas comunes. Para cada uno, dígame la respuesta que mejor describa cómo se ha sentido."
+    },
+    "reask_options": {
+      "en": "Sorry, I want to get this right. Would you say {options}?",
+      "es": "Disculpe, quiero anotarlo bien. ¿Diría usted {options}?"
+    },
+    "reask_current": {
+      "en": "Let me ask that again.",
+      "es": "Permítame preguntarlo de nuevo."
+    },
+    "urgent_line": {
+      "en": "Thank you for telling me. I'm asking the on-call nurse to call you right now. If this is an emergency, hang up and call 9-1-1.",
+      "es": "Gracias por decírmelo. Voy a pedirle a la enfermera de guardia que le llame ahora mismo. Si es una emergencia, cuelgue y llame al 9-1-1."
+    },
+    "added_to_page": {
+      "en": "Thank you. I've added that to my message for the nurse.",
+      "es": "Gracias. Lo agregué a mi mensaje para la enfermera."
+    },
+    "emergency_line": {
+      "en": "This could be an emergency. Please hang up and call 9-1-1 now. I'm also alerting the on-call nurse.",
+      "es": "Esto podría ser una emergencia. Por favor, cuelgue y llame al 9-1-1 ahora. También estoy avisando a la enfermera de guardia."
+    },
+    "crisis_line": {
+      "en": "Thank you for telling me. You deserve support right now. Please call or text 9-8-8 to reach the Suicide and Crisis Lifeline, or call 9-1-1 if you are in danger. I'm also alerting the on-call nurse.",
+      "es": "Gracias por decírmelo. Usted merece apoyo ahora mismo. Llame o envíe un mensaje de texto al 9-8-8, la Línea de Prevención del Suicidio y Crisis, o llame al 9-1-1 si está en peligro. También estoy avisando a la enfermera de guardia."
+    },
+    "deferral_medical": {
+      "en": "That's a good question for your nurse. I can't give medical advice, but I'll pass your question on and they'll call you back.",
+      "es": "Esa es una buena pregunta para su enfermera. No puedo dar consejos médicos, pero le pasaré su pregunta y le devolverán la llamada."
+    },
+    "wants_person_close": {
+      "en": "Of course. I'll ask someone from the research team to call you. Thank you, goodbye.",
+      "es": "Por supuesto. Le pediré a alguien del equipo de investigación que le llame. Gracias, adiós."
+    },
+    "closing": {
+      "en": "Thank you, {patient_first_name}. The research team will review your answers. If this is an emergency, hang up and call 9-1-1. Goodbye.",
+      "es": "Gracias, {patient_first_name}. El equipo de investigación revisará sus respuestas. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós."
+    },
+    "closing_after_escalation": {
+      "en": "Thank you, {patient_first_name}. The nurse will call you very soon. If this is an emergency, hang up and call 9-1-1. Goodbye.",
+      "es": "Gracias, {patient_first_name}. La enfermera le llamará muy pronto. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós."
+    },
+    "fallback_error": {
+      "en": "I'm sorry, I'm having a technical problem. Someone from the research team will call you back. If this is an emergency, hang up and call 9-1-1. Goodbye.",
+      "es": "Lo siento, tengo un problema técnico. Alguien del equipo de investigación le devolverá la llamada. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós."
+    },
+    "voicemail": {
+      "en": "Hello, this is an automated call from {study_team_name} for {patient_first_name}. We will call back later. Goodbye.",
+      "es": "Hola, esta es una llamada automática de {study_team_name} para {patient_first_name}. Le llamaremos más tarde. Adiós."
+    },
+    "first_message_inbound": {
+      "en": "Hello, you've reached the automated check-in line for {study_team_name}. I'm an AI assistant, not a person, and you can ask to speak with a person at any time. Am I speaking with {patient_first_name}?",
+      "es": "Hola, se ha comunicado con la línea automática de seguimiento de {study_team_name}. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Hablo con {patient_first_name}?"
+    },
+    "first_message_inbound_unknown": {
+      "en": "Hello, you've reached the automated check-in line for {study_team_name}. I'm an AI assistant, not a person. I couldn't match this phone number to a study participant, so someone from the research team will call you back. If this is an emergency, hang up and call 9-1-1. Goodbye.",
+      "es": "Hola, se ha comunicado con la línea automática de seguimiento de {study_team_name}. Soy un asistente de inteligencia artificial, no una persona. No pude encontrar este número entre los participantes del estudio, así que alguien del equipo de investigación le devolverá la llamada. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós."
+    }
+  },
+  "pace_instructions": {
+    "standard": "Speak clearly and at a natural pace. Before recording any number, repeat it back in one short sentence and wait for confirmation.",
+    "extra_time": "This person needs extra time. Speak slowly, in short sentences, one question at a time. After you ask something, wait. Silence is fine; do not fill it and never interrupt. If they ask you to repeat, repeat the question slowly, word for word. Before recording any answer, repeat back what you understood in one short sentence and wait for them to confirm."
+  },
+  "language_names": {
+    "en": {
+      "en": "English",
+      "es": "inglés"
+    },
+    "es": {
+      "en": "Spanish",
+      "es": "español"
+    }
+  },
+  "page_templates_en": {
+    "push_title": {
+      "urgent": "URGENT · Patient {subject_id}",
+      "emergency": "EMERGENCY · Patient {subject_id}"
+    },
+    "urgent": "Urgent page from Between Visits. Patient {subject_id_spoken}. {findings_sentence} Patient prefers {language_name}{interpreter_note}.",
+    "emergency": "Emergency page from Between Visits. Patient {subject_id_spoken}. {findings_sentence} The patient was told to call 9-1-1. Patient prefers {language_name}{interpreter_note}.",
+    "interpreter_note": ", use the interpreter line",
+    "voice_suffix": "Press 1 to acknowledge.",
+    "ack_confirmation": "Acknowledged. Thank you.",
+    "no_input": "No input received. We will page again."
+  }
+}

@@ -1,0 +1,308 @@
+{
+  "_about": "Provisional CTCAE grading rules and the CTCAE v5.0 text they cite. CTCAE is published by the U.S. National Cancer Institute (credit: NCI CTCAE v5.0, Nov 27 2017, https://dctd.cancer.gov/research/ctep-trials/for-sites/adverse-events). Text below was extracted from NCI's v5.0 workbook verbatim (typos as published). MedDRA codes and SOC columns were deliberately removed: MedDRA content can't be redistributed in an open-source repo. There is no official mapping from patient-reported answers to CTCAE grades, so each rule states its basis; anything without a rule is 'needs clinician'. CTCAE v6.0 (Jul 2025) exists; switching versions means a new rules file, not code changes.",
+  "ctcae_version": "5.0",
+  "derived_inputs": {
+    "stools_over_baseline": "DIARRHEA_STOOLS_PER_DAY minus (DIARRHEA_BASELINE answer, else patient.baseline.stools_per_day); unknown if either is missing"
+  },
+  "adl": {
+    "instrumental": "*Instrumental ADL refer to preparing meals, shopping for groceries or clothes, using the telephone, managing money, etc.",
+    "self_care": "**Self care ADL refer to bathing, dressing and undressing, feeding self, using the toilet, taking medications, and not bedridden."
+  },
+  "rules": [
+    {
+      "id": "CTCAE5_DIARRHEA_G1",
+      "term": "Diarrhea",
+      "grade": 1,
+      "when": {
+        "derived": "stools_over_baseline",
+        "gte": 1,
+        "lte": 3
+      },
+      "ctcae_text": "Increase of <4 stools per day over baseline; mild increase in ostomy output compared to baseline",
+      "basis": "Stool-count criterion only (worst day vs baseline). Ostomy and ADL criteria not assessed by phone."
+    },
+    {
+      "id": "CTCAE5_DIARRHEA_G2",
+      "term": "Diarrhea",
+      "grade": 2,
+      "when": {
+        "derived": "stools_over_baseline",
+        "gte": 4,
+        "lte": 6
+      },
+      "ctcae_text": "Increase of 4 - 6 stools per day over baseline; moderate increase in ostomy output compared to baseline; limiting instrumental ADL",
+      "basis": "Stool-count criterion only (worst day vs baseline). Ostomy and ADL criteria not assessed by phone."
+    },
+    {
+      "id": "CTCAE5_DIARRHEA_G3",
+      "term": "Diarrhea",
+      "grade": 3,
+      "when": {
+        "derived": "stools_over_baseline",
+        "gte": 7
+      },
+      "ctcae_text": "Increase of >=7 stools per day over baseline; hospitalization indicated; severe increase in ostomy output compared to baseline; limiting self care ADL",
+      "basis": "Stool-count criterion only (worst day vs baseline). Hospitalization and ADL criteria not assessed by phone."
+    },
+    {
+      "id": "CTCAE5_FEVER_G1",
+      "term": "Fever",
+      "grade": 1,
+      "when": {
+        "item": "TEMP_HIGHEST",
+        "gte": 38.0,
+        "lte": 39.0
+      },
+      "ctcae_text": "38.0 - 39.0 degrees C (100.4 - 102.2 degrees F)",
+      "basis": "Highest home temperature reported by the patient, converted to Celsius."
+    },
+    {
+      "id": "CTCAE5_FEVER_G2",
+      "term": "Fever",
+      "grade": 2,
+      "when": {
+        "item": "TEMP_HIGHEST",
+        "gt": 39.0,
+        "lte": 40.0
+      },
+      "ctcae_text": ">39.0 - 40.0 degrees C (102.3 - 104.0 degrees F)",
+      "basis": "Highest home temperature reported by the patient, converted to Celsius."
+    },
+    {
+      "id": "CTCAE5_FEVER_G3",
+      "term": "Fever",
+      "grade": 3,
+      "when": {
+        "item": "TEMP_HIGHEST",
+        "gt": 40.0
+      },
+      "ctcae_text": ">40.0 degrees C (>104.0 degrees F) for <=24 hrs",
+      "basis": "Duration unknown by phone; Grade 4 requires more than 24 hours above 40.0 C, so a clinician must confirm."
+    },
+    {
+      "id": "CTCAE5_DYSPNEA_G1",
+      "term": "Dyspnea",
+      "grade": 1,
+      "when": {
+        "item": "SOB_EXERTION",
+        "eq": "heavy_activity"
+      },
+      "ctcae_text": "Shortness of breath with moderate exertion",
+      "basis": "Patient reports breathlessness only with hard activity (proxy for moderate exertion)."
+    },
+    {
+      "id": "CTCAE5_DYSPNEA_G2",
+      "term": "Dyspnea",
+      "grade": 2,
+      "when": {
+        "item": "SOB_EXERTION",
+        "eq": "light_activity"
+      },
+      "ctcae_text": "Shortness of breath with minimal exertion; limiting instrumental ADL",
+      "basis": "Patient reports breathlessness with light activity (proxy for minimal exertion). ADL not assessed."
+    },
+    {
+      "id": "CTCAE5_DYSPNEA_G3",
+      "term": "Dyspnea",
+      "grade": 3,
+      "when": {
+        "item": "SOB_EXERTION",
+        "eq": "at_rest"
+      },
+      "ctcae_text": "Shortness of breath at rest; limiting self care ADL",
+      "basis": "Patient reports breathlessness at rest. ADL not assessed."
+    },
+    {
+      "id": "CTCAE5_FATIGUE_G1",
+      "term": "Fatigue",
+      "grade": 1,
+      "when": {
+        "item": "FATIGUE_REST_HELPS",
+        "eq": "yes"
+      },
+      "ctcae_text": "Fatigue relieved by rest",
+      "basis": "Patient reports fatigue relieved by rest."
+    },
+    {
+      "id": "CTCAE5_DIZZINESS_G1",
+      "term": "Dizziness",
+      "grade": 1,
+      "when": {
+        "item": "DIZZINESS_SEV",
+        "eq": "mild"
+      },
+      "ctcae_text": "Mild unsteadiness or sensation of movement",
+      "basis": "Patient rates dizziness as mild (proxy for mild unsteadiness)."
+    }
+  ],
+  "terms": {
+    "Chest pain - cardiac": {
+      "grade_1": "Mild pain",
+      "grade_2": "Moderate pain; pain on exertion; limiting instrumental ADL; hemodynamically stable",
+      "grade_3": "Pain at rest; limiting self care ADL; cardiac catheterization; new onset cardiac chest pain; unstable angina",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by substernal discomfort due to insufficient myocardial oxygenation e.g., angina pectoris."
+    },
+    "Colitis": {
+      "grade_1": "Asymptomatic; clinical or diagnostic observations only; intervention not indicated",
+      "grade_2": "Abdominal pain; mucus or blood in stool",
+      "grade_3": "Severe abdominal pain; peritoneal signs",
+      "grade_4": "Life-threatening consequences; urgent intervention indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by inflammation of the colon."
+    },
+    "Diarrhea": {
+      "grade_1": "Increase of <4 stools per day over baseline; mild increase in ostomy output compared to baseline",
+      "grade_2": "Increase of 4 - 6 stools per day over baseline; moderate increase in ostomy output compared to baseline; limiting instrumental ADL",
+      "grade_3": "Increase of >=7 stools per day over baseline; hospitalization indicated; severe increase in ostomy output compared to baseline; limiting self care ADL",
+      "grade_4": "Life-threatening consequences; urgent intervention indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by an increase in frequency and/or loose or watery bowel movements."
+    },
+    "Mucositis oral": {
+      "grade_1": "Asymptomatic or mild symptoms; intervention not indicated",
+      "grade_2": "Moderate pain or ulcer that does not interfere with oral intake; modified diet indicated",
+      "grade_3": "Severe pain; interfering with oral intake",
+      "grade_4": "Life-threatening consequences; urgent intervention indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by ulceration or inflammation of the oral mucosal."
+    },
+    "Nausea": {
+      "grade_1": "Loss of appetite without alteration in eating habits",
+      "grade_2": "Oral intake decreased without significant weight loss, dehydration or malnutrition",
+      "grade_3": "Inadequate oral caloric or fluid intake; tube feeding, TPN, or hospitalization indicated",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by a queasy sensation and/or the urge to vomit."
+    },
+    "Vomiting": {
+      "grade_1": "Intervention not indicated",
+      "grade_2": "Outpatient IV hydration; medical intervention indicated",
+      "grade_3": "Tube feeding, TPN, or hospitalization indicated",
+      "grade_4": "Life-threatening consequences",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by the reflexive act of ejecting the contents of the stomach through the mouth."
+    },
+    "Chills": {
+      "grade_1": "Mild sensation of cold; shivering; chattering of teeth",
+      "grade_2": "Moderate tremor of the entire body; narcotics indicated",
+      "grade_3": "Severe or prolonged, not responsive to narcotics",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by a sensation of cold that often marks a physiologic response to sweating after a fever."
+    },
+    "Fatigue": {
+      "grade_1": "Fatigue relieved by rest",
+      "grade_2": "Fatigue not relieved by rest; limiting instrumental ADL",
+      "grade_3": "Fatigue not relieved by rest, limiting self care ADL",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by a state of generalized weakness with a pronounced inability to summon sufficient energy to accomplish daily activities."
+    },
+    "Fever": {
+      "grade_1": "38.0 - 39.0 degrees C (100.4 - 102.2 degrees F)",
+      "grade_2": ">39.0 - 40.0 degrees C (102.3 - 104.0 degrees F)",
+      "grade_3": ">40.0 degrees C (>104.0 degrees F) for <=24 hrs",
+      "grade_4": ">40.0 degrees C (>104.0 degrees F) for >24 hrs",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by elevation of the body's temperature above the upper limit of normal."
+    },
+    "Non-cardiac chest pain": {
+      "grade_1": "Mild pain",
+      "grade_2": "Moderate pain; limiting instrumental ADL",
+      "grade_3": "Severe pain; limiting self care ADL",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by a sensation of marked discomfort in the chest unrelated to a heart disorder."
+    },
+    "Cytokine release syndrome": {
+      "grade_1": "Fever with or without constitutional symptoms",
+      "grade_2": "Hypotension responding to fluids; hypoxia responding to <40% O2",
+      "grade_3": "Hypotension managed with one pressor; hypoxia requiring ≥ 40% O2",
+      "grade_4": "Life-threatening consequences; urgent intervention indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by fever, tachypnea, headache, tachycardia, hypotension, rash, and/or hypoxia caused by the release of cytokines."
+    },
+    "Anorexia": {
+      "grade_1": "Loss of appetite without alteration in eating habits",
+      "grade_2": "Oral intake altered without significant weight loss or malnutrition; oral nutritional supplements indicated",
+      "grade_3": "Associated with significant weight loss or malnutrition (e.g., inadequate oral caloric and/or fluid intake); tube feeding or TPN indicated",
+      "grade_4": "Life-threatening consequences; urgent intervention indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by a loss of appetite."
+    },
+    "Dizziness": {
+      "grade_1": "Mild unsteadiness or sensation of movement",
+      "grade_2": "Moderate unsteadiness or sensation of movement; limiting instrumental ADL",
+      "grade_3": "Severe unsteadiness or sensation of movement; limiting self care ADL",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by a disturbing sensation of lightheadedness, unsteadiness, giddiness, spinning or rocking."
+    },
+    "Confusion": {
+      "grade_1": "Mild disorientation",
+      "grade_2": "Moderate disorientation; limiting instrumental ADL",
+      "grade_3": "Severe disorientation; limiting self care ADL",
+      "grade_4": "Life-threatening consequences; urgent intervention indicated",
+      "grade_5": "-",
+      "definition": "A disorder characterized by a lack of clear and orderly thought and behavior."
+    },
+    "Depression": {
+      "grade_1": "Mild depressive symptoms",
+      "grade_2": "Moderate depressive symptoms; limiting instrumental ADL",
+      "grade_3": "Severe depressive symptoms; limiting self care ADL; hospitalization not indicated",
+      "grade_4": "Life-threatening consequences, threats of harm to self or others; hospitalization indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by melancholic feelings of grief or unhappiness."
+    },
+    "Suicidal ideation": {
+      "grade_1": "Increased thoughts of death but no wish to kill oneself",
+      "grade_2": "Suicidal ideation with no specific plan or intent",
+      "grade_3": "Specific plan to commit suicide without serious intent to die which may not require hospitalization",
+      "grade_4": "Specific plan to commit suicide with serious intent to die which requires hospitalization",
+      "grade_5": "-",
+      "definition": "A disorder characterized by thoughts of taking one's own life."
+    },
+    "Cough": {
+      "grade_1": "Mild symptoms; nonprescription intervention indicated",
+      "grade_2": "Moderate symptoms, medical intervention indicated; limiting instrumental ADL",
+      "grade_3": "Severe symptoms; limiting self care ADL",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by sudden, often repetitive, spasmodic contraction of the thoracic cavity, resulting in violent release of air from the lungs and usually accompanied by a distinctive sound."
+    },
+    "Dyspnea": {
+      "grade_1": "Shortness of breath with moderate exertion",
+      "grade_2": "Shortness of breath with minimal exertion; limiting instrumental ADL",
+      "grade_3": "Shortness of breath at rest; limiting self care ADL",
+      "grade_4": "Life-threatening consequences; urgent intervention indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by an uncomfortable sensation of difficulty breathing."
+    },
+    "Pruritus": {
+      "grade_1": "Mild or localized; topical intervention indicated",
+      "grade_2": "Widespread and intermittent; skin changes from scratching (e.g., edema, papulation, excoriations, lichenification, oozing/crusts); oral intervention indicated; limiting instrumental ADL",
+      "grade_3": "Widespread and constant; limiting self care ADL or sleep; systemic corticosteroid or immunosuppressive therapy indicated",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by an intense itching sensation."
+    },
+    "Rash maculo-papular": {
+      "grade_1": "Macules/papules covering <10% BSA with or without symptoms (e.g., pruritus, burning, tightness)",
+      "grade_2": "Macules/papules covering 10 - 30% BSA with or without symptoms (e.g., pruritus, burning, tightness); limiting instrumental ADL; rash covering > 30% BSA with or without mild symptoms",
+      "grade_3": "Macules/papules covering >30% BSA with moderate or severe symptoms; limiting self care ADL",
+      "grade_4": "-",
+      "grade_5": "-",
+      "definition": "A disorder characterized by the presence of macules (flat) and papules (elevated). Also known as morbillform rash, it is one of the most common cutaneous adverse events, frequently affecting the upper trunk, spreading centripetally and associated with pruritis."
+    },
+    "Hypotension": {
+      "grade_1": "Asymptomatic, intervention not indicated",
+      "grade_2": "Non-urgent medical intervention indicated",
+      "grade_3": "Medical intervention indicated; hospitalization indicated",
+      "grade_4": "Life-threatening consequences and urgent intervention indicated",
+      "grade_5": "Death",
+      "definition": "A disorder characterized by a blood pressure that is below the normal expected for an individual in a given environment."
+    }
+  }
+}

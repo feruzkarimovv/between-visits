@@ -1,0 +1,434 @@
+{
+  "_about": "Symptom questions in our OWN wording (MIT licensed). They follow the general structure of NCI's PRO-CTCAE (how often / how severe) but are NOT PRO-CTCAE items: NCI's terms forbid redistributing, modifying or translating PRO-CTCAE wording without written consent. A site that has registered its study with NCI can drop the official items into data/local/symptom_items.local.json (gitignored, same item codes); backend/app/content.py overrides wording from that file when present, and the agent must still say it verbatim. Every scale also accepts 'unknown'. Follow-ups are asked right after their parent when the parent's answer is in `when.in`. Spanish uses 'usted'; option read-outs agree in gender with the item's noun.",
+  "version": "1.0.0",
+  "recall_period": {
+    "en": "In the past 7 days",
+    "es": "En los últimos 7 días"
+  },
+  "scales": {
+    "frequency": {
+      "options": [
+        "never",
+        "rarely",
+        "sometimes",
+        "often",
+        "almost_always"
+      ]
+    },
+    "severity": {
+      "options": [
+        "none",
+        "mild",
+        "moderate",
+        "severe",
+        "very_severe"
+      ]
+    },
+    "yes_no": {
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    "consent": {
+      "options": [
+        "yes",
+        "no",
+        "later"
+      ]
+    },
+    "exertion": {
+      "options": [
+        "heavy_activity",
+        "light_activity",
+        "at_rest"
+      ]
+    },
+    "count": {
+      "numeric": true,
+      "units": [
+        "per_day"
+      ]
+    },
+    "temperature": {
+      "numeric": true,
+      "units": [
+        "celsius",
+        "fahrenheit"
+      ],
+      "options": [
+        "not_measured"
+      ]
+    },
+    "free_text": {
+      "options": []
+    }
+  },
+  "items": {
+    "IDENTITY": {
+      "kind": "flow",
+      "scale": "yes_no",
+      "say_script": "first_message",
+      "note": "Asked by the agent's first message; nothing about health or the study before it is confirmed."
+    },
+    "CALL_CONSENT": {
+      "kind": "flow",
+      "scale": "consent",
+      "say_script": "consent_question"
+    },
+    "DIARRHEA_FREQ": {
+      "kind": "symptom",
+      "term": "Diarrhea",
+      "scale": "frequency",
+      "text": {
+        "en": "In the past 7 days, how often have you had loose or watery bowel movements?",
+        "es": "En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas?"
+      },
+      "options_say": {
+        "en": "Would you say never, rarely, sometimes, often, or almost all the time?",
+        "es": "¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "sometimes",
+              "often",
+              "almost_always"
+            ]
+          },
+          "item": "DIARRHEA_STOOLS_PER_DAY"
+        },
+        {
+          "when": {
+            "in": [
+              "sometimes",
+              "often",
+              "almost_always"
+            ]
+          },
+          "item": "DIARRHEA_BASELINE",
+          "only_if": "baseline_stools_missing"
+        },
+        {
+          "when": {
+            "in": [
+              "sometimes",
+              "often",
+              "almost_always"
+            ]
+          },
+          "item": "STOOL_BLOOD"
+        }
+      ]
+    },
+    "DIARRHEA_STOOLS_PER_DAY": {
+      "kind": "followup",
+      "term": "Diarrhea",
+      "scale": "count",
+      "unit": "per_day",
+      "text": {
+        "en": "On your worst day, about how many bowel movements did you have?",
+        "es": "En su peor día, ¿cuántas veces fue al baño a evacuar, más o menos?"
+      }
+    },
+    "DIARRHEA_BASELINE": {
+      "kind": "followup",
+      "term": "Diarrhea",
+      "scale": "count",
+      "unit": "per_day",
+      "text": {
+        "en": "Before your study treatment, how many bowel movements did you usually have in a day?",
+        "es": "Antes de su tratamiento del estudio, ¿cuántas veces al día solía evacuar?"
+      }
+    },
+    "STOOL_BLOOD": {
+      "kind": "followup",
+      "term": "Diarrhea",
+      "scale": "yes_no",
+      "text": {
+        "en": "Have you seen any blood or mucus in your stool, or stool that looks black like tar?",
+        "es": "¿Ha visto sangre o mucosidad en sus heces, o heces negras como el alquitrán?"
+      }
+    },
+    "NAUSEA_FREQ": {
+      "kind": "symptom",
+      "term": "Nausea",
+      "scale": "frequency",
+      "text": {
+        "en": "In the past 7 days, how often have you felt sick to your stomach, as if you might throw up?",
+        "es": "En los últimos 7 días, ¿con qué frecuencia ha tenido náuseas, como si fuera a vomitar?"
+      },
+      "options_say": {
+        "en": "Would you say never, rarely, sometimes, often, or almost all the time?",
+        "es": "¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?"
+      }
+    },
+    "VOMITING_FREQ": {
+      "kind": "symptom",
+      "term": "Vomiting",
+      "scale": "frequency",
+      "text": {
+        "en": "In the past 7 days, how often have you thrown up?",
+        "es": "En los últimos 7 días, ¿con qué frecuencia ha vomitado?"
+      },
+      "options_say": {
+        "en": "Would you say never, rarely, sometimes, often, or almost all the time?",
+        "es": "¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "sometimes",
+              "often",
+              "almost_always"
+            ]
+          },
+          "item": "FLUIDS_KEPT_DOWN"
+        }
+      ]
+    },
+    "FLUIDS_KEPT_DOWN": {
+      "kind": "followup",
+      "term": "Vomiting",
+      "scale": "yes_no",
+      "text": {
+        "en": "In the last 24 hours, have you been able to keep liquids down?",
+        "es": "En las últimas 24 horas, ¿ha podido tomar líquidos sin vomitarlos?"
+      }
+    },
+    "FEVER_CHILLS": {
+      "kind": "symptom",
+      "term": "Fever",
+      "scale": "yes_no",
+      "text": {
+        "en": "In the past 7 days, have you had a fever, chills, or shaking?",
+        "es": "En los últimos 7 días, ¿ha tenido fiebre, escalofríos o temblores?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "yes"
+            ]
+          },
+          "item": "TEMP_HIGHEST"
+        }
+      ]
+    },
+    "TEMP_HIGHEST": {
+      "kind": "followup",
+      "term": "Fever",
+      "scale": "temperature",
+      "text": {
+        "en": "Did you take your temperature? If you did, what was the highest reading?",
+        "es": "¿Se tomó la temperatura? Si lo hizo, ¿cuál fue la más alta?"
+      }
+    },
+    "SOB_SEV": {
+      "kind": "symptom",
+      "term": "Dyspnea",
+      "scale": "severity",
+      "text": {
+        "en": "In the past 7 days, how much shortness of breath have you had?",
+        "es": "En los últimos 7 días, ¿qué tanta falta de aire ha tenido?"
+      },
+      "options_say": {
+        "en": "Would you say none, mild, moderate, severe, or very severe?",
+        "es": "¿Diría que nada, leve, moderada, fuerte o muy fuerte?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "mild",
+              "moderate",
+              "severe",
+              "very_severe"
+            ]
+          },
+          "item": "SOB_EXERTION"
+        }
+      ]
+    },
+    "SOB_EXERTION": {
+      "kind": "followup",
+      "term": "Dyspnea",
+      "scale": "exertion",
+      "text": {
+        "en": "When does it happen? Only with hard activity like climbing stairs, also with light activity like walking around the house or getting dressed, or even when you are resting?",
+        "es": "¿Cuándo le pasa? ¿Solo con actividad fuerte, como subir escaleras; también con actividad ligera, como caminar por la casa o vestirse; o incluso cuando está descansando?"
+      }
+    },
+    "DIZZINESS_SEV": {
+      "kind": "symptom",
+      "term": "Dizziness",
+      "scale": "severity",
+      "text": {
+        "en": "In the past 7 days, how much dizziness have you had?",
+        "es": "En los últimos 7 días, ¿qué tan fuerte ha sido el mareo?"
+      },
+      "options_say": {
+        "en": "Would you say none, mild, moderate, severe, or very severe?",
+        "es": "¿Diría que nada, leve, moderado, fuerte o muy fuerte?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "mild",
+              "moderate",
+              "severe",
+              "very_severe"
+            ]
+          },
+          "item": "DIZZY_ON_STANDING"
+        }
+      ]
+    },
+    "DIZZY_ON_STANDING": {
+      "kind": "followup",
+      "term": "Dizziness",
+      "scale": "yes_no",
+      "text": {
+        "en": "Do you feel dizzy or lightheaded when you stand up?",
+        "es": "¿Se marea al ponerse de pie?"
+      }
+    },
+    "FATIGUE_SEV": {
+      "kind": "symptom",
+      "term": "Fatigue",
+      "scale": "severity",
+      "text": {
+        "en": "In the past 7 days, how much tiredness or lack of energy have you had?",
+        "es": "En los últimos 7 días, ¿qué tan fuerte ha sido el cansancio o la falta de energía?"
+      },
+      "options_say": {
+        "en": "Would you say none, mild, moderate, severe, or very severe?",
+        "es": "¿Diría que nada, leve, moderado, fuerte o muy fuerte?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "mild",
+              "moderate",
+              "severe",
+              "very_severe"
+            ]
+          },
+          "item": "FATIGUE_REST_HELPS"
+        }
+      ]
+    },
+    "FATIGUE_REST_HELPS": {
+      "kind": "followup",
+      "term": "Fatigue",
+      "scale": "yes_no",
+      "text": {
+        "en": "Does resting make the tiredness better?",
+        "es": "¿El cansancio mejora cuando descansa?"
+      }
+    },
+    "RASH_ANY": {
+      "kind": "symptom",
+      "term": "Rash maculo-papular",
+      "scale": "yes_no",
+      "text": {
+        "en": "In the past 7 days, have you had a new skin rash?",
+        "es": "En los últimos 7 días, ¿le ha salido algún sarpullido o erupción nueva en la piel?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "yes"
+            ]
+          },
+          "item": "SKIN_BLISTER"
+        }
+      ]
+    },
+    "SKIN_BLISTER": {
+      "kind": "followup",
+      "term": "Rash maculo-papular",
+      "scale": "yes_no",
+      "text": {
+        "en": "Is your skin blistering or peeling anywhere, or do you have painful sores in your mouth?",
+        "es": "¿Tiene ampollas o la piel pelándose en alguna parte, o llagas dolorosas en la boca?"
+      }
+    },
+    "NEURO_CHANGE": {
+      "kind": "symptom",
+      "term": "Confusion",
+      "scale": "yes_no",
+      "text": {
+        "en": "Have you or your family noticed any new confusion, trouble finding words, or unusual sleepiness?",
+        "es": "¿Usted o su familia han notado confusión nueva, dificultad para encontrar las palabras o sueño fuera de lo normal?"
+      }
+    },
+    "MEDS_NEW": {
+      "kind": "flow",
+      "scale": "yes_no",
+      "text": {
+        "en": "Since your last study visit, have you started, stopped, or changed any medicines, including ones from the pharmacy or vitamins?",
+        "es": "Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "yes"
+            ]
+          },
+          "item": "MEDS_DETAIL"
+        }
+      ]
+    },
+    "MEDS_DETAIL": {
+      "kind": "flow",
+      "scale": "free_text",
+      "answered_by_tool": "record_medication_change",
+      "text": {
+        "en": "Which medicine was it, and when did you start or change it?",
+        "es": "¿Qué medicamento fue y cuándo lo empezó o lo cambió?"
+      }
+    },
+    "CARE_VISIT": {
+      "kind": "flow",
+      "scale": "yes_no",
+      "text": {
+        "en": "Since your last study visit, have you gone to an emergency room, urgent care, or another doctor?",
+        "es": "Desde su última visita del estudio, ¿ha ido a una sala de emergencias, a una clínica de urgencias o a otro médico?"
+      },
+      "followups": [
+        {
+          "when": {
+            "in": [
+              "yes"
+            ]
+          },
+          "item": "CARE_VISIT_DETAIL"
+        }
+      ]
+    },
+    "CARE_VISIT_DETAIL": {
+      "kind": "flow",
+      "scale": "free_text",
+      "text": {
+        "en": "Where did you go, and what was it for?",
+        "es": "¿A dónde fue y por qué motivo?"
+      }
+    },
+    "ANYTHING_ELSE": {
+      "kind": "flow",
+      "scale": "yes_no",
+      "note": "The verbatim quote carries the content; a non-empty 'yes' creates a NURSE_TASK.",
+      "text": {
+        "en": "Is there anything else you would like the nurse to know?",
+        "es": "¿Hay algo más que le gustaría que supiera la enfermera?"
+      }
+    }
+  }
+}

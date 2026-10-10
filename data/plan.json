@@ -1,0 +1,42 @@
+{
+  "_about": "Approved between-visit check-in plan (seed). Item wording lives in data/symptom_items.json; red flags in data/red_flags.json. The backend appends MEDS_NEW, CARE_VISIT and ANYTHING_ELSE after these items.",
+  "id": "plan_v1",
+  "study_id": "std_demo01",
+  "version": 1,
+  "status": "approved",
+  "items": [
+    "DIARRHEA_FREQ",
+    "NAUSEA_FREQ",
+    "VOMITING_FREQ",
+    "FEVER_CHILLS",
+    "SOB_SEV",
+    "DIZZINESS_SEV",
+    "FATIGUE_SEV",
+    "RASH_ANY",
+    "NEURO_CHANGE"
+  ],
+  "red_flag_ids": [
+    "RF_FEVER",
+    "RF_DIARRHEA_SEVERE",
+    "RF_DEHYDRATION",
+    "RF_BREATHING",
+    "RF_BREATHING_SEVERE",
+    "RF_CHEST_PAIN",
+    "RF_NEURO",
+    "RF_SEIZURE_FAINT",
+    "RF_SKIN_SEVERE",
+    "RF_LIVER_KIDNEY",
+    "RF_HEART",
+    "RF_BLEEDING",
+    "RF_SELF_HARM"
+  ],
+  "schedule_days_after_dose": [
+    1,
+    3,
+    7
+  ],
+  "source": "seed",
+  "source_citations": [],
+  "approved_by": "Jess Kim (research coordinator, demo)",
+  "approved_at": "2026-10-10T20:00:00Z"
+}

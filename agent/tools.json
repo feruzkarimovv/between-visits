@@ -1,0 +1,256 @@
+{
+  "_about": "ElevenLabs webhook tool configs (POST /v1/convai/tools {\"tool_config\": <item>}). agent/sync_agent.py replaces ${PUBLIC_BASE_URL}, ${TOOL_SECRET_ID} and the string \"${RED_FLAG_IDS}\" (with the JSON array of IDs from data/red_flags.json) before uploading, then upserts each tool by name. These paths and bodies must match docs/03-api-contracts.md section 2.",
+  "tools": [
+    {
+      "type": "webhook",
+      "name": "record_answer",
+      "description": "Record the person's answer to the current check-in question, or a correction to an earlier one. Call it right after they answer. Then say the returned next.say exactly, word for word.",
+      "response_timeout_secs": 10,
+      "tool_error_handling_mode": "passthrough",
+      "api_schema": {
+        "url": "${PUBLIC_BASE_URL}/agent/tools/record_answer",
+        "method": "POST",
+        "request_headers": {
+          "X-BV-Tool-Secret": {
+            "secret_id": "${TOOL_SECRET_ID}"
+          }
+        },
+        "request_body_schema": {
+          "type": "object",
+          "required": [
+            "verbatim_quote"
+          ],
+          "properties": {
+            "checkin_id": {
+              "type": "string",
+              "dynamic_variable": "checkin_id"
+            },
+            "conversation_id": {
+              "type": "string",
+              "dynamic_variable": "system__conversation_id"
+            },
+            "item_code": {
+              "type": "string",
+              "description": "The item_code from the last tool result, for example IDENTITY, CALL_CONSENT or DIARRHEA_FREQ. Use an earlier item_code only to correct an earlier answer. For the very first answer use IDENTITY."
+            },
+            "option_code": {
+              "type": "string",
+              "enum": [
+                "yes",
+                "no",
+                "later",
+                "never",
+                "rarely",
+                "sometimes",
+                "often",
+                "almost_always",
+                "none",
+                "mild",
+                "moderate",
+                "severe",
+                "very_severe",
+                "heavy_activity",
+                "light_activity",
+                "at_rest",
+                "not_measured",
+                "unknown"
+              ],
+              "description": "The option that matches the answer. Leave empty for number answers."
+            },
+            "numeric_value": {
+              "type": "number",
+              "description": "Only for number answers (counts or temperatures). For a range such as 'seven or eight', use the higher number."
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "per_day",
+                "celsius",
+                "fahrenheit"
+              ],
+              "description": "Unit of numeric_value."
+            },
+            "verbatim_quote": {
+              "type": "string",
+              "description": "The person's exact words for this answer, in the language they spoke. Never translate."
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "webhook",
+      "name": "report_red_flag",
+      "description": "Call immediately whenever the person mentions anything on the red-flag list in your instructions, at any moment, even outside a question or in passing. Then say the returned next.say exactly.",
+      "response_timeout_secs": 10,
+      "tool_error_handling_mode": "passthrough",
+      "api_schema": {
+        "url": "${PUBLIC_BASE_URL}/agent/tools/report_red_flag",
+        "method": "POST",
+        "request_headers": {
+          "X-BV-Tool-Secret": {
+            "secret_id": "${TOOL_SECRET_ID}"
+          }
+        },
+        "request_body_schema": {
+          "type": "object",
+          "required": [
+            "red_flag_id",
+            "verbatim_quote"
+          ],
+          "properties": {
+            "checkin_id": {
+              "type": "string",
+              "dynamic_variable": "checkin_id"
+            },
+            "conversation_id": {
+              "type": "string",
+              "dynamic_variable": "system__conversation_id"
+            },
+            "red_flag_id": {
+              "type": "string",
+              "enum": "${RED_FLAG_IDS}",
+              "description": "The matching red-flag ID from your instructions."
+            },
+            "verbatim_quote": {
+              "type": "string",
+              "description": "The person's exact words, in the language they spoke. Never translate."
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "webhook",
+      "name": "record_medication_change",
+      "description": "Record a new, stopped or changed medicine (including pharmacy medicines and vitamins) when the person describes one. Then say the returned next.say exactly.",
+      "response_timeout_secs": 10,
+      "tool_error_handling_mode": "passthrough",
+      "api_schema": {
+        "url": "${PUBLIC_BASE_URL}/agent/tools/record_medication_change",
+        "method": "POST",
+        "request_headers": {
+          "X-BV-Tool-Secret": {
+            "secret_id": "${TOOL_SECRET_ID}"
+          }
+        },
+        "request_body_schema": {
+          "type": "object",
+          "required": [
+            "description",
+            "verbatim_quote"
+          ],
+          "properties": {
+            "checkin_id": {
+              "type": "string",
+              "dynamic_variable": "checkin_id"
+            },
+            "conversation_id": {
+              "type": "string",
+              "dynamic_variable": "system__conversation_id"
+            },
+            "description": {
+              "type": "string",
+              "description": "Short English description: medicine name, started/stopped/changed, and when. Example: 'Imodium from the pharmacy, started yesterday'."
+            },
+            "verbatim_quote": {
+              "type": "string",
+              "description": "The person's exact words, in the language they spoke. Never translate."
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "webhook",
+      "name": "request_human",
+      "description": "Call when the person asks for a person, nurse or doctor, refuses to talk to an automated assistant, asks any medical question, or sounds very distressed. Then say the returned next.say exactly.",
+      "response_timeout_secs": 10,
+      "tool_error_handling_mode": "passthrough",
+      "api_schema": {
+        "url": "${PUBLIC_BASE_URL}/agent/tools/request_human",
+        "method": "POST",
+        "request_headers": {
+          "X-BV-Tool-Secret": {
+            "secret_id": "${TOOL_SECRET_ID}"
+          }
+        },
+        "request_body_schema": {
+          "type": "object",
+          "required": [
+            "reason",
+            "verbatim_quote"
+          ],
+          "properties": {
+            "checkin_id": {
+              "type": "string",
+              "dynamic_variable": "checkin_id"
+            },
+            "conversation_id": {
+              "type": "string",
+              "dynamic_variable": "system__conversation_id"
+            },
+            "reason": {
+              "type": "string",
+              "enum": [
+                "wants_person",
+                "medical_question",
+                "distress",
+                "other"
+              ],
+              "description": "Why a human is needed."
+            },
+            "verbatim_quote": {
+              "type": "string",
+              "description": "The person's exact words, in the language they spoke. Never translate."
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "webhook",
+      "name": "set_speaker",
+      "description": "Call when the person who answered is not the patient but a caregiver or family member. Then say the returned next.say exactly.",
+      "response_timeout_secs": 10,
+      "tool_error_handling_mode": "passthrough",
+      "api_schema": {
+        "url": "${PUBLIC_BASE_URL}/agent/tools/set_speaker",
+        "method": "POST",
+        "request_headers": {
+          "X-BV-Tool-Secret": {
+            "secret_id": "${TOOL_SECRET_ID}"
+          }
+        },
+        "request_body_schema": {
+          "type": "object",
+          "required": [
+            "speaker"
+          ],
+          "properties": {
+            "checkin_id": {
+              "type": "string",
+              "dynamic_variable": "checkin_id"
+            },
+            "conversation_id": {
+              "type": "string",
+              "dynamic_variable": "system__conversation_id"
+            },
+            "speaker": {
+              "type": "string",
+              "enum": [
+                "patient",
+                "caregiver"
+              ],
+              "description": "Who is answering."
+            },
+            "relation": {
+              "type": "string",
+              "description": "Relation to the patient in English, for example daughter, son, wife, husband, caregiver."
+            }
+          }
+        }
+      }
+    }
+  ]
+}

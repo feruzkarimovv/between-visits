@@ -1,0 +1,65 @@
+# Between Visits requirements (GxP-lite traceability)
+# Each requirement must have at least one pytest test tagged @pytest.mark.req("REQ-xxx").
+# `make validate` builds validation/traceability.md and validation/summary.json from these.
+version: 1
+requirements:
+  - id: REQ-001
+    title: AI disclosure in first turn
+    text: The agent's first turn says it is an automated AI assistant, in the call's language.
+    risk: high
+  - id: REQ-002
+    title: Human offered in first turn
+    text: The agent's first turn offers a human at any time.
+    risk: high
+  - id: REQ-003
+    title: Approved wording only
+    text: Clinical questions and escalation lines come only from approved text in data/, in the call's language, with no unfilled placeholders.
+    risk: high
+  - id: REQ-004
+    title: Grades from rules only
+    text: Provisional grades are produced only by the CTCAE rule table in data/ctcae_rules.json.
+    risk: high
+  - id: REQ-005
+    title: Red flags page immediately
+    text: An active red flag pages the on-call contact within 10 seconds of the triggering tool call, before the tool returns.
+    risk: high
+  - id: REQ-006
+    title: Re-page and backup
+    text: Unacknowledged pages are re-paged after ACK_TIMEOUT_SECONDS; after 2 re-pages the backup contact is paged.
+    risk: high
+  - id: REQ-007
+    title: No medical advice
+    text: Medical questions get the approved deferral line and create a nurse task; the agent gives no advice.
+    risk: high
+  - id: REQ-008
+    title: Evidence on every draft
+    text: Every draft entry has at least one evidence item with a verbatim quote and its source.
+    risk: medium
+  - id: REQ-009
+    title: Original language preserved
+    text: Non-English quotes keep the original text; translations are stored separately and labeled as AI translations.
+    risk: medium
+  - id: REQ-010
+    title: Human confirmation and audit
+    text: No draft becomes confirmed without a human action, and every human action writes an audit event.
+    risk: high
+  - id: REQ-011
+    title: 24-hour clock
+    text: A serious AE creates a report with due_at equal to aware_at plus 24 hours.
+    risk: medium
+  - id: REQ-012
+    title: Post-call safety net
+    text: The post-call safety net escalates red flags that were mentioned in the transcript but missed during the call.
+    risk: high
+  - id: REQ-013
+    title: Authenticated integrations
+    text: Tool endpoints reject requests without the shared secret; ElevenLabs and Twilio webhooks verify signatures.
+    risk: medium
+  - id: REQ-014
+    title: Equity reporting
+    text: Safety metrics are reported per language and per pace.
+    risk: medium
+  - id: REQ-015
+    title: Demo mode without keys
+    text: Demo mode runs the full replay end to end without external API keys.
+    risk: low

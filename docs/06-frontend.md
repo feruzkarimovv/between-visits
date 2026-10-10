@@ -1,0 +1,84 @@
+# 06 · Frontend
+
+Next.js (App Router) + TypeScript + Tailwind + shadcn/ui + TanStack Query. API types are generated from the backend's OpenAPI (`make types` → `frontend/src/lib/api-types.ts`). All requests go through one `apiFetch()` helper that adds `X-BV-User` and `X-BV-Role` from the demo role switch.
+
+## Design direction
+
+Calm clinical tool, not a consumer app. White and light-gray surfaces, one accent color, dense but readable tables, large hit targets. Semantic colors are reserved for state:
+
+| State | Color | Used for |
+|---|---|---|
+| Emergency | red | emergency escalations, red-flag chips |
+| Urgent | amber | urgent escalations, provisional grade ≥ 3 |
+| Callback / task | blue | nurse tasks, callbacks |
+| Done / acknowledged | green | acknowledged, confirmed |
+| AI-generated | violet outline + "AI draft" or "AI translation, verify" label | any LLM-produced text shown to staff |
+
+Rules: every AI-produced string carries a visible label. Every draft shows its evidence quote. Original-language quotes are shown first, English translation second. Times show as relative ("21 s ago") with absolute time on hover. Provisional grades always say "provisional".
+
+## Layout
+
+Top bar: product name, study short title + NCT ID, **open escalations banner** (red/amber pill with count, links to `/escalations`, polls every 2 s), **Demo role switch** (Coordinator · Investigator · Sponsor) with a visible "demo, no authentication" note. Left nav: Today, Escalations, Review, Patients, Plan, Report card, Sponsor inbox, Audit.
+
+## Pages
+
+### `/` Today
+- Table of check-ins due today: subject ID, name, day after dose, language chip (EN/ES), pace chip ("Extra time"), caregiver icon, status chip, actions **Call phone** and **Call in browser**.
+- In demo mode the phone button is replaced by **Replay scenario** (dropdown of `/api/demo/scenarios`).
+- Clicking a row or starting a call navigates to `/checkins/[id]`.
+
+### `/checkins/[id]` Live check-in (the demo's main screen)
+Polls `GET /api/checkins/{id}` every 1 s until `completed`, then every 5 s for 30 s (post-call pipeline results arrive).
+- Header: patient name, subject ID, language, pace, speaker (patient or caregiver), call status with a running timer, channel.
+- Left column, **Conversation**: during the call show the stream of recorded answers as chat-like cards (question label → patient's quote → recorded value). After the call, replace with the full transcript with timestamps; clicking a quote anywhere on the page scrolls here and highlights it.
+- Right column, **Findings**: one card per term: term, the patient's answer (scale value), numeric input if any, **provisional grade** badge, the rule text that fired, red-flag chips.
+- Top of right column, **Escalation panel** (only when one exists): level, reason, "Paged RN on call by push 0:21 ago", re-page count, **Acknowledged in N s** in green when done, language note ("Prefers Spanish: use interpreter line"), and a dashboard **Acknowledge** button as fallback.
+- Bottom, **Drafts created** (after the call) with a link to the review queue filtered by this check-in.
+- If `channel == "web"`: an embedded call widget (start/stop, mic level, connection status) using `@elevenlabs/react` (inside `<ConversationProvider>`), started with the `conversation_token` and `dynamic_variables` from `web_session`. After connecting, POST to `/api/checkins/{id}/web-started`.
+
+### `/escalations`
+Open first (sorted by level then age), then acknowledged and resolved. Each row: level chip, patient, red flags, summary sentence, paged time, ack time, ack method, actions Acknowledge / Resolve (with note).
+
+### `/review` Review queue
+- Filters: status (draft by default), kind (AE, CM, NURSE_TASK), patient.
+- Each draft card: kind, term or medication, payload fields (editable inline in edit mode), provisional grade + rule, **evidence block** (original quote, translation with label, timestamp link to the check-in), source (live tool or post-call extraction, with a note "found after the call" for the latter).
+- Actions: **Confirm**, **Edit** (then Save), **Reject** (requires reason). Toasts: "Draft confirmed", "Draft rejected".
+- Investigator role on a confirmed AE: **Seriousness** checkboxes (six ICH E2A criteria), **Relatedness** select, **Sign**. If serious, a toast links to the new serious-event report.
+
+### `/sae/[id]` Serious-event report
+- Big **24-hour clock** (time remaining until `due_at`, turns amber under 6 h, red under 1 h).
+- CIOMS-style form sections (patient, reaction, suspect product by class, seriousness, reporter) prefilled; narrative with "AI draft" label and an editable final version.
+- Actions: Save, **Sign** (investigator), **Send to sponsor**. After sending: "Received by sponsor at 15:42, 22 h 58 m before deadline".
+
+### `/sponsor` Sponsor safety inbox (mock)
+Visually framed as a different organization's tool (different header color, "Sponsor view (mock)" label, no site-only data like phone numbers or names beyond subject ID). List of received reports with on-time badge and the four valid-case checks as green ticks. Clicking opens the report read-only.
+
+### `/patients` and `/patients/[id]`
+List with language, pace, caregiver, next due. Detail page: profile (language, pace, hearing, caregiver, baseline), dose timeline with check-in dots, a small multiple chart per symptom term showing provisional grade over time (sparkline style, dose dates as vertical markers), and past check-ins.
+
+### `/plan`
+Approved plan: version, approver, approval time, schedule (days after dose), item list with EN and ES wording side by side, red flags with levels. Stretch: **Propose from protocol PDF** → shows the Gemini proposal as a diff against the active plan with page citations → **Approve** creates the new version.
+
+### `/report-card` Safety report card
+Data from `GET /api/eval/latest` and `/api/validation/latest`.
+- Header: run date, commit SHA, number of personas, mode ("text simulation" / "voice").
+- Metric tiles: urgent and emergency cases paged (x/y), side effects captured (recall), grades matching the answer key, medical-advice requests refused, disclosure in first turn, interruptions per call (voice runs only).
+- **Equity table**: the same metrics split by language (EN, ES) and pace (standard, extra time). Highlight any gap over 5 points.
+- Persona table: persona, language, pace, expected vs actual escalation, pass/fail, link to transcript.
+- **Known misses**: list from `latest.json` with the planned fix.
+- Validation: requirement count, tests linked, pass rate, link to `validation/traceability.md` on GitHub.
+
+### `/audit`
+Append-only list: time, actor, role, action, entity, before/after diff on expand.
+
+## Components to build once
+
+`StatusChip`, `LevelChip`, `LanguageChip`, `PaceChip`, `GradeBadge` (always shows "provisional"), `EvidenceQuote` (quote + translation + timestamp + source), `AiLabel`, `CountdownClock`, `RelativeTime`, `RoleSwitch`, `EscalationBanner`, `WebCallWidget`, `Sparkline`.
+
+## States
+
+Every list has a designed empty state ("No check-ins due today. Patients appear here 1, 3 and 7 days after a dose."). Every mutation shows a toast and disables its button while pending. Network errors show "Can't reach the backend. Check that `make dev` is running." with a retry.
+
+## Accessibility
+
+Keyboard reachable actions, visible focus, color never the only signal (chips have text), minimum 14 px text, 4.5:1 contrast.

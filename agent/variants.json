@@ -1,0 +1,67 @@
+{
+  "_about": "Four agent variants generated from agent/agent.template.json by agent/sync_agent.py. Turn-taking can't be overridden per call in ElevenLabs, so pace needs separate agents. The backend picks the variant '{language}-{pace}' from agent/agents.lock.json.",
+  "llm": "gemini-3.5-flash",
+  "backup_llm_order": [
+    "gemini-3.5-flash-lite",
+    "gemini-2.5-flash"
+  ],
+  "tts_model_id": "eleven_flash_v2_5",
+  "variants": {
+    "en-standard": {
+      "language": "en",
+      "voice_env": "ELEVENLABS_VOICE_ID_EN",
+      "pace": "standard"
+    },
+    "en-extra_time": {
+      "language": "en",
+      "voice_env": "ELEVENLABS_VOICE_ID_EN",
+      "pace": "extra_time"
+    },
+    "es-standard": {
+      "language": "es",
+      "voice_env": "ELEVENLABS_VOICE_ID_ES",
+      "pace": "standard"
+    },
+    "es-extra_time": {
+      "language": "es",
+      "voice_env": "ELEVENLABS_VOICE_ID_ES",
+      "pace": "extra_time"
+    }
+  },
+  "pace_settings": {
+    "standard": {
+      "tts_speed": 1.0,
+      "max_duration_seconds": 600,
+      "skip_turn": false,
+      "turn": {
+        "turn_eagerness": "normal",
+        "turn_timeout": 8,
+        "silence_end_call_timeout": 60,
+        "speculative_turn": false
+      }
+    },
+    "extra_time": {
+      "tts_speed": 0.85,
+      "max_duration_seconds": 1200,
+      "skip_turn": true,
+      "turn": {
+        "turn_eagerness": "patient",
+        "turn_timeout": 15,
+        "silence_end_call_timeout": 120,
+        "speculative_turn": false,
+        "interruption_ignore_terms": [
+          "mm-hmm",
+          "uh-huh",
+          "okay",
+          "ajá",
+          "sí"
+        ],
+        "interruption_ignore_term_languages": [
+          "en",
+          "es"
+        ],
+        "merge_with_default_ignore_terms": true
+      }
+    }
+  }
+}

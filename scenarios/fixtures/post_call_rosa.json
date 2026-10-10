@@ -1,0 +1,313 @@
+{
+  "type": "post_call_transcription",
+  "event_timestamp": 1760200000,
+  "data": {
+    "agent_id": "agent_es_fixture",
+    "conversation_id": "conv_fixture_rosa",
+    "status": "done",
+    "user_id": "101-007",
+    "transcript": [
+      {
+        "role": "agent",
+        "message": "Hola, esta es una llamada automática de el equipo de investigación de Hillside. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con Rosa?",
+        "time_in_call_secs": 0,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Sí, soy yo.",
+        "time_in_call_secs": 8,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 9,
+        "tool_calls": [
+          {
+            "request_id": "req_0",
+            "tool_name": "record_answer",
+            "params_as_json": "{\"item_code\": \"IDENTITY\", \"option_code\": \"yes\", \"verbatim_quote\": \"Sí, soy yo.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias. Le llamo para su seguimiento sobre cómo se ha sentido desde su última visita del estudio. Toma unos cinco minutos. ¿Es un buen momento?",
+        "time_in_call_secs": 11,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Sí, está bien.",
+        "time_in_call_secs": 21,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 22,
+        "tool_calls": [
+          {
+            "request_id": "req_1",
+            "tool_name": "record_answer",
+            "params_as_json": "{\"item_code\": \"CALL_CONSENT\", \"option_code\": \"yes\", \"verbatim_quote\": \"Sí, está bien.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias. Le voy a preguntar sobre algunos síntomas comunes. Para cada uno, dígame la respuesta que mejor describa cómo se ha sentido. En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
+        "time_in_call_secs": 24,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "¿Cómo?",
+        "time_in_call_secs": 38,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": "En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
+        "time_in_call_secs": 40,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Casi todo el tiempo, la verdad.",
+        "time_in_call_secs": 55,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": "Entendí: casi todo el tiempo. ¿Es correcto?",
+        "time_in_call_secs": 58,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Sí.",
+        "time_in_call_secs": 63,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 64,
+        "tool_calls": [
+          {
+            "request_id": "req_2",
+            "tool_name": "record_answer",
+            "params_as_json": "{\"item_code\": \"DIARRHEA_FREQ\", \"option_code\": \"almost_always\", \"verbatim_quote\": \"Casi todo el tiempo, la verdad.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias. En su peor día, ¿cuántas veces fue al baño a evacuar, más o menos?",
+        "time_in_call_secs": 66,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Como siete u ocho veces... normalmente voy una.",
+        "time_in_call_secs": 80,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": "Entendí: ocho veces en su peor día. ¿Es correcto?",
+        "time_in_call_secs": 84,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Sí, más o menos.",
+        "time_in_call_secs": 89,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 90,
+        "tool_calls": [
+          {
+            "request_id": "req_3",
+            "tool_name": "record_answer",
+            "params_as_json": "{\"item_code\": \"DIARRHEA_STOOLS_PER_DAY\", \"numeric_value\": 8, \"unit\": \"per_day\", \"verbatim_quote\": \"Como siete u ocho veces... normalmente voy una.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias por decírmelo. Voy a pedirle a la enfermera de guardia que le llame ahora mismo. Si es una emergencia, cuelgue y llame al 9-1-1. Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?",
+        "time_in_call_secs": 93,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Ay... y esta mañana me mareé al levantarme.",
+        "time_in_call_secs": 104,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 104,
+        "tool_calls": [
+          {
+            "request_id": "req_4",
+            "tool_name": "report_red_flag",
+            "params_as_json": "{\"red_flag_id\": \"RF_DEHYDRATION\", \"verbatim_quote\": \"y esta mañana me mareé al levantarme.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias. Lo agregué a mi mensaje para la enfermera. Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?",
+        "time_in_call_secs": 107,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "Sí, ayer tomé Imodium de la farmacia.",
+        "time_in_call_secs": 118,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 118,
+        "tool_calls": [
+          {
+            "request_id": "req_5",
+            "tool_name": "record_answer",
+            "params_as_json": "{\"item_code\": \"MEDS_NEW\", \"option_code\": \"yes\", \"verbatim_quote\": \"Sí, ayer tomé Imodium de la farmacia.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias. ¿Qué medicamento fue y cuándo lo empezó o lo cambió?",
+        "time_in_call_secs": 121,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "El Imodium, lo empecé ayer.",
+        "time_in_call_secs": 130,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 130,
+        "tool_calls": [
+          {
+            "request_id": "req_6",
+            "tool_name": "record_medication_change",
+            "params_as_json": "{\"description\": \"Imodium (loperamide) from the pharmacy, started yesterday\", \"verbatim_quote\": \"El Imodium, lo empecé ayer.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias. Desde su última visita del estudio, ¿ha ido a una sala de emergencias, a una clínica de urgencias o a otro médico?",
+        "time_in_call_secs": 133,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "No.",
+        "time_in_call_secs": 142,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 142,
+        "tool_calls": [
+          {
+            "request_id": "req_7",
+            "tool_name": "record_answer",
+            "params_as_json": "{\"item_code\": \"CARE_VISIT\", \"option_code\": \"no\", \"verbatim_quote\": \"No.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias. ¿Hay algo más que le gustaría que supiera la enfermera?",
+        "time_in_call_secs": 144,
+        "interrupted": false
+      },
+      {
+        "role": "user",
+        "message": "No, nada más. Gracias.",
+        "time_in_call_secs": 152,
+        "interrupted": false
+      },
+      {
+        "role": "agent",
+        "message": null,
+        "time_in_call_secs": 152,
+        "tool_calls": [
+          {
+            "request_id": "req_8",
+            "tool_name": "record_answer",
+            "params_as_json": "{\"item_code\": \"ANYTHING_ELSE\", \"option_code\": \"no\", \"verbatim_quote\": \"No, nada más. Gracias.\"}",
+            "tool_has_been_called": true,
+            "type": "webhook"
+          }
+        ]
+      },
+      {
+        "role": "agent",
+        "message": "Gracias, Rosa. La enfermera le llamará muy pronto. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós.",
+        "time_in_call_secs": 155,
+        "interrupted": false
+      }
+    ],
+    "metadata": {
+      "start_time_unix_secs": 1760199830,
+      "call_duration_secs": 160,
+      "termination_reason": "end_call tool was called.",
+      "main_language": "es",
+      "phone_call": {
+        "type": "twilio",
+        "direction": "outbound",
+        "call_sid": "CA_fixture",
+        "external_number": "+15555550107",
+        "call_result": "answered"
+      }
+    },
+    "analysis": {
+      "call_successful": "success",
+      "transcript_summary": "Fixture.",
+      "evaluation_criteria_results": {},
+      "data_collection_results": {}
+    },
+    "conversation_initiation_client_data": {
+      "dynamic_variables": {
+        "checkin_id": "ci_fixture_rosa"
+      }
+    },
+    "has_audio": false
+  }
+}

@@ -1,0 +1,34 @@
+# secrets and local-only data
+.env
+.env.local
+data/patients.local.json
+agent/agents.lock.json
+
+# runtime
+backend/data/*.db
+backend/data/*.db-journal
+scenarios/audio/*.mp3
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# node
+node_modules/
+frontend/.next/
+frontend/out/
+
+# os/editor
+.DS_Store
+.idea/
+.vscode/
+
+# local tooling
+.claude/
+backend/data/*.db-wal
+backend/data/*.db-shm
+frontend/.env*.local
+*.tsbuildinfo

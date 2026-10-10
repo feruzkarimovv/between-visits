@@ -1,0 +1,319 @@
+{
+  "_about": "Red flags for the example study. `rule` conditions are evaluated by backend/app/services/rules.py after every answer (DSL: item/derived + eq | in | gte | gt | lte | lt, combined with any/all). Flags with rule null are only raised when the agent calls report_red_flag or the post-call safety net finds them. Any red flag escalates at its level; false alarms are acceptable, misses are not. Symptom lists are condensed (not quoted) from the public Libtayo Medication Guide and CDC fever guidance; lines marked 'Design decision' need clinical review before real use. `say_script` overrides the default urgent/emergency line. page_phrase_en is read to the nurse and must never contain names or other identifiers beyond the subject ID.",
+  "version": "1.0.0",
+  "levels": {
+    "urgent": {
+      "say_script": "urgent_line",
+      "page": true
+    },
+    "emergency": {
+      "say_script": "emergency_line",
+      "page": true
+    },
+    "callback": {
+      "say_script": null,
+      "page": false
+    }
+  },
+  "red_flags": [
+    {
+      "id": "RF_FEVER",
+      "level": "urgent",
+      "label_en": "Temperature 38.0 °C (100.4 °F) or higher",
+      "agent_description": "a temperature of 38.0 °C / 100.4 °F or higher, or a fever with shaking chills",
+      "examples_en": [
+        "I had a fever of 101",
+        "my temperature was 38.5"
+      ],
+      "examples_es": [
+        "tuve fiebre de 38 y medio",
+        "me dio fiebre con escalofríos"
+      ],
+      "page_phrase_en": "Reports a temperature of {temp_c} degrees Celsius.",
+      "rule": {
+        "item": "TEMP_HIGHEST",
+        "gte": 38.0
+      },
+      "sources": [
+        "CDC, Watch Out for Fever (fever of 100.4 F / 38 C or higher during cancer treatment)",
+        "Libtayo Medication Guide (fever or flu-like symptoms)"
+      ]
+    },
+    {
+      "id": "RF_DIARRHEA_SEVERE",
+      "level": "urgent",
+      "label_en": "7 or more stools a day above usual, blood or mucus in stool, black stool, or severe belly pain",
+      "agent_description": "diarrhea 7 or more times a day above their usual, blood or mucus in the stool, black tar-like stool, or severe belly pain",
+      "examples_en": [
+        "there was blood in the toilet",
+        "my stomach hurts really bad"
+      ],
+      "examples_es": [
+        "vi sangre en las heces",
+        "me duele muchísimo la barriga"
+      ],
+      "page_phrase_en": "Reports {stools_over_baseline} stools a day above baseline{blood_note}.",
+      "rule": {
+        "any": [
+          {
+            "derived": "stools_over_baseline",
+            "gte": 7
+          },
+          {
+            "item": "STOOL_BLOOD",
+            "eq": "yes"
+          }
+        ]
+      },
+      "sources": [
+        "Libtayo Medication Guide (intestinal problems)",
+        "Study NCT02760498 protocol, colitis/diarrhea management (p.154-155)",
+        "CTCAE v5.0 Diarrhea Grade 3"
+      ]
+    },
+    {
+      "id": "RF_DEHYDRATION",
+      "level": "urgent",
+      "label_en": "Dizzy on standing with diarrhea or vomiting, or can't keep liquids down",
+      "agent_description": "feeling dizzy or lightheaded when standing up while also having diarrhea or vomiting, or not being able to keep liquids down",
+      "examples_en": [
+        "I got dizzy when I stood up",
+        "I can't keep water down"
+      ],
+      "examples_es": [
+        "me mareé al levantarme",
+        "no puedo retener el agua"
+      ],
+      "page_phrase_en": "Reports dizziness on standing with diarrhea or vomiting, or cannot keep liquids down.",
+      "rule": {
+        "any": [
+          {
+            "item": "FLUIDS_KEPT_DOWN",
+            "eq": "no"
+          },
+          {
+            "all": [
+              {
+                "item": "DIZZY_ON_STANDING",
+                "eq": "yes"
+              },
+              {
+                "any": [
+                  {
+                    "derived": "stools_over_baseline",
+                    "gte": 4
+                  },
+                  {
+                    "item": "VOMITING_FREQ",
+                    "in": [
+                      "sometimes",
+                      "often",
+                      "almost_always"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sources": [
+        "Design decision by the team (clinical review pending)"
+      ]
+    },
+    {
+      "id": "RF_BREATHING",
+      "level": "urgent",
+      "label_en": "Short of breath at rest, severe shortness of breath, or new cough with shortness of breath",
+      "agent_description": "shortness of breath while resting, severe or worsening shortness of breath, or a new cough with shortness of breath",
+      "examples_en": [
+        "I'm out of breath even sitting down"
+      ],
+      "examples_es": [
+        "me falta el aire aunque esté sentada"
+      ],
+      "page_phrase_en": "Reports shortness of breath {sob_detail}.",
+      "rule": {
+        "any": [
+          {
+            "item": "SOB_EXERTION",
+            "eq": "at_rest"
+          },
+          {
+            "item": "SOB_SEV",
+            "in": [
+              "severe",
+              "very_severe"
+            ]
+          }
+        ]
+      },
+      "sources": [
+        "Libtayo Medication Guide (lung problems)",
+        "CTCAE v5.0 Dyspnea Grade 3"
+      ]
+    },
+    {
+      "id": "RF_BREATHING_SEVERE",
+      "level": "emergency",
+      "label_en": "Struggling to breathe right now",
+      "agent_description": "struggling to breathe right now, unable to finish a sentence, or lips or face turning blue",
+      "examples_en": [
+        "I can barely breathe right now"
+      ],
+      "examples_es": [
+        "casi no puedo respirar ahora mismo"
+      ],
+      "page_phrase_en": "Reports severe trouble breathing right now.",
+      "rule": null,
+      "sources": [
+        "Design decision by the team (clinical review pending)"
+      ]
+    },
+    {
+      "id": "RF_CHEST_PAIN",
+      "level": "emergency",
+      "label_en": "Chest pain, pressure or tightness",
+      "agent_description": "chest pain, pressure or tightness",
+      "examples_en": [
+        "there's a pressure in my chest"
+      ],
+      "examples_es": [
+        "siento presión en el pecho",
+        "me duele el pecho"
+      ],
+      "page_phrase_en": "Reports chest pain or pressure.",
+      "rule": null,
+      "sources": [
+        "Libtayo Medication Guide (lung and heart problems)"
+      ]
+    },
+    {
+      "id": "RF_NEURO",
+      "level": "urgent",
+      "label_en": "New confusion, trouble speaking, unusual sleepiness, new tremor or balance problems, severe headache",
+      "agent_description": "new confusion, trouble speaking or finding words, unusual sleepiness or trouble staying awake, new shaking or balance problems, or a severe headache",
+      "examples_en": [
+        "Dad keeps mixing up words since yesterday"
+      ],
+      "examples_es": [
+        "está muy confundido desde ayer"
+      ],
+      "page_phrase_en": "Reports new confusion, speech trouble or unusual sleepiness.",
+      "rule": {
+        "item": "NEURO_CHANGE",
+        "eq": "yes"
+      },
+      "sources": [
+        "Libtayo Medication Guide (nervous system problems)"
+      ]
+    },
+    {
+      "id": "RF_SEIZURE_FAINT",
+      "level": "emergency",
+      "label_en": "Seizure, fainting, or can't be woken",
+      "agent_description": "a seizure, fainting or passing out, or someone who can't be woken up",
+      "examples_en": [
+        "she passed out this morning"
+      ],
+      "examples_es": [
+        "se desmayó esta mañana"
+      ],
+      "page_phrase_en": "Reports a seizure, fainting, or unresponsiveness.",
+      "rule": null,
+      "sources": [
+        "Design decision by the team (clinical review pending)"
+      ]
+    },
+    {
+      "id": "RF_SKIN_SEVERE",
+      "level": "urgent",
+      "label_en": "Blistering or peeling skin, or painful sores in the mouth, nose, throat or genitals",
+      "agent_description": "blistering or peeling skin, or painful sores in the mouth, nose, throat or genitals",
+      "examples_en": [
+        "my skin is peeling"
+      ],
+      "examples_es": [
+        "tengo ampollas en la piel"
+      ],
+      "page_phrase_en": "Reports blistering or peeling skin or painful mouth sores.",
+      "rule": {
+        "item": "SKIN_BLISTER",
+        "eq": "yes"
+      },
+      "sources": [
+        "Libtayo Medication Guide (skin problems)"
+      ]
+    },
+    {
+      "id": "RF_LIVER_KIDNEY",
+      "level": "urgent",
+      "label_en": "Yellow skin or eyes, very dark urine, or much less urine than usual",
+      "agent_description": "yellow skin or eyes, very dark urine, or much less urine than usual",
+      "examples_en": [
+        "my eyes look yellow"
+      ],
+      "examples_es": [
+        "tengo los ojos amarillos",
+        "casi no orino"
+      ],
+      "page_phrase_en": "Reports yellow skin or eyes, dark urine, or decreased urine.",
+      "rule": null,
+      "sources": [
+        "Libtayo Medication Guide (liver and kidney problems)"
+      ]
+    },
+    {
+      "id": "RF_HEART",
+      "level": "urgent",
+      "label_en": "New fast, pounding or irregular heartbeat",
+      "agent_description": "a new fast, pounding or irregular heartbeat",
+      "examples_en": [
+        "my heart is racing"
+      ],
+      "examples_es": [
+        "el corazón me late muy rápido"
+      ],
+      "page_phrase_en": "Reports a new fast or irregular heartbeat.",
+      "rule": null,
+      "sources": [
+        "Libtayo Medication Guide (heart problems)"
+      ]
+    },
+    {
+      "id": "RF_BLEEDING",
+      "level": "urgent",
+      "label_en": "Vomiting blood or bleeding that won't stop",
+      "agent_description": "vomiting blood or bleeding that won't stop",
+      "examples_en": [
+        "I threw up blood"
+      ],
+      "examples_es": [
+        "vomité sangre"
+      ],
+      "page_phrase_en": "Reports vomiting blood or uncontrolled bleeding.",
+      "rule": null,
+      "sources": [
+        "Design decision by the team (clinical review pending)"
+      ]
+    },
+    {
+      "id": "RF_SELF_HARM",
+      "level": "emergency",
+      "say_script": "crisis_line",
+      "label_en": "Thoughts of self-harm or not wanting to live",
+      "agent_description": "thoughts of hurting themselves or not wanting to live",
+      "examples_en": [
+        "I don't want to live like this anymore"
+      ],
+      "examples_es": [
+        "ya no quiero vivir así"
+      ],
+      "page_phrase_en": "Expressed thoughts of self-harm or not wanting to live. Crisis line given.",
+      "rule": null,
+      "sources": [
+        "988 Suicide and Crisis Lifeline"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,261 @@
+{
+  "_about": "SCRIPTED demo replay built from the approved scripts and items (not a real recording). WS1 replaces it with a real Rosa call (same format) once one is recorded. Format: docs/04-voice-agent.md § Replay format. checkin_id is injected by the replay engine. Expected outcome: Diarrhea provisional grade 3 + RF_DIARRHEA_SEVERE (urgent page at ~89.5 s), RF_DEHYDRATION added to the same escalation, acknowledged at 113 s, CM draft loperamide, AE drafts Diarrhea (G3) and Dizziness. translations_en: English translations of the scripted quotes, used only by the fake translator in DEMO_MODE (labeled 'AI translation, verify' like real ones).",
+  "id": "rosa_es_urgent",
+  "title": "Rosa, Spanish, extra time, urgent diarrhea",
+  "patient_id": "pat_rosa",
+  "day_after_dose": 3,
+  "audio": "scenarios/audio/rosa_es_urgent.mp3",
+  "events": [
+    {
+      "t": 0.0,
+      "type": "call_started"
+    },
+    {
+      "t": 9.0,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "IDENTITY",
+        "option_code": "yes",
+        "verbatim_quote": "Sí, soy yo."
+      }
+    },
+    {
+      "t": 21.5,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "CALL_CONSENT",
+        "option_code": "yes",
+        "verbatim_quote": "Sí, está bien."
+      }
+    },
+    {
+      "t": 63.5,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "DIARRHEA_FREQ",
+        "option_code": "almost_always",
+        "verbatim_quote": "Casi todo el tiempo, la verdad."
+      }
+    },
+    {
+      "t": 89.5,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "DIARRHEA_STOOLS_PER_DAY",
+        "numeric_value": 8,
+        "unit": "per_day",
+        "verbatim_quote": "Como siete u ocho veces... normalmente voy una."
+      }
+    },
+    {
+      "t": 104.5,
+      "type": "tool",
+      "tool": "report_red_flag",
+      "body": {
+        "red_flag_id": "RF_DEHYDRATION",
+        "verbatim_quote": "y esta mañana me mareé al levantarme."
+      }
+    },
+    {
+      "t": 113.0,
+      "type": "page_ack",
+      "by": "RN on call",
+      "method": "push_button"
+    },
+    {
+      "t": 118.5,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "MEDS_NEW",
+        "option_code": "yes",
+        "verbatim_quote": "Sí, ayer tomé Imodium de la farmacia."
+      }
+    },
+    {
+      "t": 130.5,
+      "type": "tool",
+      "tool": "record_medication_change",
+      "body": {
+        "description": "Imodium (loperamide) from the pharmacy, started yesterday",
+        "verbatim_quote": "El Imodium, lo empecé ayer."
+      }
+    },
+    {
+      "t": 142.5,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "CARE_VISIT",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 152.5,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "ANYTHING_ELSE",
+        "option_code": "no",
+        "verbatim_quote": "No, nada más. Gracias."
+      }
+    },
+    {
+      "t": 162.0,
+      "type": "call_ended",
+      "termination_reason": "end_call tool was called."
+    },
+    {
+      "t": 166.0,
+      "type": "post_call",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hola, esta es una llamada automática de el equipo de investigación de Hillside. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con Rosa?",
+          "t_s": 0.0
+        },
+        {
+          "role": "user",
+          "text": "Sí, soy yo.",
+          "t_s": 8.5
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. Le llamo para su seguimiento sobre cómo se ha sentido desde su última visita del estudio. Toma unos cinco minutos. ¿Es un buen momento?",
+          "t_s": 11.0
+        },
+        {
+          "role": "user",
+          "text": "Sí, está bien.",
+          "t_s": 21.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. Le voy a preguntar sobre algunos síntomas comunes. Para cada uno, dígame la respuesta que mejor describa cómo se ha sentido. En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
+          "t_s": 23.5
+        },
+        {
+          "role": "user",
+          "text": "¿Cómo?",
+          "t_s": 38.0
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
+          "t_s": 40.0
+        },
+        {
+          "role": "user",
+          "text": "Casi todo el tiempo, la verdad.",
+          "t_s": 55.0
+        },
+        {
+          "role": "agent",
+          "text": "Entendí: casi todo el tiempo. ¿Es correcto?",
+          "t_s": 58.0
+        },
+        {
+          "role": "user",
+          "text": "Sí.",
+          "t_s": 63.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. En su peor día, ¿cuántas veces fue al baño a evacuar, más o menos?",
+          "t_s": 66.0
+        },
+        {
+          "role": "user",
+          "text": "Como siete u ocho veces... normalmente voy una.",
+          "t_s": 80.0
+        },
+        {
+          "role": "agent",
+          "text": "Entendí: ocho veces en su peor día. ¿Es correcto?",
+          "t_s": 84.0
+        },
+        {
+          "role": "user",
+          "text": "Sí, más o menos.",
+          "t_s": 89.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias por decírmelo. Voy a pedirle a la enfermera de guardia que le llame ahora mismo. Si es una emergencia, cuelgue y llame al 9-1-1. Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?",
+          "t_s": 93.0
+        },
+        {
+          "role": "user",
+          "text": "Ay... y esta mañana me mareé al levantarme.",
+          "t_s": 104.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. Lo agregué a mi mensaje para la enfermera. Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?",
+          "t_s": 107.0
+        },
+        {
+          "role": "user",
+          "text": "Sí, ayer tomé Imodium de la farmacia.",
+          "t_s": 118.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. ¿Qué medicamento fue y cuándo lo empezó o lo cambió?",
+          "t_s": 121.0
+        },
+        {
+          "role": "user",
+          "text": "El Imodium, lo empecé ayer.",
+          "t_s": 130.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. Desde su última visita del estudio, ¿ha ido a una sala de emergencias, a una clínica de urgencias o a otro médico?",
+          "t_s": 133.0
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 142.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. ¿Hay algo más que le gustaría que supiera la enfermera?",
+          "t_s": 144.0
+        },
+        {
+          "role": "user",
+          "text": "No, nada más. Gracias.",
+          "t_s": 152.0
+        },
+        {
+          "role": "agent",
+          "text": "Gracias, Rosa. La enfermera le llamará muy pronto. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós.",
+          "t_s": 155.0
+        }
+      ]
+    }
+  ],
+  "summary_en": "Scripted demo: Rosa reports diarrhea almost all the time, 7-8 stools on her worst day (usual 1), dizziness on standing this morning, and Imodium from the pharmacy started yesterday. Urgent page sent and acknowledged.",
+  "translations_en": {
+    "Sí, soy yo.": "Yes, it's me.",
+    "Sí, está bien.": "Yes, that's fine.",
+    "Casi todo el tiempo, la verdad.": "Almost all the time, honestly.",
+    "Como siete u ocho veces... normalmente voy una.": "Like seven or eight times... normally I go once.",
+    "y esta mañana me mareé al levantarme.": "and this morning I got dizzy when I got up.",
+    "Ay... y esta mañana me mareé al levantarme.": "Oh... and this morning I got dizzy when I got up.",
+    "Sí, ayer tomé Imodium de la farmacia.": "Yes, yesterday I took Imodium from the pharmacy.",
+    "El Imodium, lo empecé ayer.": "The Imodium, I started it yesterday.",
+    "No.": "No.",
+    "No, nada más. Gracias.": "No, nothing else. Thank you.",
+    "Sí.": "Yes.",
+    "Sí, más o menos.": "Yes, more or less.",
+    "¿Cómo?": "Sorry?"
+  }
+}
