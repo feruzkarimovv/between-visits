@@ -151,3 +151,26 @@ def test_every_say_is_approved_and_filled(session, fake_pager):
             steps += 1
         assert r["next"]["action"] == "close"
         assert not escs(session, cid) and not fake_pager.sent
+
+
+@pytest.mark.req("REQ-004")
+def test_urgent_keeps_the_count_that_grades_the_symptom_in_progress(session, fake_pager):
+    """Rosa says 'almost always' and mentions dizziness on standing in the same breath: the page goes out now,
+    but the stool count is still asked so the diarrhea AE gets its provisional CTCAE grade."""
+    cid = checkin_for(session, "pat_rosa").id
+    to_symptoms(session, cid)
+    r = tool(session, "record_answer", cid, item_code="DIARRHEA_FREQ", option_code="almost_always", verbatim_quote="casi siempre")
+    assert r["next"]["item_code"] == "DIARRHEA_STOOLS_PER_DAY"
+    r = tool(session, "report_red_flag", cid, red_flag_id="RF_DEHYDRATION", verbatim_quote="me mareé al levantarme")
+    assert r["escalated"] and len(fake_pager.sent) == 1
+    assert r["next"]["item_code"] == "DIARRHEA_STOOLS_PER_DAY"
+    assert r["next"]["say"].startswith(content.script("urgent_line", "es"))
+    r = tool(session, "record_answer", cid, item_code="DIARRHEA_STOOLS_PER_DAY", numeric_value=8, verbatim_quote="siete u ocho")
+    assert r["next"]["item_code"] == "MEDS_NEW"  # STOOL_BLOOD and other symptoms dropped
+    assert r["next"]["say"].startswith(content.script("added_to_page", "es"))
+    assert len(fake_pager.sent) == 1  # same escalation, no second page
+    from app.models import Finding
+
+    session.expire_all()
+    f = session.exec(select(Finding).where(Finding.checkin_id == cid, Finding.term == "Diarrhea")).one()
+    assert f.provisional_grade == 3

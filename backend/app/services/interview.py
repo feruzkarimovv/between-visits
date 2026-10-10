@@ -18,8 +18,8 @@ from sqlmodel import Session, select
 from app import content
 from app.audit import write_audit
 from app.ids import new_id
-from app.models import Answer, CheckIn, CheckInPlan, Patient, Study
-from app.services import clinical, drafts, escalation
+from app.models import Answer, CheckIn, CheckInPlan, Finding, Patient, Study
+from app.services import clinical, drafts, escalation, rules
 from app.timeutil import utcnow
 
 log = logging.getLogger("bv.interview")
@@ -117,8 +117,32 @@ def _kind(code: str) -> str:
     return content.item(code).get("kind", "symptom") if content.has_item(code) else "flow"
 
 
-def _drop_symptoms(state: dict[str, Any]) -> None:
-    state["queue"] = [c for c in state["queue"] if _kind(c) not in ("symptom", "followup")]
+def _grading_inputs_to_keep(ctx: "Ctx") -> set[str]:
+    """Follow-ups the CTCAE rules need for the term being asked right now, if it has no grade yet.
+
+    An urgent page drops the remaining symptom questions, but not the number that grades the symptom in
+    progress (e.g. the stool count after "diarrhea almost all the time"): the page has already gone out, and
+    without the number the AE draft has no provisional grade."""
+    st = ctx.state
+    cur = st.get("current")
+    code = cur if cur and _kind(cur) in ("symptom", "followup") else next(
+        (c for c in reversed(st["asked"]) if _kind(c) in ("symptom", "followup")), None)
+    term = content.term_of(code) if code else None
+    if not term:
+        return set()
+    f = ctx.session.exec(select(Finding).where(Finding.checkin_id == ctx.checkin.id, Finding.term == term)).first()
+    if f is not None and f.provisional_grade is not None:
+        return set()
+    needed: set[str] = set()
+    for rule in content.rules_for(term):
+        needed |= rules._cond_items(rule["when"])
+    return {c for c in needed if content.has_item(c) and content.item(c).get("kind") == "followup"}
+
+
+def _drop_symptoms(ctx: "Ctx") -> set[str]:
+    keep = _grading_inputs_to_keep(ctx)
+    ctx.state["queue"] = [c for c in ctx.state["queue"] if _kind(c) not in ("symptom", "followup") or c in keep]
+    return keep
 
 
 def _advance(ctx: Ctx) -> str | None:
@@ -216,9 +240,9 @@ def _respond_to_escalation(ctx: Ctx, outcome: str, level: str, new_ids: list[str
     if outcome in ("new", "raised") and level == "emergency":
         return _close(ctx, f"{line} {ctx.script('closing_after_escalation')}")
     if outcome in ("new", "raised"):
-        _drop_symptoms(ctx.state)
+        keep = _drop_symptoms(ctx)
         cur = ctx.state.get("current")
-        if repeat_current and cur and _kind(cur) in ("symptom", "followup"):
+        if repeat_current and cur and _kind(cur) in ("symptom", "followup") and cur not in keep:
             ctx.state["current"] = None  # dropped, never answered
             return _next_after_answer(ctx, line)
     if repeat_current:

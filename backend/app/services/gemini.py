@@ -29,7 +29,10 @@ log = logging.getLogger("bv.gemini")
 
 @lru_cache
 def term_enum() -> type[enum.Enum]:
-    terms = sorted(set(content.rules_doc()["terms"]) | {t for it in content.items_doc()["items"].values() if (t := it.get("term"))} | {"Chest pain"})
+    # Terms that encode a clinical judgment (cardiac vs non-cardiac) are excluded: the LLM reports, never diagnoses.
+    judged = {"Chest pain - cardiac", "Non-cardiac chest pain"}
+    terms = sorted((set(content.rules_doc()["terms"]) | {t for it in content.items_doc()["items"].values() if (t := it.get("term"))}
+                    | {"Chest pain"}) - judged)
     return enum.Enum("Term", {re.sub(r"\W+", "_", t).upper(): t for t in terms})  # type: ignore[return-value]
 
 
