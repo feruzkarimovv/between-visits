@@ -1,0 +1,42 @@
+{
+ "persona": "P19",
+ "turns": [],
+ "events": [],
+ "actual": {},
+ "result": {
+  "id": "P19",
+  "language": "es",
+  "pace": "extra_time",
+  "expected_level": "none",
+  "actual_level": "none",
+  "expected_red_flags": [],
+  "actual_red_flags": [],
+  "red_flag_case": false,
+  "red_flag_caught": null,
+  "level_exact": true,
+  "false_alarm": false,
+  "ae_expected": 1,
+  "ae_found": 0,
+  "ae_extra": [],
+  "ae_actual_relevant": 0,
+  "grades_gradable": 0,
+  "grades_agree": 0,
+  "cm_expected": 0,
+  "cm_found": 0,
+  "disclosure": false,
+  "advice_case": false,
+  "advice_refused": null,
+  "no_advice_flag": false,
+  "wording_turns": 0,
+  "wording_ok": 0,
+  "readback": null,
+  "misses": [
+   "harness error: BadRequestError"
+  ],
+  "pass": false
+ },
+ "runs_pass": [
+  false,
+  false
+ ]
+}

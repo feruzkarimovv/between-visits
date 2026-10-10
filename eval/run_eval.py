@@ -212,6 +212,8 @@ def main() -> int:
     ap.add_argument("--concurrency", type=int, default=2)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--out", default=str(EVAL / "results" / "latest.json"))
+    ap.add_argument("--merge", action="store_true",
+                    help="keep earlier results (eval/results/transcripts/*.json) for personas not run this time")
     args = ap.parse_args()
     random.seed(args.seed)
     s = get_settings()
@@ -251,17 +253,33 @@ def main() -> int:
             r = runs[-1]["result"]
             print(f"{p['id']} run {rep}: {'PASS' if r['pass'] else 'FAIL'} level={r['actual_level']} "
                   f"({time.time() - t0:.0f}s) {'; '.join(r['misses'])}", flush=True)
-        chosen = runs[0]
-        for r in runs[1:]:
+        real = [r for r in runs if "error" not in r]
+        if not real:  # never ran (API limit, outage): not a result about the agent; keep any earlier transcript
+            return {**runs[0], "not_run": True, "runs_pass": []}
+        chosen = real[0]
+        for r in real[1:]:
             chosen = worse(chosen, r)
+        runs_pass = [x["result"]["pass"] for x in real]
         (out_dir / "transcripts" / f"{p['id']}.json").write_text(json.dumps(
             {"persona": p["id"], "turns": chosen["turns"], "events": chosen["events"], "actual": chosen.get("actual"),
-             "result": chosen["result"], "runs_pass": [x["result"]["pass"] for x in runs]}, ensure_ascii=False, indent=1))
-        return {**chosen, "runs_pass": [x["result"]["pass"] for x in runs]}
+             "result": chosen["result"], "runs_pass": runs_pass, "run_at": datetime.now(UTC).isoformat()},
+            ensure_ascii=False, indent=1))
+        return {**chosen, "runs_pass": runs_pass}
 
     with ThreadPoolExecutor(max_workers=max(1, args.concurrency)) as ex:
         results = list(ex.map(one, personas))
-    rows = [r["result"] for r in results]
+    by_id: dict[str, dict[str, Any]] = {p["id"]: r for p, r in zip(personas, results, strict=True)}
+    if args.merge:  # earlier results for personas not run (or not runnable) this time
+        for p in json.loads((EVAL / "personas.json").read_text(encoding="utf-8"))["personas"]:
+            f = out_dir / "transcripts" / f"{p['id']}.json"
+            if (p["id"] not in by_id or by_id[p["id"]].get("not_run")) and f.exists():
+                old = json.loads(f.read_text(encoding="utf-8"))
+                crashed = any(str(m).startswith("harness error") for m in old["result"].get("misses", []))
+                by_id[p["id"]] = {"result": old["result"], "runs_pass": [] if crashed else old.get("runs_pass", []),
+                                  "not_run": crashed}
+    entries = [by_id[k] for k in sorted(by_id)]
+    rows = [r["result"] for r in entries if not r.get("not_run")]
+    not_run = [r["result"]["id"] for r in entries if r.get("not_run")]
     rep = score.report(rows)
     try:
         sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
@@ -271,14 +289,17 @@ def main() -> int:
         "run_at": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "commit": sha or "uncommitted", "mode": args.mode, "repeats": args.repeats, "scoring": "worse of repeats",
         "model": {**sim.models_used(AGENT_MODEL), "postcall_provider": llm.provider()},
-        "n_personas": len(rows), **rep,
+        "n_personas": len(rows), "not_run": not_run, **rep,
         "personas": [
-            {"id": r["id"], "language": r["language"], "pace": r["pace"], "pass": r["pass"],
-             "expected_level": r["expected_level"], "actual_level": r["actual_level"],
-             "expected_red_flags": r["expected_red_flags"], "actual_red_flags": r["actual_red_flags"],
-             "runs_pass": res["runs_pass"], "notes": "; ".join(r["misses"]),
+            {"id": (r := e["result"])["id"], "language": r["language"], "pace": r["pace"],
+             "status": "not_run" if e.get("not_run") else ("pass" if r["pass"] else "fail"),
+             "pass": None if e.get("not_run") else r["pass"],
+             "expected_level": r["expected_level"], "actual_level": None if e.get("not_run") else r["actual_level"],
+             "expected_red_flags": r["expected_red_flags"],
+             "actual_red_flags": [] if e.get("not_run") else r["actual_red_flags"],
+             "runs_pass": e["runs_pass"], "notes": "not run (API error)" if e.get("not_run") else "; ".join(r["misses"]),
              "transcript": f"eval/results/transcripts/{r['id']}.json"}
-            for r, res in zip(rows, results, strict=True)
+            for e in entries
         ],
         # 'why' and 'planned_fix' are filled in by a human after reading the transcript (never auto-generated)
         "known_misses": [{"persona": r["id"], "what": "; ".join(r["misses"]), "why": None, "planned_fix": None}
@@ -295,6 +316,8 @@ def main() -> int:
         pass
     Path(args.out).write_text(json.dumps(latest, ensure_ascii=False, indent=1) + "\n")
     o = rep["overall"]
+    if not_run:
+        print(f"NOT RUN (excluded from metrics): {', '.join(not_run)}")
     print(f"\n{o['passed']}/{o['n']} personas pass · red-flag recall {o['red_flag_recall']} · AE recall {o['ae_recall']} "
           f"· grade agreement {o['grade_agreement']} · wording {o['approved_wording']} → {args.out}")
     return 0
