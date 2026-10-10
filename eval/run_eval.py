@@ -73,6 +73,8 @@ def with_retry(fn, *a, **kw):  # noqa: ANN001, ANN002, ANN003, ANN201
         try:
             return fn(*a, **kw)
         except genai_errors.APIError as e:
+            if "PerDay" in str(e) or "free_tier" in str(e):
+                raise SystemExit(f"Gemini daily/free-tier quota exhausted; link billing in AI Studio and retry.\n{str(e)[:300]}") from e
             if getattr(e, "code", None) in (429, 500, 503) and attempt < 6:
                 time.sleep(delay + random.random())
                 delay = min(delay * 2, 60)
