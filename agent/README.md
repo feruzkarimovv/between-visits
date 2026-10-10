@@ -23,7 +23,7 @@ uv run --project backend python agent/sync_agent.py --inbound es-extra_time  # +
 python3 agent/test_sync_agent.py                                     # offline rendering checks
 ```
 
-Needs in `.env`: `ELEVENLABS_API_KEY`, `PUBLIC_BASE_URL` (https tunnel URL), `TOOL_SHARED_SECRET`, `ELEVENLABS_VOICE_ID_EN`, `ELEVENLABS_VOICE_ID_ES`; `ELEVENLABS_PHONE_NUMBER_ID` for `--inbound`. Optional: `ELEVENLABS_LLM`, `ELEVENLABS_TTS_MODEL` (defaults in `variants.json`). `--dry-run` uses placeholders for anything missing.
+Needs in `.env`: `ELEVENLABS_API_KEY`, `PUBLIC_BASE_URL` (https tunnel URL), `TOOL_SHARED_SECRET`, `ELEVENLABS_VOICE_ID_EN`, `ELEVENLABS_VOICE_ID_ES`; `ELEVENLABS_PHONE_NUMBER_ID` for `--inbound`. Optional: `ELEVENLABS_LLM`, `ELEVENLABS_TTS_MODEL_EN` / `ELEVENLABS_TTS_MODEL_ES` (defaults per language in `variants.json`). `--dry-run` uses placeholders for anything missing.
 
 What a sync does:
 

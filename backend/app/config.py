@@ -31,7 +31,6 @@ class Settings(BaseSettings):
     elevenlabs_webhook_secret: str = ""
     elevenlabs_phone_number_id: str = ""
     elevenlabs_llm: str = "gemini-3.5-flash"
-    elevenlabs_tts_model: str = "eleven_flash_v2_5"
     elevenlabs_voice_id_en: str = ""
     elevenlabs_voice_id_es: str = ""
 

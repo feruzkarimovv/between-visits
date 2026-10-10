@@ -7,7 +7,7 @@ Verified against ElevenLabs docs and SDKs on Sat Oct 10 2026 (Python `elevenlabs
 1. **Twilio trial accounts won't work** with the native integration (ElevenLabs requires a paid Twilio account; new Twilio trials strip media streams and use non-importable numbers). **And outbound calls to +1 numbers need an approved Primary Compliance Profile** (errors 21216 / 13225 until approved; review can take days; inbound calls aren't documented as blocked). **Upgrade Twilio and submit the profile in the first hour.** Until outbound is cleared, use browser calls or the inbound fallback (§ Inbound fallback). The nurse page never depends on Twilio (§ Paging).
 2. **Turn-taking settings can't be overridden per call**, so "extra time" must be a separate agent. We use **four agents**: `en-standard`, `en-extra_time`, `es-standard`, `es-extra_time`, generated from one template.
 3. **Agents created through the API don't get `end_call` automatically.** Add it under `built_in_tools`.
-4. **The default TTS model changed on Oct 5 2026.** Always pin `tts.model_id` (we use `eleven_flash_v2_5`, ~75 ms, supports Spanish).
+4. **The default TTS model changed on Oct 5 2026.** Always pin `tts.model_id`, per language: English agents must use an English-only model (`eleven_flash_v2`; the API rejects `eleven_flash_v2_5` for `language: en`, verified Oct 10), Spanish agents use `eleven_flash_v2_5` (~75 ms, multilingual).
 5. **Webhook tool errors are hidden from the LLM by default.** Set `tool_error_handling_mode: "passthrough"` on every tool (our tools return 200 anyway).
 6. **`simulate-conversation` is deprecated and removed Oct 31 2026.** If you use ElevenLabs-side tests, use the Tests API (§ Testing).
 
@@ -45,8 +45,9 @@ All four come from `agent/agent.template.json` + `agent/variants.json`. Only the
 | `agent.language` | `en` | `es` |
 | `tts.voice_id` | `$ELEVENLABS_VOICE_ID_EN` | `$ELEVENLABS_VOICE_ID_ES` (native Latin American Spanish voice) |
 | `agent.first_message` | `data/scripts.json` `first_message.en` | `first_message.es` |
+| `tts.model_id` | `eleven_flash_v2` (English agents must use turbo/flash v2) | `eleven_flash_v2_5` |
 
-Same for all: `llm: "gemini-3.5-flash"`, `temperature: 0`, `tts.model_id: "eleven_flash_v2_5"`, `disable_first_message_interruptions: true` (older patients say "Hello?" over the greeting), the prompt from `agent/prompt.md`.
+Same for all: `llm: "gemini-3.5-flash"`, `temperature: 0`, `disable_first_message_interruptions: true` (older patients say "Hello?" over the greeting), the prompt from `agent/prompt.md`.
 
 Keep barge-in on (patients must be able to say "¿Cómo?"): leave `"interruption"` in `conversation.client_events` (it is there by default; to change it you GET the agent, edit the list and PATCH it back).
 
@@ -276,4 +277,4 @@ Recorded from a real call (WS1 V6) and played back by `backend/app/services/repl
 
 - Write emergency numbers digit by digit in `data/scripts.json` ("9-1-1", "9-8-8") so TTS doesn't say "nine hundred eleven".
 - Spanish numbers in `say` text should be words ("cinco minutos").
-- Pin `tts.model_id`; never use `eleven_flash_v2` or `eleven_turbo_v2` (English only).
+- Pin `tts.model_id`; `eleven_flash_v2` / `eleven_turbo_v2` are English only, so never on the Spanish agents (and required on the English ones).

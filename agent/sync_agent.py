@@ -241,7 +241,7 @@ class Sources:
             "LLM": env("ELEVENLABS_LLM") or self.variants["llm"],
             "TOOL_IDS": list(tool_ids),
             "BACKUP_LLM_ORDER": list(self.variants["backup_llm_order"]),
-            "TTS_MODEL_ID": env("ELEVENLABS_TTS_MODEL") or self.variants["tts_model_id"],
+            "TTS_MODEL_ID": env(f"ELEVENLABS_TTS_MODEL_{lang.upper()}") or self.variants["tts_model_by_language"][lang],
             "VOICE_ID": voice_id,
             "TTS_SPEED": float(pace_cfg["tts_speed"]),
             "TURN": pace_cfg["turn"],
