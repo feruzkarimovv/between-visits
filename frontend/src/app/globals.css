@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (docs/06-frontend.md): neutral grays, one accent (teal),
+ * semantic colors reserved for state:
+ *   emergency = red · urgent / grade >= 3 = amber · callback / task = blue
+ *   done / acknowledged = green · AI-generated = violet outline
+ */
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-accent-50: #f0fdfa;
+  --color-accent-100: #ccfbf1;
+  --color-accent-200: #99f6e4;
+  --color-accent-600: #0d9488;
+  --color-accent-700: #0f766e;
+  --color-accent-800: #115e59;
+  --color-accent-900: #134e4a;
+
+  --color-surface: #ffffff;
+  --color-canvas: #f6f7f9;
+  --color-line: #e3e6ea;
+  --color-ink: #111827;
+  --color-ink-muted: #4b5563;
+  --color-ink-subtle: #6b7280;
+
+  --color-sponsor-900: #1e1b4b;
+  --color-sponsor-800: #272463;
+  --color-sponsor-50: #f5f5ff;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus for keyboard users everywhere. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-accent-600);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Stable numbers: counters and clocks don't jitter while polling. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes bv-flash {
+  0% {
+    background-color: #fef3c7;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.bv-highlight {
+  animation: bv-flash 2.4s ease-out;
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+@keyframes bv-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bv-enter {
+  animation: bv-enter 0.35s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-enter,
+  .bv-highlight {
+    animation: none;
+  }
+}
