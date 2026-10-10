@@ -1,9 +1,13 @@
 {
-  "_about": "Four agent variants generated from agent/agent.template.json by agent/sync_agent.py. Turn-taking can't be overridden per call in ElevenLabs, so pace needs separate agents. The backend picks the variant '{language}-{pace}' from agent/agents.lock.json. TTS model is pinned per language: ElevenLabs requires English agents to use an English-only turbo/flash v2 model (API error 'English Agents must use turbo or flash v2', Oct 10 2026); Spanish needs the multilingual eleven_flash_v2_5.",
+  "_about": "Four agent variants generated from agent/agent.template.json by agent/sync_agent.py. Turn-taking can't be overridden per call in ElevenLabs, so pace needs separate agents. The backend picks the variant '{language}-{pace}' from agent/agents.lock.json. TTS model is pinned per language: ElevenLabs requires English agents to use an English-only turbo/flash v2 model (API error 'English Agents must use turbo or flash v2', Oct 10 2026); Spanish needs the multilingual eleven_flash_v2_5. Set ELEVENLABS_LLM to switch the agent LLM (e.g. claude-sonnet-5-5); backup_llm_order_claude is used when it is a Claude model so fallbacks stay in the same family as the evaluation.",
   "llm": "gemini-3.5-flash",
   "backup_llm_order": [
     "gemini-3.5-flash-lite",
     "gemini-2.5-flash"
+  ],
+  "backup_llm_order_claude": [
+    "claude-sonnet-5",
+    "claude-haiku-4-5"
   ],
   "tts_model_by_language": {
     "en": "eleven_flash_v2",

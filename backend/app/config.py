@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     gemini_model_long: str = "gemini-3.8-flash"
     gemini_agent_sim_model: str = "gemini-3.5-flash"
 
+    # Claude (Anthropic API): post-call pipeline, SAE narratives, evaluation
+    llm_provider: str = "auto"  # auto | anthropic | gemini | fake
+    anthropic_api_key: str = ""
+    claude_model_fast: str = "claude-opus-5-5"  # extraction, translation
+    claude_model_long: str = "claude-opus-5-5"  # safety net, narratives
+
     # Twilio
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""

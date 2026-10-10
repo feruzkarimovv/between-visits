@@ -153,3 +153,27 @@ def test_postcall_crash_escalates(client, session, fake_pager, monkeypatch):
     escs = session.exec(select(Escalation).where(Escalation.checkin_id == c.id)).all()
     assert [e.level for e in escs] == ["urgent"] and escs[0].reason == "post_call_safety_net"
     assert len(fake_pager.sent) == 1 and session.get(CheckIn, c.id).postcall_status == "failed"
+
+
+def test_llm_provider_selection(monkeypatch):
+    from app.config import get_settings
+    from app.services import gemini, llm
+
+    s = get_settings()
+    gemini.set_fake(False)
+    try:
+        for demo, prov, ak, gk, want in [
+            (True, "auto", "a", "g", "fake"),
+            (False, "auto", "a", "g", "anthropic"),
+            (False, "auto", "", "g", "gemini"),
+            (False, "auto", "", "", "fake"),
+            (False, "gemini", "a", "g", "gemini"),
+            (False, "anthropic", "", "g", "fake"),
+        ]:
+            monkeypatch.setattr(s, "demo_mode", demo)
+            monkeypatch.setattr(s, "llm_provider", prov)
+            monkeypatch.setattr(s, "anthropic_api_key", ak)
+            monkeypatch.setattr(s, "gemini_api_key", gk)
+            assert llm.provider() == want, (demo, prov, ak, gk)
+    finally:
+        gemini.set_fake(True)

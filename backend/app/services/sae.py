@@ -15,7 +15,7 @@ from app.audit import write_audit
 from app.errors import ApiError
 from app.models import CheckIn, DraftEntry, Escalation, Patient, SAEReport, Study
 from app.schemas import SponsorInboxItem, ValidCaseChecks
-from app.services import gemini
+from app.services import gemini, llm
 from app.timeutil import ensure_utc, iso, utcnow
 
 log = logging.getLogger("bv.sae")
@@ -84,7 +84,7 @@ def create_for(session: Session, d: DraftEntry, user: str) -> SAEReport:
     payload = build_payload(session, d, user, aware, due)
     quotes = [ev.get("quote", "") for ev in d.evidence or []]
     try:
-        narrative = gemini.draft_narrative(payload, quotes)
+        narrative = llm.draft_narrative(payload, quotes)
     except Exception as e:  # noqa: BLE001
         log.warning("narrative_fallback draft_id=%s error=%r", d.id, e)
         narrative = gemini.template_narrative(payload)

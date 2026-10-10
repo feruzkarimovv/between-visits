@@ -9,6 +9,8 @@ os.environ.update(
         "DEMO_MODE": "0",
         "APP_ENV": "dev",
         "GEMINI_API_KEY": "",
+        "ANTHROPIC_API_KEY": "",
+        "LLM_PROVIDER": "auto",
         "ELEVENLABS_API_KEY": "",
         "ELEVENLABS_WEBHOOK_SECRET": "whsec-test",
         "PAGER_CHANNEL": "console",

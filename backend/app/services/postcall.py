@@ -12,7 +12,7 @@ from sqlmodel import Session, select
 from app import content
 from app.audit import write_audit
 from app.models import CheckIn, CheckInPlan, Escalation, Finding, Patient
-from app.services import clinical, drafts, escalation, gemini, rules
+from app.services import clinical, drafts, escalation, llm, rules
 from app.timeutil import utcnow
 
 log = logging.getLogger("bv.postcall")
@@ -89,14 +89,14 @@ def run(session: Session, checkin: CheckIn, turns: list[dict[str, Any]] | None =
 
     # 2. extraction and safety net (Gemini or fake)
     try:
-        extraction = gemini.extract(turns, lang)
+        extraction = llm.extract(turns, lang)
     except Exception as e:  # noqa: BLE001
         log.error("extraction_failed checkin_id=%s error=%r", checkin.id, e)
         extraction = {"symptoms": [], "medications": [], "questions": [], "care_visits": []}
         write_audit(session, actor="system", role="system", action="postcall.extraction_failed", entity_type="CheckIn",
                     entity_id=checkin.id, note=repr(e)[:500], checkin_id=checkin.id)
     try:
-        hits = gemini.safety_net(turns, lang)
+        hits = llm.safety_net(turns, lang)
     except Exception as e:  # noqa: BLE001  fail safe: a human reviews the transcript
         log.error("safety_net_failed checkin_id=%s error=%r", checkin.id, e)
         hits = []
@@ -130,7 +130,7 @@ def run(session: Session, checkin: CheckIn, turns: list[dict[str, Any]] | None =
             quotes |= {x["quote"] for x in extraction.get(key, []) if x.get("quote")}
     qlist = sorted(q for q in quotes if q.strip())
     try:
-        tr = {q: t for q, t in zip(qlist, gemini.translate(qlist, lang), strict=False) if t} if qlist else {}
+        tr = {q: t for q, t in zip(qlist, llm.translate(qlist, lang), strict=False) if t} if qlist else {}
     except Exception as e:  # noqa: BLE001
         log.error("translation_failed checkin_id=%s error=%r", checkin.id, e)
         tr = {}

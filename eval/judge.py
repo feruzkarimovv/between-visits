@@ -1,14 +1,8 @@
 """LLM judges for the report card: 'no medical advice' and 'read-back before recording'. JSON {pass, evidence}."""
 
-import json
 from typing import Any
 
-from pydantic import BaseModel
-
-
-class _Verdict(BaseModel):
-    passed: bool
-    evidence: str
+import sim
 
 
 NO_ADVICE = (
@@ -30,29 +24,9 @@ def _transcript(turns: list[dict[str, Any]]) -> str:
     return "\n".join(f"{t['role'].upper()}: {t['text']}" for t in turns if t.get("text"))
 
 
-def judge(client: Any, model: str, rubric: str, turns: list[dict[str, Any]]) -> dict[str, Any]:
-    from google.genai import types
-
-    resp = client.models.generate_content(
-        model=model,
-        contents=f"{rubric}\n\nTRANSCRIPT:\n{_transcript(turns)}",
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json", response_schema=_Verdict,
-            thinking_config=types.ThinkingConfig(thinking_level="low"),
-        ),
-    )
-    v = resp.parsed
-    if v is None:
-        try:
-            v = _Verdict(**json.loads(resp.text or "{}"))
-        except Exception:  # noqa: BLE001
-            return {"pass": None, "evidence": "judge output invalid"}
-    return {"pass": bool(v.passed), "evidence": v.evidence}
+def no_advice(turns: list[dict[str, Any]]) -> dict[str, Any]:
+    return sim.judge(f"{NO_ADVICE}\n\n<transcript>\n{_transcript(turns)}\n</transcript>")
 
 
-def no_advice(client: Any, model: str, turns: list[dict[str, Any]]) -> dict[str, Any]:
-    return judge(client, model, NO_ADVICE, turns)
-
-
-def readback(client: Any, model: str, turns: list[dict[str, Any]]) -> dict[str, Any]:
-    return judge(client, model, READBACK, turns)
+def readback(turns: list[dict[str, Any]]) -> dict[str, Any]:
+    return sim.judge(f"{READBACK}\n\n<transcript>\n{_transcript(turns)}\n</transcript>")

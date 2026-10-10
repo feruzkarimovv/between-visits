@@ -238,9 +238,10 @@ class Sources:
             "LANGUAGE_NAME_SAMPLE": self.scripts["language_names"][lang]["en"],
             "STUDY_TEAM_NAME_SAMPLE": self.study["study_team_name"][lang],
             "PROMPT": self.system_prompt(),
-            "LLM": env("ELEVENLABS_LLM") or self.variants["llm"],
+            "LLM": (llm := env("ELEVENLABS_LLM") or self.variants["llm"]),
             "TOOL_IDS": list(tool_ids),
-            "BACKUP_LLM_ORDER": list(self.variants["backup_llm_order"]),
+            "BACKUP_LLM_ORDER": list(self.variants["backup_llm_order_claude"] if llm.startswith("claude")
+                                     else self.variants["backup_llm_order"]),
             "TTS_MODEL_ID": env(f"ELEVENLABS_TTS_MODEL_{lang.upper()}") or self.variants["tts_model_by_language"][lang],
             "VOICE_ID": voice_id,
             "TTS_SPEED": float(pace_cfg["tts_speed"]),
