@@ -2,6 +2,8 @@
 
 Numbers in [brackets] must come from your real runs. Never script them.
 
+> **Decision (Sat Oct 10, ~8 PM):** LLMs moved from Gemini to Claude (Anthropic API credits): voice agent on Claude Sonnet 5.5 via ElevenLabs; post-call pipeline Haiku 5.5 / Opus 5.5; evaluation agent = same model as the voice agent.
+>
 > **Decision (Sat Oct 10, 6:30 PM):** no Twilio for the hackathon. Patient calls run in the browser (same ElevenLabs agent, same tools, same pipeline); the nurse page is ntfy and needs no Twilio. Phone calling stays in the code (`make sync-agent`, `ELEVENLABS_PHONE_NUMBER_ID`) for a real deployment.
 
 ## 30-second pitch (mentors, hallway, Devpost tagline source)
@@ -18,7 +20,7 @@ Numbers in [brackets] must come from your real runs. Never script them.
 | 1:25–1:45 | Nurse's phone buzzes on camera with an urgent push; one tap on Acknowledge; panel turns green | "The on-call nurse is paged in seconds, told Rosa prefers Spanish, and acknowledges in [N] seconds. The agent never gives medical advice. Its job is to get the right human, fast." |
 | 1:45–2:15 | `/review`: drafts with Spanish quotes + labeled English translation; confirm; investigator marks serious (hospitalized for IV fluids); `/sae` 24-hour clock; `/sponsor` inbox receives it | "Every entry is a draft with the exact words and second it came from. When the investigator marks it serious, the sponsor report is drafted and the 24-hour clock starts. What used to surface at the next visit reaches the sponsor the same day." |
 | 2:15–2:45 | `/report-card`: metrics, equity table EN vs ES and standard vs extra time, known miss, validation badge | "We test it on 20 simulated patients on every change: chest pain, a caregiver answering, someone asking for medical advice. It catches [x of y] urgent cases in Spanish and in English. Here's one case we still get wrong, and our fix." |
-| 2:45–3:00 | Architecture strip, GitHub, MIT, `make demo` | "Between Visits. Open source, runs from a clean clone, built on ElevenLabs and Gemini. No symptom waits for the next visit, in any language, at any pace." |
+| 2:45–3:00 | Architecture strip, GitHub, MIT, `make demo` | "Between Visits. Open source, runs from a clean clone, built on ElevenLabs and Claude. No symptom waits for the next visit, in any language, at any pace." |
 
 Recording tips: record a real browser call (not dramatized), use a quiet room and a headset or good mic for Rosa's side, add subtitles for Spanish audio, keep the dashboard at 125% zoom, record screen at 1080p. Upload as unlisted YouTube.
 
@@ -58,12 +60,12 @@ Backup: if the call fails, say "Here's the recorded call from this morning" and 
 - **Who uses it?** The site's study team. Sponsors could provide it to sites the way they provide patient apps today.
 - **What was technically hard?** Live voice with mid-conversation tool calls, a backend-driven interview so the AI can't skip or invent questions, predictable escalation, and the simulated-patient evaluation.
 - **Why not NCI's PRO-CTCAE questions directly?** NCI's terms don't allow redistributing or modifying them in an open-source repo, so we wrote our own and built a local plug-in for studies that register with NCI.
-- **What did you build vs use?** Used ElevenLabs, Gemini, Twilio. Built the interview engine, rules, escalation and paging, post-call pipeline, review and sponsor workflow, evaluation harness, validation pack.
+- **What did you build vs use?** Used ElevenLabs and Claude (Anthropic API). Built the interview engine, rules, escalation and paging, post-call pipeline, review and sponsor workflow, evaluation harness, validation pack.
 
 ## Devpost submission (by 9:30 AM)
 
 - Track: **Social Good**. Superlatives: **Regeneron: Best Clinical Trial Solution** and **Use of ElevenLabs**.
 - Links: GitHub repo (public, MIT), YouTube video, deck (PDF or Slides), optional live demo URL.
-- "Built with": ElevenLabs, Gemini, Twilio, FastAPI, Next.js, SQLite, TypeScript, Python.
+- "Built with": ElevenLabs, Claude (Anthropic API), FastAPI, Next.js, SQLite, TypeScript, Python.
 - Add all four teammates as contributors.
 - After awards (if placed): each member fills `regn.link/jedi` with the Devpost link.

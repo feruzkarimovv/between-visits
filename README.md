@@ -19,17 +19,17 @@ Between Visits is a voice agent that phones cancer-trial patients in the days af
 
 ```mermaid
 flowchart LR
-  P(("Patient phone")) <-->|"call (EN/ES, standard or extra time)"| EL["ElevenLabs agent<br/>LLM: Gemini"]
+  P(("Patient (browser call)")) <-->|"voice (EN/ES, standard or extra time)"| EL["ElevenLabs agent<br/>LLM: Claude Sonnet"]
   EL -->|"server tools: record_answer, report_red_flag, ..."| BE["Backend (FastAPI)<br/>interview engine + CTCAE rules"]
   BE -->|"approved next question"| EL
   BE -->|"urgent push + Acknowledge"| N(("Nurse phone (ntfy)"))
-  EL -->|"post-call webhook (HMAC)"| PC["Post-call pipeline<br/>Gemini: extraction, safety net, translation"]
+  EL -->|"post-call webhook (HMAC)"| PC["Post-call pipeline<br/>Claude: extraction, safety net, translation"]
   PC --> BE
   BE <--> FE["Dashboard (Next.js)<br/>live call · review · SAE · sponsor inbox · report card"]
 ```
 
 1. **Approved plan.** The study team approves a check-in plan: plain-language symptom questions written in English and Spanish, red flags taken from the drug's patient guide, and calls on days 1, 3 and 7 after each dose.
-2. **The call.** An ElevenLabs agent running on Gemini says it is an AI, offers a person, and asks only the questions the backend hands it, one at a time. Four variants cover English/Spanish × standard/extra time; the extra-time variants speak slower, wait longer and read every answer back.
+2. **The call.** An ElevenLabs voice agent running on Claude says it is an AI, offers a person, and asks only the questions the backend hands it, one at a time. Four variants cover English/Spanish × standard/extra time; the extra-time variants speak slower, wait longer and read every answer back.
 3. **Rules grade.** The agent only reports what it heard (an option code or a number plus the exact quote). Fixed CTCAE v5 rules turn answers into *provisional* grades, and a fixed red-flag table decides escalation. Urgent findings page the nurse before the agent says its next word.
 4. **After the call.** The transcript, extracted symptoms and medications, a safety-net scan for red flags the call missed, and labeled English translations become drafts with evidence (quote, language, second in the call, source).
 5. **Humans decide.** The coordinator confirms, edits or rejects each draft. The investigator marks seriousness and relatedness. A serious event becomes a CIOMS-style sponsor report with a 24-hour clock from the moment the site became aware, and lands in a mock sponsor safety inbox.
@@ -50,7 +50,7 @@ flowchart LR
 
 ## Evaluation
 
-The safety report card runs 20 simulated patients (English/Spanish × standard/extra time, 5 per cell) through the real backend: Gemini plays the agent with the exact production prompt and tools, another Gemini plays the patient, then the production post-call pipeline runs and the result is scored against an answer key. Every persona runs twice and the worse run counts.
+The safety report card runs 20 simulated patients (English/Spanish × standard/extra time, 5 per cell) through the real backend: Claude plays the agent with the same model, prompt and tools as the production voice agent, another Claude model plays the patient, then the production post-call pipeline runs and the result is scored against an answer key. Every persona runs twice and the worse run counts.
 
 <!-- Filled from eval/results/latest.json after `make eval`. Never type numbers that didn't come from a run. -->
 _Results pending the first full run (`make eval`)._
@@ -69,7 +69,7 @@ make demo                   # seeds, starts backend :8000 + dashboard :3000 with
 
 Open http://localhost:3000 → **Today** → **Replay scenario** → *Rosa, Spanish, extra time, urgent diarrhea*. The replay drives the same service functions as a live call: answers, provisional grade 3, the urgent page (printed to the backend console in demo mode), acknowledgment, transcript and drafts. Then review the drafts, switch the demo role to Investigator, mark the diarrhea serious, sign and send the report to the sponsor inbox.
 
-**Full mode (real calls):** needs ElevenLabs, Gemini, a public URL and the ntfy app on the nurse's phone. Calls run in the browser; phone calls additionally need a Twilio number imported into ElevenLabs.
+**Full mode (real calls):** needs ElevenLabs, an Anthropic API key, a public URL and the ntfy app on the nurse's phone. Calls run in the browser; phone calls additionally need a Twilio number imported into ElevenLabs.
 
 ```bash
 make tunnel                                   # ngrok static domain → PUBLIC_BASE_URL
@@ -84,7 +84,7 @@ See `docs/04-voice-agent.md` for the Twilio, ElevenLabs and paging setup, includ
 |---|---|
 | `make test` | backend tests + lint, data validation, agent sync offline tests, frontend typecheck + lint |
 | `make validate` | requirement ↔ test traceability (`validation/traceability.md`, `summary.json`) |
-| `make eval` | 20-persona safety report card → `eval/results/latest.json` (needs `GEMINI_API_KEY`) |
+| `make eval` | 20-persona safety report card → `eval/results/latest.json` (needs `ANTHROPIC_API_KEY`) |
 | `make types` | regenerate frontend API types from the backend's OpenAPI |
 
 ## Repository map
