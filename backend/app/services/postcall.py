@@ -231,6 +231,8 @@ def run(session: Session, checkin: CheckIn, turns: list[dict[str, Any]] | None =
 def apply_call_metadata(checkin: CheckIn, data: dict[str, Any], turns: list[dict[str, Any]]) -> None:
     meta = data.get("metadata") or {}
     analysis = data.get("analysis") or {}
+    if not isinstance(meta, dict):
+        meta = {}
     checkin.transcript = turns
     checkin.duration_s = meta.get("call_duration_secs")
     checkin.termination_reason = meta.get("termination_reason")
@@ -240,8 +242,9 @@ def apply_call_metadata(checkin: CheckIn, data: dict[str, Any], turns: list[dict
         "data_collection_results": analysis.get("data_collection_results"),
         "call_successful": analysis.get("call_successful"),
     }
-    if meta.get("phone_call", {}).get("call_sid"):
-        checkin.twilio_call_sid = checkin.twilio_call_sid or meta["phone_call"]["call_sid"]
+    phone = meta.get("phone_call") or {}  # null on browser calls
+    if phone.get("call_sid"):
+        checkin.twilio_call_sid = checkin.twilio_call_sid or phone["call_sid"]
     now = utcnow()
     checkin.ended_at = checkin.ended_at or now
     if checkin.started_at is None and meta.get("start_time_unix_secs"):

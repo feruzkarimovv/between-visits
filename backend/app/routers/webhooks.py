@@ -77,10 +77,10 @@ def process_post_call(data: dict[str, Any]) -> None:
         if c.postcall_status in ("processing", "done"):
             log.info("post_call_duplicate checkin_id=%s conversation_id=%s", c.id, data.get("conversation_id"))
             return
-        turns = postcall.turns_from_elevenlabs(data, c.language)
-        postcall.apply_call_metadata(c, data, turns)
-        s.commit()
         try:
+            turns = postcall.turns_from_elevenlabs(data, c.language)
+            postcall.apply_call_metadata(c, data, turns)
+            s.commit()
             postcall.run(s, c, turns)
             s.commit()
         except Exception as e:  # noqa: BLE001  fail safe: page a human to review this call

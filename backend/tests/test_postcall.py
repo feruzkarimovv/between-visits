@@ -117,3 +117,39 @@ def test_call_initiation_failure_sets_no_answer(client, session):
 
 
 _ = Path
+
+
+@pytest.mark.req("REQ-012")
+def test_browser_call_payload_with_null_fields(client, session, fake_pager):
+    """Browser (WebRTC) calls send phone_call: null; a crash here must never be silent."""
+    ev = load("post_call_rosa.json")
+    ev["data"]["metadata"]["phone_call"] = None
+    ev["data"]["analysis"] = None
+    ev["data"]["conversation_id"] = "conv_browser"
+    c = session.exec(select(CheckIn).where(CheckIn.patient_id == "pat_rosa")).one()
+    c.el_conversation_id = "conv_browser"
+    session.add(c)
+    session.commit()
+    assert post(client, ev).status_code == 200
+    session.expire_all()
+    c = session.get(CheckIn, c.id)
+    assert c.postcall_status == "done" and c.status == "completed" and c.transcript
+
+
+def test_postcall_crash_escalates(client, session, fake_pager, monkeypatch):
+    from app.services import postcall
+
+    def boom(*a, **k):
+        raise RuntimeError("pipeline bug")
+
+    monkeypatch.setattr(postcall, "apply_call_metadata", boom)
+    ev = load("post_call_rosa.json")
+    c = session.exec(select(CheckIn).where(CheckIn.patient_id == "pat_rosa")).one()
+    c.el_conversation_id = ev["data"]["conversation_id"]
+    session.add(c)
+    session.commit()
+    assert post(client, ev).status_code == 200
+    session.expire_all()
+    escs = session.exec(select(Escalation).where(Escalation.checkin_id == c.id)).all()
+    assert [e.level for e in escs] == ["urgent"] and escs[0].reason == "post_call_safety_net"
+    assert len(fake_pager.sent) == 1 and session.get(CheckIn, c.id).postcall_status == "failed"
