@@ -1,11 +1,11 @@
 {
- "generated_at": "2026-10-10T20:59:21Z",
- "commit": "uncommitted",
+ "generated_at": "2026-10-10T23:23:12Z",
+ "commit": "20be77d",
  "requirements": 15,
  "requirements_passing": 15,
- "tests_total": 82,
- "tests_passed": 82,
- "tests_linked": 63,
+ "tests_total": 86,
+ "tests_passed": 86,
+ "tests_linked": 65,
  "pytest_exit_code": 0,
  "rows": [
   {
@@ -59,6 +59,7 @@
    "risk": "high",
    "text": "Provisional grades are produced only by the CTCAE rule table in data/ctcae_rules.json.",
    "tests": [
+    "tests/test_interview.py::test_urgent_keeps_the_count_that_grades_the_symptom_in_progress",
     "tests/test_rules.py::test_grade_vectors[worst 4]",
     "tests/test_rules.py::test_grade_vectors[worst 5]",
     "tests/test_rules.py::test_grade_vectors[worst 7 (6 over)]",
@@ -81,8 +82,8 @@
     "tests/test_rules.py::test_grade_vectors[dizziness mild]",
     "tests/test_rules.py::test_grade_vectors[nausea often]"
    ],
-   "passed": 21,
-   "total": 21,
+   "passed": 22,
+   "total": 22,
    "status": "PASS"
   },
   {
@@ -199,10 +200,11 @@
    "risk": "high",
    "text": "The post-call safety net escalates red flags that were mentioned in the transcript but missed during the call.",
    "tests": [
-    "tests/test_postcall.py::test_safety_net_catches_missed_chest_pain"
+    "tests/test_postcall.py::test_safety_net_catches_missed_chest_pain",
+    "tests/test_postcall.py::test_browser_call_payload_with_null_fields"
    ],
-   "passed": 1,
-   "total": 1,
+   "passed": 2,
+   "total": 2,
    "status": "PASS"
   },
   {
