@@ -2,6 +2,8 @@
 
 Numbers in [brackets] must come from your real runs. Never script them.
 
+> **Decision (Sat Oct 10, 6:30 PM):** no Twilio for the hackathon. Patient calls run in the browser (same ElevenLabs agent, same tools, same pipeline); the nurse page is ntfy and needs no Twilio. Phone calling stays in the code (`make sync-agent`, `ELEVENLABS_PHONE_NUMBER_ID`) for a real deployment.
+
 ## 30-second pitch (mentors, hallway, Devpost tagline source)
 
 "Regeneron's team told us the patients trials struggle with most are the ones who don't speak English and the ones who need more time. Between Visits is a voice agent that calls cancer-trial patients in the days after a dose, in their language and at their pace. It asks plain-language symptom questions, the National Cancer Institute's CTCAE rules grade the answers, and anything urgent pages the on-call nurse within seconds. The study team gets draft side-effect entries with the patient's own words as evidence, and serious events go to the sponsor with the 24-hour clock running. The AI listens, rules grade, humans decide."
@@ -18,14 +20,14 @@ Numbers in [brackets] must come from your real runs. Never script them.
 | 2:15–2:45 | `/report-card`: metrics, equity table EN vs ES and standard vs extra time, known miss, validation badge | "We test it on 20 simulated patients on every change: chest pain, a caregiver answering, someone asking for medical advice. It catches [x of y] urgent cases in Spanish and in English. Here's one case we still get wrong, and our fix." |
 | 2:45–3:00 | Architecture strip, GitHub, MIT, `make demo` | "Between Visits. Open source, runs from a clean clone, built on ElevenLabs and Gemini. No symptom waits for the next visit, in any language, at any pace." |
 
-Recording tips: record a real call (not dramatized), use a quiet room and a phone on speaker into a good mic, add subtitles for Spanish audio, keep the dashboard at 125% zoom, record screen at 1080p. Upload as unlisted YouTube.
+Recording tips: record a real browser call (not dramatized), use a quiet room and a headset or good mic for Rosa's side, add subtitles for Spanish audio, keep the dashboard at 125% zoom, record screen at 1080p. Upload as unlisted YouTube.
 
 ## Live demo at the judging table (about 2 minutes)
 
-Roles: **A** pitches, **B** plays Rosa (phone on speaker), **C** drives the dashboard and holds the nurse phone, **D** answers technical questions.
+Roles: **A** pitches, **B** plays Rosa (headset plugged into the dashboard laptop: the browser call runs where it's started), **C** drives the dashboard and holds the nurse phone, **D** answers technical questions.
 
 1. A (15 s): the Regeneron feedback line + Rosa in one sentence. "Let's call her."
-2. C clicks **Call phone** (or **Call in browser**, or B calls the study line if outbound calling isn't cleared). B's phone rings. Run the call, answering quickly; let the judge hear the disclosure, one patient-paced repeat, and the red flag (≈ 60 s).
+2. C clicks **Call in browser** on Rosa's row; B answers on the headset plugged into that laptop. (Phone calling is built but off: Twilio's outbound approval wouldn't clear before judging.) Run the call, answering quickly; let the judge hear the disclosure, one patient-paced repeat, and the red flag (≈ 60 s).
 3. C holds up the nurse phone with the urgent push, taps Acknowledge, shows the green acknowledgment, then the review queue and sponsor clock (≈ 25 s).
 4. A (15 s): "The AI listens, rules grade, humans decide. And we prove it" → report card equity table.
 5. A: "Want to try to break it? Ask it for medical advice." Hand the judge the browser call (headset).

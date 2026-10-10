@@ -112,7 +112,13 @@ export default function TodayPage() {
         <CardHeader
           title="Check-ins due today"
           icon={<CalendarCheck className="size-4 text-ink-subtle" aria-hidden />}
-          subtitle={demoMode ? "Demo mode: outbound phone calls are off. Use a browser call or replay a recorded scenario." : "Call by phone, or run the same check-in in the browser."}
+          subtitle={
+            demoMode
+              ? "Demo mode: outbound phone calls are off. Use a browser call or replay a recorded scenario."
+              : health.data?.phone_calls_enabled
+                ? "Call by phone, or run the same check-in in the browser."
+                : "Check-ins run in the browser with the same voice agent. Phone calling is off until a phone number is connected."
+          }
         />
         {today.isPending ? (
           <LoadingRows rows={5} />
@@ -254,7 +260,7 @@ function TodayTableRow({
             </Button>
           ) : (
             <>
-              {!demoMode ? (
+              {!demoMode && !phoneNote ? (
                 <span title={phoneNote ?? undefined}>
                   <Button
                     size="sm"

@@ -69,7 +69,7 @@ make demo                   # seeds, starts backend :8000 + dashboard :3000 with
 
 Open http://localhost:3000 → **Today** → **Replay scenario** → *Rosa, Spanish, extra time, urgent diarrhea*. The replay drives the same service functions as a live call: answers, provisional grade 3, the urgent page (printed to the backend console in demo mode), acknowledgment, transcript and drafts. Then review the drafts, switch the demo role to Investigator, mark the diarrhea serious, sign and send the report to the sponsor inbox.
 
-**Full mode (real calls):** needs ElevenLabs (agents + an imported Twilio number), Gemini, a public URL and the ntfy app on the nurse's phone.
+**Full mode (real calls):** needs ElevenLabs, Gemini, a public URL and the ntfy app on the nurse's phone. Calls run in the browser; phone calls additionally need a Twilio number imported into ElevenLabs.
 
 ```bash
 make tunnel                                   # ngrok static domain → PUBLIC_BASE_URL
@@ -105,6 +105,7 @@ See `docs/04-voice-agent.md` for the Twilio, ElevenLabs and paging setup, includ
 - Provisional grades cover only what can be asked by phone (stool counts, temperature, breathlessness by activity level, fatigue relieved by rest, mild dizziness); everything else is "needs clinician".
 - English and Spanish only. Spanish wording needs review by a fluent clinical translator before real use.
 - The simulated-patient evaluation uses an LLM patient and an LLM agent in text mode; voice behavior (pauses, interruptions, speech recognition) is checked with a handful of manual calls only.
+- Phone calling (ElevenLabs + Twilio) is implemented but not connected for the hackathon: Twilio's US outbound compliance approval takes days. The demo uses browser calls with the same agent; nurse paging (ntfy) doesn't depend on Twilio.
 - No authentication (a visible demo role switch), no EDC/EHR integration, SQLite.
 - ntfy.sh delivery is best effort; the dashboard acknowledgment and re-page loop are the backstop.
 
