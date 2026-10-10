@@ -26,7 +26,7 @@ def configure_engine(url: str | None = None) -> Engine:
         def _pragmas(dbapi_conn, _):  # noqa: ANN001
             cur = dbapi_conn.cursor()
             cur.execute("PRAGMA journal_mode=WAL")
-            cur.execute("PRAGMA busy_timeout=5000")
+            cur.execute("PRAGMA busy_timeout=30000")
             cur.close()
 
     return _engine

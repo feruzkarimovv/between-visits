@@ -87,7 +87,9 @@ def run(session: Session, checkin: CheckIn, turns: list[dict[str, Any]] | None =
         d.evidence = new_ev
         session.add(d)
 
-    # 2. extraction and safety net (Gemini or fake)
+    # 2. extraction and safety net (LLM or fake). Commit first: never hold the SQLite write lock during a
+    #    slow LLM call, or live tool calls from other check-ins time out.
+    session.commit()
     try:
         extraction = llm.extract(turns, lang)
     except Exception as e:  # noqa: BLE001
@@ -121,6 +123,7 @@ def run(session: Session, checkin: CheckIn, turns: list[dict[str, Any]] | None =
                         [h["red_flag_id"] for h in missed], outcome)
 
     # 4. translations for non-English quotes (stored separately, labeled)
+    session.commit()
     quotes: set[str] = set()
     if lang != "en":
         quotes |= {a.verbatim_quote for a in answers if a.verbatim_quote}

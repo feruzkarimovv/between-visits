@@ -142,11 +142,14 @@ def run_call(p: dict[str, Any], rep: int) -> dict[str, Any]:
                 clock += 4
                 turns.append({"i": len(turns), "role": "agent", "text": ev[1], "t_s": clock, "lang": p["language"]})
                 agent_turns += 1
-                if pending_say:
+                # approved wording: was the approved line actually spoken (read-backs in between are fine)?
+                if pending_say and score.similarity(ev[1], pending_say) >= 0.9:
                     question_turns.append({"text": ev[1], "say": pending_say})
                     pending_say = None
             elif ev[0] == "tool":
                 events.append({"t": clock, "tool": ev[1], "args": ev[2], "result": ev[3]})
+                if pending_say:  # a new tool result arrived before the last approved line was said
+                    question_turns.append({"text": "", "say": pending_say})
                 pending_say = ev[3]["next"]["say"]
             elif ev[0] == "end":
                 ended = True
@@ -155,6 +158,9 @@ def run_call(p: dict[str, Any], rep: int) -> dict[str, Any]:
             closed = bool((session.get(CheckIn, cid).interview_state or {}).get("closed"))
         if closed and turns[-1]["role"] == "agent":
             ended = True  # the closing line was said; a real call ends here even if end_call is late
+
+    if pending_say:
+        question_turns.append({"text": "", "say": pending_say})
 
     # post-call pipeline (production code) on the simulated transcript
     with Session(get_engine()) as session:
