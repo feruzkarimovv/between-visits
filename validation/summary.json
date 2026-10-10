@@ -1,0 +1,249 @@
+{
+ "generated_at": "2026-10-10T20:59:21Z",
+ "commit": "uncommitted",
+ "requirements": 15,
+ "requirements_passing": 15,
+ "tests_total": 82,
+ "tests_passed": 82,
+ "tests_linked": 63,
+ "pytest_exit_code": 0,
+ "rows": [
+  {
+   "id": "REQ-001",
+   "title": "AI disclosure in first turn",
+   "risk": "high",
+   "text": "The agent's first turn says it is an automated AI assistant, in the call's language.",
+   "tests": [
+    "tests/test_disclosure.py::test_first_turn_scripts[en-first_message]",
+    "tests/test_disclosure.py::test_first_turn_scripts[en-first_message_inbound]",
+    "tests/test_disclosure.py::test_first_turn_scripts[es-first_message]",
+    "tests/test_disclosure.py::test_first_turn_scripts[es-first_message_inbound]",
+    "tests/test_disclosure.py::test_agent_variants_use_the_disclosure_first_message"
+   ],
+   "passed": 5,
+   "total": 5,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-002",
+   "title": "Human offered in first turn",
+   "risk": "high",
+   "text": "The agent's first turn offers a human at any time.",
+   "tests": [
+    "tests/test_disclosure.py::test_first_turn_scripts[en-first_message]",
+    "tests/test_disclosure.py::test_first_turn_scripts[en-first_message_inbound]",
+    "tests/test_disclosure.py::test_first_turn_scripts[es-first_message]",
+    "tests/test_disclosure.py::test_first_turn_scripts[es-first_message_inbound]",
+    "tests/test_disclosure.py::test_agent_variants_use_the_disclosure_first_message"
+   ],
+   "passed": 5,
+   "total": 5,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-003",
+   "title": "Approved wording only",
+   "risk": "high",
+   "text": "Clinical questions and escalation lines come only from approved text in data/, in the call's language, with no unfilled placeholders.",
+   "tests": [
+    "tests/test_interview.py::test_every_say_is_approved_and_filled",
+    "tests/test_rosa_flow.py::test_rosa_flow"
+   ],
+   "passed": 2,
+   "total": 2,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-004",
+   "title": "Grades from rules only",
+   "risk": "high",
+   "text": "Provisional grades are produced only by the CTCAE rule table in data/ctcae_rules.json.",
+   "tests": [
+    "tests/test_rules.py::test_grade_vectors[worst 4]",
+    "tests/test_rules.py::test_grade_vectors[worst 5]",
+    "tests/test_rules.py::test_grade_vectors[worst 7 (6 over)]",
+    "tests/test_rules.py::test_grade_vectors[worst 8]",
+    "tests/test_rules.py::test_grade_vectors[baseline answered 2, worst 9]",
+    "tests/test_rules.py::test_grade_vectors[no baseline at all]",
+    "tests/test_rules.py::test_grade_vectors[worst unknown]",
+    "tests/test_rules.py::test_grade_vectors[blood, 2 over]",
+    "tests/test_rules.py::test_grade_vectors[37.9 C]",
+    "tests/test_rules.py::test_grade_vectors[38.0 C]",
+    "tests/test_rules.py::test_grade_vectors[100.4 F]",
+    "tests/test_rules.py::test_grade_vectors[102.2 F]",
+    "tests/test_rules.py::test_grade_vectors[102.3 F]",
+    "tests/test_rules.py::test_grade_vectors[40.0 C]",
+    "tests/test_rules.py::test_grade_vectors[40.1 C]",
+    "tests/test_rules.py::test_grade_vectors[not measured]",
+    "tests/test_rules.py::test_grade_vectors[SOB at rest]",
+    "tests/test_rules.py::test_grade_vectors[SOB severe + light]",
+    "tests/test_rules.py::test_grade_vectors[fatigue rest helps]",
+    "tests/test_rules.py::test_grade_vectors[dizziness mild]",
+    "tests/test_rules.py::test_grade_vectors[nausea often]"
+   ],
+   "passed": 21,
+   "total": 21,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-005",
+   "title": "Red flags page immediately",
+   "risk": "high",
+   "text": "An active red flag pages the on-call contact within 10 seconds of the triggering tool call, before the tool returns.",
+   "tests": [
+    "tests/test_interview.py::test_chest_pain_is_emergency_and_closes",
+    "tests/test_interview.py::test_urgent_then_heart_adds_then_chest_raises",
+    "tests/test_paging.py::test_page_message_has_subject_id_only",
+    "tests/test_paging.py::test_failed_page_is_retried",
+    "tests/test_rosa_flow.py::test_rosa_flow",
+    "tests/test_rules.py::test_red_flag_vectors[worst 4]",
+    "tests/test_rules.py::test_red_flag_vectors[worst 7]",
+    "tests/test_rules.py::test_red_flag_vectors[worst 8]",
+    "tests/test_rules.py::test_red_flag_vectors[baseline answered 2, worst 9]",
+    "tests/test_rules.py::test_red_flag_vectors[no baseline]",
+    "tests/test_rules.py::test_red_flag_vectors[worst unknown]",
+    "tests/test_rules.py::test_red_flag_vectors[blood]",
+    "tests/test_rules.py::test_red_flag_vectors[37.9 C]",
+    "tests/test_rules.py::test_red_flag_vectors[38.0 C]",
+    "tests/test_rules.py::test_red_flag_vectors[100.4 F]",
+    "tests/test_rules.py::test_red_flag_vectors[not measured]",
+    "tests/test_rules.py::test_red_flag_vectors[SOB at rest]",
+    "tests/test_rules.py::test_red_flag_vectors[SOB severe light]",
+    "tests/test_rules.py::test_red_flag_vectors[fluids no]",
+    "tests/test_rules.py::test_red_flag_vectors[dizzy + 3 over]",
+    "tests/test_rules.py::test_red_flag_vectors[dizzy + 4 over]",
+    "tests/test_rules.py::test_red_flag_vectors[dizzy + vomiting sometimes]",
+    "tests/test_rules.py::test_red_flag_vectors[neuro yes]",
+    "tests/test_rules.py::test_red_flag_vectors[skin blister]",
+    "tests/test_rules.py::test_reported_flags_and_levels"
+   ],
+   "passed": 25,
+   "total": 25,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-006",
+   "title": "Re-page and backup",
+   "risk": "high",
+   "text": "Unacknowledged pages are re-paged after ACK_TIMEOUT_SECONDS; after 2 re-pages the backup contact is paged.",
+   "tests": [
+    "tests/test_paging.py::test_repage_and_backup"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-007",
+   "title": "No medical advice",
+   "risk": "high",
+   "text": "Medical questions get the approved deferral line and create a nurse task; the agent gives no advice.",
+   "tests": [
+    "tests/test_interview.py::test_medical_question_defers_and_creates_task"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-008",
+   "title": "Evidence on every draft",
+   "risk": "medium",
+   "text": "Every draft entry has at least one evidence item with a verbatim quote and its source.",
+   "tests": [
+    "tests/test_postcall.py::test_rosa_post_call_creates_drafts"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-009",
+   "title": "Original language preserved",
+   "risk": "medium",
+   "text": "Non-English quotes keep the original text; translations are stored separately and labeled as AI translations.",
+   "tests": [
+    "tests/test_postcall.py::test_rosa_post_call_creates_drafts"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-010",
+   "title": "Human confirmation and audit",
+   "risk": "high",
+   "text": "No draft becomes confirmed without a human action, and every human action writes an audit event.",
+   "tests": [
+    "tests/test_review.py::test_review_to_sponsor"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-011",
+   "title": "24-hour clock",
+   "risk": "medium",
+   "text": "A serious AE creates a report with due_at equal to aware_at plus 24 hours.",
+   "tests": [
+    "tests/test_review.py::test_review_to_sponsor"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-012",
+   "title": "Post-call safety net",
+   "risk": "high",
+   "text": "The post-call safety net escalates red flags that were mentioned in the transcript but missed during the call.",
+   "tests": [
+    "tests/test_postcall.py::test_safety_net_catches_missed_chest_pain"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-013",
+   "title": "Authenticated integrations",
+   "risk": "medium",
+   "text": "Tool endpoints reject requests without the shared secret; ElevenLabs and Twilio webhooks verify signatures.",
+   "tests": [
+    "tests/test_paging.py::test_ntfy_ack_requires_token",
+    "tests/test_postcall.py::test_signature_verification",
+    "tests/test_postcall.py::test_bad_signature_401",
+    "tests/test_rosa_flow.py::test_rosa_flow",
+    "tests/test_rosa_flow.py::test_missing_or_bad_secret_is_401"
+   ],
+   "passed": 5,
+   "total": 5,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-014",
+   "title": "Equity reporting",
+   "risk": "medium",
+   "text": "Safety metrics are reported per language and per pace.",
+   "tests": [
+    "tests/test_eval_score.py::test_report_splits_by_language_and_pace"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  },
+  {
+   "id": "REQ-015",
+   "title": "Demo mode without keys",
+   "risk": "low",
+   "text": "Demo mode runs the full replay end to end without external API keys.",
+   "tests": [
+    "tests/test_review.py::test_replay_runs_full_story"
+   ],
+   "passed": 1,
+   "total": 1,
+   "status": "PASS"
+  }
+ ]
+}
