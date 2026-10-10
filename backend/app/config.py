@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     claude_model_fast: str = "claude-opus-5-5"  # extraction, translation
     claude_model_long: str = "claude-opus-5-5"  # safety net, narratives
+    claude_model_patient: str = ""  # eval's simulated patient; empty = CLAUDE_MODEL_FAST
 
     # Twilio
     twilio_account_sid: str = ""

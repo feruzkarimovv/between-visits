@@ -55,7 +55,7 @@ _spec = importlib.util.spec_from_file_location("sync_agent", ROOT / "agent" / "s
 sync_agent = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(sync_agent)  # type: ignore[union-attr]
 
-MAX_AGENT_TURNS = 40
+MAX_AGENT_TURNS = 80  # extra-time read-backs roughly double the agent turns
 AGENT_MODEL = sim.agent_llm(json.loads((ROOT / "agent" / "variants.json").read_text()))
 PAGES: list[pager.PageMessage] = []
 _lock = threading.Lock()
@@ -84,7 +84,9 @@ def patient_prompt(p: dict[str, Any]) -> str:
         + "\nFACTS (reveal each only when asked about it, unless a behavior says otherwise; never invent other symptoms):\n"
         + "\n".join(f"- {k}: {v}" for k, v in p["facts"].items())
         + "\nBEHAVIORS:\n" + "\n".join(f"- {b}" for b in p.get("behaviors", []))
-        + "\nIf asked to choose from options, answer naturally (you may use your own words). If the call ends, say goodbye."
+        + "\nAnswer the question that was just asked. Ask for a repeat at most once per question (unless a behavior says "
+        "you ask more), then answer from your FACTS. If asked to choose from options, answer naturally (you may use your "
+        "own words). Say each scripted line in your FACTS when the moment it describes comes. If the call ends, say goodbye."
     )
 
 

@@ -229,7 +229,7 @@ def helper_provider() -> str:
 def patient_text(prompt: str) -> str:
     s = _settings()
     if helper_provider() == "anthropic":
-        return claude_text(s.claude_model_fast, prompt)
+        return claude_text(s.claude_model_patient or s.claude_model_fast, prompt)
     return gemini_text(s.gemini_model_fast, prompt)
 
 
@@ -243,5 +243,5 @@ def judge(prompt: str) -> dict[str, Any]:
 def models_used(agent_model: str) -> dict[str, str]:
     s = _settings()
     if helper_provider() == "anthropic":
-        return {"agent": agent_model, "patient": s.claude_model_fast, "judge": s.claude_model_long}
+        return {"agent": agent_model, "patient": s.claude_model_patient or s.claude_model_fast, "judge": s.claude_model_long}
     return {"agent": agent_model, "patient": s.gemini_model_fast, "judge": s.gemini_model_long}
