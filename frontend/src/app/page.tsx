@@ -143,6 +143,8 @@ export default function TodayPage() {
                   key={row.id ?? row.patient.id}
                   row={row}
                   demoMode={demoMode}
+                  phoneNote={health.data?.phone_calls_note ?? null}
+                  webNote={health.data?.browser_calls_note ?? null}
                   pendingChannel={call.isPending && call.variables?.patientId === row.patient.id ? call.variables.channel : null}
                   anyPending={call.isPending}
                   onCall={(channel) =>
@@ -176,6 +178,8 @@ function Stat({ label, value, tone }: { label: string; value: number | null; ton
 function TodayTableRow({
   row,
   demoMode,
+  phoneNote,
+  webNote,
   pendingChannel,
   anyPending,
   onCall,
@@ -183,6 +187,8 @@ function TodayTableRow({
 }: {
   row: TodayRow;
   demoMode: boolean;
+  phoneNote: string | null;
+  webNote: string | null;
   pendingChannel: "phone" | "web" | null;
   anyPending: boolean;
   onCall: (channel: "phone" | "web") => void;
@@ -249,27 +255,31 @@ function TodayTableRow({
           ) : (
             <>
               {!demoMode ? (
+                <span title={phoneNote ?? undefined}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={<Phone className="size-4" aria-hidden />}
+                    loading={pendingChannel === "phone"}
+                    disabled={anyPending || !!phoneNote}
+                    onClick={() => onCall("phone")}
+                  >
+                    Call phone
+                  </Button>
+                </span>
+              ) : null}
+              <span title={webNote ?? undefined}>
                 <Button
                   size="sm"
                   variant="secondary"
-                  icon={<Phone className="size-4" aria-hidden />}
-                  loading={pendingChannel === "phone"}
-                  disabled={anyPending}
-                  onClick={() => onCall("phone")}
+                  icon={<Globe className="size-4" aria-hidden />}
+                  loading={pendingChannel === "web"}
+                  disabled={anyPending || (!demoMode && !!webNote)}
+                  onClick={() => onCall("web")}
                 >
-                  Call phone
+                  Call in browser
                 </Button>
-              ) : null}
-              <Button
-                size="sm"
-                variant="secondary"
-                icon={<Globe className="size-4" aria-hidden />}
-                loading={pendingChannel === "web"}
-                disabled={anyPending}
-                onClick={() => onCall("web")}
-              >
-                Call in browser
-              </Button>
+              </span>
             </>
           )}
         </div>

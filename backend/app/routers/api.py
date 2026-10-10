@@ -47,9 +47,9 @@ from app.schemas import (
 from app.seed import today_local
 from app.serialize import checkin_detail, checkin_out, draft_out, escalation_out, patient_summary, sae_out
 from app.services import checkins as checkin_svc
+from app.services import elevenlabs, review, sae
 from app.services import escalation as esc_svc
 from app.services import export as export_svc
-from app.services import review, sae
 from app.timeutil import utcnow
 
 router = APIRouter(prefix="/api", tags=["api"])
@@ -79,8 +79,11 @@ def _get(session: Session, model, id_: str, what: str):  # noqa: ANN001, ANN202
 @router.get("/health", response_model=Health)
 def health(request: Request) -> Health:
     s = get_settings()
+    ready = elevenlabs.readiness()
     return Health(ok=True, demo_mode=s.demo_mode, version=request.app.version, commit=request.app.state.commit,
-                  app_env=s.app_env, pager_channel=s.effective_pager_channel)
+                  app_env=s.app_env, pager_channel=s.effective_pager_channel,
+                  phone_calls_enabled=ready["phone"] is None, browser_calls_enabled=ready["web"] is None,
+                  phone_calls_note=ready["phone"], browser_calls_note=ready["web"])
 
 
 @router.get("/study", response_model=StudyOut)
@@ -208,8 +211,9 @@ def list_checkins(date_: date | None = Query(default=None, alias="date"), sessio
 def create_checkin(patient_id: str, body: CreateCheckInIn, who: Actor = Depends(actor),
                    session: Session = Depends(get_session)) -> CreateCheckInOut:
     p = _get(session, Patient, patient_id, "patient")
-    if body.channel == "phone" and get_settings().demo_mode:
-        raise ApiError(503, "telephony_unavailable", "Demo mode: phone calls are off. Use Replay scenario.")
+    not_ready = elevenlabs.readiness()["phone" if body.channel == "phone" else "web"]
+    if not_ready and not elevenlabs.has_client_override():
+        raise ApiError(503, "telephony_unavailable", not_ready)
     c = checkin_svc.new_checkin(session, p, body.channel, body.day_after_dose, who.user, who.role)
     web = None
     if body.channel == "phone":

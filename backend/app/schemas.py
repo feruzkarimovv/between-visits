@@ -77,6 +77,10 @@ class Health(BaseModel):
     commit: str
     app_env: str
     pager_channel: str
+    phone_calls_enabled: bool = False
+    browser_calls_enabled: bool = False
+    phone_calls_note: str | None = None
+    browser_calls_note: str | None = None
 
 
 class StudyOut(BaseModel):

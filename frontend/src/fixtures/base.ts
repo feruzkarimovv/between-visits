@@ -44,6 +44,8 @@ export const HEALTH: Health = {
   commit: "fixture",
   app_env: "fixture",
   pager_channel: "console",
+  phone_calls_enabled: true,
+  browser_calls_enabled: true,
 };
 
 export const STUDY: Study = {

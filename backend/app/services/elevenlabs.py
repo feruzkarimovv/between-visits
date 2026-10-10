@@ -54,6 +54,23 @@ def agent_id_for(variant: str) -> str:
     return agent_id
 
 
+def readiness() -> dict[str, str | None]:
+    """Why each call channel is unavailable (None = ready). Shown on the dashboard instead of failing a call."""
+    s = get_settings()
+    lock = load_lock()
+    base = None
+    if s.demo_mode:
+        base = "Demo mode: calls are off. Use Replay scenario."
+    elif not s.elevenlabs_api_key:
+        base = "ElevenLabs isn't configured (ELEVENLABS_API_KEY)."
+    elif len(lock) < 4:
+        base = "ElevenLabs agents aren't synced yet (make sync-agent)."
+    phone = base or (None if s.elevenlabs_phone_number_id else
+                     "Phone calls aren't set up yet: import the Twilio number into ElevenLabs "
+                     "(ELEVENLABS_PHONE_NUMBER_ID). Use Call in browser.")
+    return {"phone": phone, "web": base}
+
+
 def dynamic_variables(checkin: CheckIn, patient: Patient, study: Study | None) -> dict[str, str]:
     lang = checkin.language
     team = (study.study_team_name if study else None) or content.study_doc()["study_team_name"]
@@ -109,6 +126,10 @@ _override: Client | None = None
 def set_client(c: Client | None) -> None:
     global _override
     _override = c
+
+
+def has_client_override() -> bool:
+    return _override is not None
 
 
 def client() -> Client:

@@ -1056,6 +1056,20 @@ export interface components {
             app_env: string;
             /** Pager Channel */
             pager_channel: string;
+            /**
+             * Phone Calls Enabled
+             * @default false
+             */
+            phone_calls_enabled: boolean;
+            /**
+             * Browser Calls Enabled
+             * @default false
+             */
+            browser_calls_enabled: boolean;
+            /** Phone Calls Note */
+            phone_calls_note?: string | null;
+            /** Browser Calls Note */
+            browser_calls_note?: string | null;
         };
         /** InterviewStateOut */
         InterviewStateOut: {
