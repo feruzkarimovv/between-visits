@@ -1,0 +1,16 @@
+{
+  "source": "drand",
+  "round": 6542582,
+  "randomness": "3fc514414b1fb0df1e1d481dc41c23fcd9af60a03904016a12a0a5ebd77f61ac",
+  "url": "https://api.drand.sh/public/6542582",
+  "fetched_at": "2026-10-11T08:48:01Z",
+  "selection": {
+    "tagger_time": "2026-10-11T08:37:58Z",
+    "target_time": "2026-10-11T08:47:58Z",
+    "drand_round": 6542582,
+    "drand_round_time": "2026-10-11T08:48:00Z",
+    "nist_allowed_from": "2026-10-11T09:18:00Z",
+    "empty_allowed_from": "2026-10-11T09:48:00Z"
+  },
+  "attempts": []
+}
