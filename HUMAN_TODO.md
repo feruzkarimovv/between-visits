@@ -145,14 +145,3 @@ Steps that need a person. Everything around them is done; each item says exactly
       ```
       Do not merge to `main` during the calls: each deploy resets the live SQLite state. You can also turn off **`bv-live-api` → Settings → Build & Deploy → Auto-Deploy** for the session. Known gap (F10): the SAE JSON export link is a plain link and cannot send `X-BV-Token`, so it returns 401 on the live instance (`docs/deploy.md` §5).
    9. **Once it works:** replace the README line "**Live demo:** not deployed yet" with the `bv-demo-web` URL, and remove "verified locally only" from `docs/deploy.md`; commit and push.
-
-8. **Confirm the `quickstart` CI job is green on GitHub Actions (R9).** The job (`.github/workflows/ci.yml`, job `quickstart`) was reproduced locally only; its acceptance is the real GitHub Actions run. It runs `cp .env.example .env`, `make setup`, `make seed`, `make test`, starts `make demo` in the background, then replays `rosa_es_urgent` at `?speed=4` until the check-in has 3 drafts (about 3-4 minutes in all).
-   ```bash
-   cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
-   gh run list --branch site-signal-build --workflow CI --limit 3        # the newest row is the pushed head
-   RUN_ID=$(gh run list --branch site-signal-build --workflow CI --limit 1 --json databaseId -q '.[0].databaseId')
-   gh run watch "$RUN_ID" --exit-status; echo exit=$?                   # expect: exit=0
-   gh run view "$RUN_ID" --json jobs -q '.jobs[] | select(.name=="quickstart") | .conclusion'   # expect: success
-   gh run view --log --job "$(gh run view "$RUN_ID" --json jobs -q '.jobs[] | select(.name=="quickstart") | .databaseId')" | grep 'drafts=3 for rosa_es_urgent'   # expect: one line
-   ```
-   Or on GitHub: **Actions → CI →** the newest `site-signal-build` run → job **quickstart** → green check, and the step **Replay rosa_es_urgent and poll until its drafts arrive** shows `drafts=3 for rosa_es_urgent`. If the job fails, open the step **make demo log (on failure)** for the server output.
