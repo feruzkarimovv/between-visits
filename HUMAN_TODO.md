@@ -35,3 +35,12 @@ Steps that need a person. Everything around them is done; each item says exactly
    git push origin site-signal-build
    ```
    From now on, any edit to `agent/prompt.md`, `agent/tools.json`, `agent/agent.template.json`, `agent/variants.json` or the agent-facing files in `data/` (scripts, red flags, plan, study) needs the same `make sync-agent` → `make sync-agent ARGS=--snapshot` → commit of the new snapshot, or CI fails.
+
+4. **Reseed every SQLite database built before B13 (audit hash chain).** `AuditEvent` gained `seq`, `prev_hash` and `hash` columns and there is no migration (docs/02). Until an old database is reseeded, each audit row is dropped (the hook logs `audit_chain_failed`; the caller's own write still commits) and `GET /api/audit` returns 500. Reseeding deletes the local demo data in that database. In each checkout or deploy that has a database:
+   ```bash
+   git checkout site-signal-build && git pull --ff-only
+   make seed                                  # or: make demo (reseeds with DEMO_MODE=1, then starts backend + frontend)
+   # with the backend running on :8000:
+   curl -s localhost:8000/api/audit/verify    # expect {"ok":true,...}
+   ```
+   For a deployed instance, run the same seed command in its shell (`cd backend && uv run python -m app.seed`, with `DEMO_MODE=1` for a demo deploy) and restart the service.
