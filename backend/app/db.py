@@ -6,6 +6,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
+from app import audit  # noqa: F401  registers the audit hash-chain flush hook for every session (docs/03 §6.6)
 from app.config import get_settings
 
 _engine: Engine | None = None

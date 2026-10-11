@@ -59,3 +59,94 @@ Read first: `CLAUDE.md`, `docs/06-frontend.md`, `docs/03-api-contracts.md`, `doc
 
 ### F9 · Polish for the video (target 7:00 AM, freeze)
 - Empty and error states, focus states, 125% zoom check, no layout shift during polling, favicon and title, screenshots for README and deck.
+
+---
+
+## Site Signal plan (Sat Oct 10, late)
+
+Added in the planning round on Sat Oct 10, late. Tasks F0–F9 above are the original Saturday plan and stay as history. This section continues the F series. Times are Sun Oct 11, ET. Checkpoints and cut rules: `docs/09-timeline-and-workstreams.md`. Page specs: `docs/06-frontend.md` § Site Signal pages (new pages `/sites`, `/sites/[id]`, `/site-inbox`, `/sae`, and the changed pages). Contracts: `docs/03-api-contracts.md` §5 and §6; product rules: `docs/10-site-signal.md` §6.
+
+Rules for the new pages (in addition to `docs/06`):
+- **Never green on Site Signal.** Tiers are Watch, Look, "No signal at this sample size" (neutral) and "Not computed: reason" (grey). No tier badge uses a green or success token, or the red and amber escalation tokens (`docs/06`). Tier and footer labels come from the API (`labels` in `GET /api/sites`), never from literals.
+- **Badges everywhere.** Every Site Signal view, row and episode shows `DataOriginBadge` (SIMULATED, MEASURED, or MIXED for the site 101 card and mixed queries). Simulated quotes show a "Synthetic" source chip; every translation shows `AiLabel`; grades say "provisional" and "rule-graded".
+- **No numbers in code.** Power, false-flag rates and thresholds are rendered from `/api/site-signal/validation` and `/api/sites`; components contain no result literals.
+- **Errors by code.** Handle `error.code` (`wrong_role`, `site_signal_unavailable`, `blind_run_unavailable`, `demo_disabled`), not HTTP status. On `site_signal_unavailable` render every site grey "Not computed: error".
+- **Subject IDs only** in every Site Signal and inbox view.
+- TanStack Query and `apiFetch()` for everything; polling only (no websockets); `api-types.ts` regenerated with `make types`, never hand-edited.
+
+### Kickoff prompt for this section
+
+> You are continuing workstream WS3 (frontend) of Between Visits. Read CLAUDE.md, docs/06-frontend.md, docs/03-api-contracts.md §5 and §6, docs/10-site-signal.md §6, and the section "Site Signal plan (Sat Oct 10, late)" at the end of docs/workstreams/WS3-frontend.md. Implement F10 for Checkpoint A (Sun 03:30 ET), then F11–F16 for Checkpoint B (06:15), then F17–F19 for Checkpoint C (07:30 freeze). Until WS5 commits monitoring/out/, run the backend against the WS2 B16b fixtures (MONITORING_OUT=backend/tests/fixtures/site_signal SITE_SIGNAL_SUMMARY=backend/tests/fixtures/site_signal/summary.json make demo); their numbers are placeholders, never results. No Site Signal tier may render green; no result number may be hard-coded. After each task run `npm run typecheck && npm run lint && npm run build`, show the output, and commit as "WS3-Fn: <summary>". Only edit frontend/ unless the task says otherwise.
+
+### F10 · Demo UX, downloads and the `/sae` list (target 03:30, Checkpoint A)
+- Today (`frontend/src/app/page.tsx`): replay speed selector 1x/2x/4x (sends `?speed=`); "Call in browser" disabled with a visible reason when `health.demo_mode` is true. WS0 R4 first adds the `demo_mode` gate on the same file; start after it lands.
+- `/sae` list page: subject ID, event term, status, `aware_at`, `CountdownClock` until due, sent / on time; rows link to `/sae/[id]`; "Download CIOMS JSON" per row and on `/sae/[id]`.
+- `/review` and `/sponsor`: "Download AE.csv" and "Download CM.csv" through a new `apiDownload()` blob helper in `src/lib/api.ts`; confirmed AE rows show an "origin: between_visits" tag; the sponsor page gets an `h1`.
+- Error handling keys on `error.code` (403 `wrong_role` replaces the old 409). (The `X-BV-Token` line in `apiFetch()` lands earlier, in WS0 R6, so the V10 calls work.)
+- `AppShell` `isActive` gives `/sae` its own nav state.
+- **Files:** `frontend/src/app/page.tsx`, `frontend/src/app/sae/page.tsx`, `frontend/src/app/sae/[id]/page.tsx`, `frontend/src/app/review/page.tsx`, `frontend/src/app/sponsor/page.tsx`, `frontend/src/lib/api.ts`, `frontend/src/components/shell/AppShell.tsx`.
+- **Depends on:** B14, B15, R4.
+- **Accept:** `cd frontend && npm run typecheck && npm run lint && npm run build` clean. In `make demo`: after the SAE flow `/sae` lists the report (no 404); the downloaded ae.csv has its header on row 1; a 4x replay of `rosa_es_urgent` finishes in about 45 s.
+
+### F11 · CRA role and navigation (target 04:15, Checkpoint B)
+- `Role` adds `"cra"`; `DEMO_IDENTITIES.cra = {user: "Sam Rivera", label: "CRA (sponsor)"}`; `RoleSwitch` offers it.
+- `AppShell` nav adds "Sites" (`/sites`) and "Site inbox" (`/site-inbox`).
+- New components: `DataOriginBadge` (SIMULATED / MEASURED / MIXED) and `TierBadge` (labels from the API; grey for `not_computed` with the reason; neutral for `none`; no green or success token).
+- **Files:** `frontend/src/lib/types.ts`, `frontend/src/lib/role.ts`, `frontend/src/components/RoleSwitch.tsx`, `frontend/src/components/shell/AppShell.tsx`, `frontend/src/components/DataOriginBadge.tsx`, `frontend/src/components/TierBadge.tsx`.
+- **Depends on:** B12.
+- **Accept:** typecheck, lint and build pass; switching to CRA sends `X-BV-Role: cra` (visible in the network tab); `grep -nwE 'green|success|red|amber' frontend/src/components/TierBadge.tsx` prints nothing.
+
+### F12 · `/sites` overview with an SVG funnel (target 05:40, Checkpoint B)
+- Header: SIMULATED badge, `sap-v1` tag commit and date, "thresholds fixed from the pre-registered null". Tabs: Signal | How well it works (F16) | Equity (F17).
+- Signal tab: hand-built SVG `FunnelPlot` (x = E, y = O/E, Look and Watch lower limits from `funnel.limits`, one dot per computed site, not-computed sites as hollow grey markers in a strip below the axis) with an accessible table fallback; ranked table (site, patients, evaluable, pending, paged, coverage, O/E, tier, rate-KRI tier, "simaerep classic (legacy)" tier, open queries); footer from `labels.footer` and `labels.footer_expected_false_look` filled with `run.expected_false_look_flags_per_study`; `run.n_computed_sites` next to the tier legend.
+- "Reveal answer key" (committed study, reads `GET /api/site-signal/answer-key`; shows only the display labels from `labels.answer_key`, never raw keys such as `gross_under`) and "Blind run" (F15, demo mode only).
+- Non-CRA, non-sponsor roles see a "switch to CRA" notice.
+- **Files:** `frontend/src/app/sites/layout.tsx`, `frontend/src/app/sites/page.tsx`, `frontend/src/components/FunnelPlot.tsx`, `frontend/src/lib/queries.ts` (`useSites`, `useSiteValidation`, `useAnswerKey`).
+- **Depends on:** B17, F11.
+- **Accept:** in `make demo` as CRA: 20 sites in the table; the funnel shows one dot per computed site with both limits and a hollow grey marker per not-computed site in the strip; the low-coverage and small sites render grey with their reasons, and any other grey site shows its reason; footer text and SIMULATED badge visible; as coordinator, the notice. Screenshots at 1280 px and 390 px show no horizontal page scroll.
+
+### F13 · `/sites/[id]` drill-down and query composer (target 05:50, Checkpoint B)
+- Site card: fictional name, region, roster mix (Spanish share, extra-time share), coverage, tier with reason.
+- `EpisodeTable`: subject ID, term, provisional grade (rule-graded), episode date, status chip (Unmatched, Matched, Pending greyed, "Paged: separate stratum", Not evaluated), `EvidenceQuote` in the original language with the `AiLabel` translation, source chip (Live call / Replay / Synthetic), `DataOriginBadge`. Site 101 shows MEASURED live and replay episodes on top. Language and pace strata mini-table; paged stratum counts.
+- `SiteQueryComposer` (CRA only): select `unmatched` episodes (also at a site not computed for low coverage or too little data) → template preview → edit → "Approve and send"; ineligible rows cannot be selected; 422 errors (`contains_identifier`, `banned_phrase`, `episode_not_eligible`) shown inline. Query list with status and links to the audit rows.
+- **Files:** `frontend/src/app/sites/[id]/page.tsx`, `frontend/src/components/EpisodeTable.tsx`, `frontend/src/components/SiteQueryComposer.tsx`, `frontend/src/lib/queries.ts`.
+- **Depends on:** F12, B18.
+- **Accept:** for a Watch-tier site, unmatched episodes show quotes (Spanish quotes with an `AiLabel` translation and a "Synthetic" chip); pending rows are greyed; paged rows read "Paged: separate stratum"; as CRA, draft → edit → approve works and `/audit` shows `site_query.drafted`, `site_query.edited`, `site_query.approved`; after a Rosa replay, site 101 shows her MEASURED episode.
+
+### F14 · `/site-inbox`, the mock site inbox (target 05:50, Checkpoint B)
+- Banner "Mock site inbox (synthetic data)". Sent, answered and closed queries for the queried site (the mock covers every site; optional site filter): body text, cited subject IDs and dates, status timeline; respond with a coded response (from the API) plus a note. CRA and sponsor see it read-only; CRA can close answered queries from `/sites/[id]` or here.
+- **Files:** `frontend/src/app/site-inbox/layout.tsx`, `frontend/src/app/site-inbox/page.tsx`.
+- **Depends on:** B18, F11.
+- **Accept:** as coordinator the approved query for a flagged site (not 101) appears and responding with a code moves it to answered; as CRA closing works; drafts never appear in the inbox.
+
+### F15 · Blind run dialog and reveal (target 06:00, Checkpoint B)
+- `BlindRunDialog`: free-text seed label (1–64 characters) → ranked 20-site result with "planted count hidden" and the fixed thresholds; "Reveal" shows the answer key (display labels from `labels.answer_key` only) and caught / missed / false flags per indicator and tier, with the explanatory text from SAP §13 rendered from API values. On 503 `blind_run_unavailable`, show the precomputed seed chips and run one of them. Hidden when `health.demo_mode` is false.
+- **Files:** `frontend/src/components/BlindRunDialog.tsx`, `frontend/src/app/sites/page.tsx`, `frontend/src/lib/queries.ts`.
+- **Depends on:** B19, F12.
+- **Accept:** a typed seed shows the ranked result in under 10 s; Reveal shows caught and missed per indicator; the 503 fallback chips work; the button is absent when demo mode is off.
+
+### F16 · "How well it works" tab (target 06:00, Checkpoint B)
+- `PowerTable`: power at both tiers for discordance, the rate KRI and simaerep classic (legacy), including the *f* = 0.25 and 0.50 rows, each with its MC SE; the null false-flag rates with MC SE; the failure case; sensitivity rows; the committed-study confusion labeled "illustration only"; a link to `WHAT_IT_GETS_WRONG.md`. All SIMULATED, all from `/api/site-signal/validation`.
+- **Files:** `frontend/src/app/sites/page.tsx`, `frontend/src/components/PowerTable.tsx`.
+- **Depends on:** S7, B17.
+- **Accept:** the tab renders every block above from the API; `grep -nE '0\.[0-9]{2}' frontend/src/components/PowerTable.tsx` finds no hard-coded result.
+
+### F17 · Equity panel and single-language toggle (target 07:00, Checkpoint C)
+- `EquityPanel`: within-site capture odds ratios (Spanish vs English, extra-time vs standard) with intervals and the "power is low" note; per-site rows where data allow; toggle "single-language app" greys out the sites listed in `single_language_counterfactual` with their reason; the planted language-gap site is labeled "planted" only after reveal. Add REQ-031 with WS5's test at this point.
+- **Files:** `frontend/src/app/sites/page.tsx`, `frontend/src/components/EquityPanel.tsx`.
+- **Depends on:** S9, B17.
+- **Accept:** the Equity tab shows both odds ratios with intervals and the note; toggling greys exactly the sites in the counterfactual list. **Cut (07:00):** not done → the equity numbers stay in `report.md` and the "How well it works" tab.
+
+### F18 · Check-in page: days-before-visit badge and recorded scenarios (target 07:00, Checkpoint C)
+- "Site aware N days before next visit" with a MEASURED badge from `days_before_next_visit` (and its basis: page acknowledgment or call end).
+- Replayed recorded scenarios show their label ("Recorded real call; synthetic patient played by a teammate" or "Scripted") and an audio player when `audio_url` is set.
+- **Files:** `frontend/src/app/checkins/[id]/page.tsx`.
+- **Depends on:** B21, V11.
+- **Accept:** after a Rosa replay with acknowledgment the badge reads "Site aware N days before next visit" with MEASURED; a recorded scenario shows its label (and the player only when audio exists on the server).
+
+### F19 · Phone width, sidebar, 125% zoom, screenshots (target 07:15, Checkpoint C)
+- Fix horizontal overflow at 390 px on `/`, `/checkins/[id]`, `/sites`, `/sites/[id]` and `/site-inbox` (in that order; anything else is a known limit); the bottom nav scrolls horizontally without page overflow; the sidebar background spans the full height on long pages; check 125% zoom.
+- Screenshots for README and deck, taken on the production build (no dev badge).
+- **Files:** `frontend/src/app/page.tsx`, `frontend/src/components/shell/AppShell.tsx`, `frontend/src/app/checkins/[id]/page.tsx`, `frontend/src/app/globals.css`, `docs/screenshots/*.png`.
+- **Depends on:** F10–F18.
+- **Accept:** Playwright at 390×844 shows `document.documentElement.scrollWidth <= 390` on the five pages; the sidebar spans the full height on `/sae/[id]`; the 125% zoom pass is noted in the commit message; screenshots committed.

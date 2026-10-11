@@ -1,0 +1,35 @@
+{
+  "_about": "Approved English wording for site queries (WS4, task D11): non-leading, data-completeness requests to site staff, the coded responses a site can give, and the phrases no query text may contain. Frozen with the sap-v1 tag; after the tag any change needs a row in docs/11 section 17. Rendered by backend/app/services/site_queries.py; a CRA approves every query before it reaches the site. Placeholders are limited to site_id, episode_lines, subject_id, term, episode_date and grade: subject IDs only, never names. Rules: docs/02-data-model.md (SiteQuery) and docs/10-site-signal.md sections 6.4 and 7.3.",
+  "version": 1,
+  "templates": {
+    "SQ_UNMATCHED_EPISODES": {
+      "title_en": "Data-completeness request: symptom reports without a matching AE log entry",
+      "body_en": "Site {site_id}: during between-visit check-in calls, the subjects listed below reported the symptoms shown. We could not find a matching entry in the site's AE log for these reports. Please review the source documents for each listed subject and date, and either enter the event or tell us why no entry is needed.\n{episode_lines}\nEach response code is an equally acceptable answer. This is a data-completeness request only. It is not a finding about the site and does not concern clinical management.",
+      "episode_line_en": "- {subject_id}: {term}, first reported on the call of {episode_date} (provisional grade {grade}, rule-graded)"
+    }
+  },
+  "response_codes": [
+    {"code": "entered_now", "label_en": "AE entered after source review"},
+    {"code": "recorded_as_medical_history", "label_en": "Already recorded as medical history"},
+    {"code": "recorded_under_other_term", "label_en": "Already recorded in the AE log under another term"},
+    {"code": "not_an_ae_per_investigator", "label_en": "Not an AE, per the investigator's judgment"},
+    {"code": "other", "label_en": "Other (explained in the note)"}
+  ],
+  "banned_phrases_en": [
+    "under-report",
+    "underreport",
+    "under report",
+    "fraud",
+    "misconduct",
+    "non-compliant",
+    "noncompliant",
+    "failed to",
+    "missed ae",
+    "clean",
+    "verified site",
+    "you must",
+    "should treat",
+    "dose",
+    "discontinue"
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "_about": "fixture, not a result", "data_origin": "SIMULATED", "sap_tag_commit": "0000000", "eval_seed": 0,
+  "code_commit": "0000000", "generated_at": "2026-10-11T00:00:00Z",
+  "language": {
+    "mh_or": 0.8, "ci95": [0.5, 1.25], "ci95_method": "patient_bootstrap", "rbg_ci95": [0.5, 1.25],
+    "breslow_day_p": 0.5, "n_sites_used": 4,
+    "per_site": [
+      {"site_id": "108", "or": 0.5, "ci95": [0.25, 1.0], "n_es": 20, "n_en": 20},
+      {"site_id": "112", "or": 1.0, "ci95": [0.5, 2.0], "n_es": 10, "n_en": 30},
+      {"site_id": "116", "or": 1.0, "ci95": [0.5, 2.0], "n_es": 30, "n_en": 50},
+      {"site_id": "119", "or": 1.0, "ci95": null, "n_es": 5, "n_en": 25}
+    ]
+  },
+  "pace": {
+    "mh_or": 1.0, "ci95": [0.5, 2.0], "n_sites_used": 4,
+    "per_site": [
+      {"site_id": "106", "or": 1.0, "ci95": [0.5, 2.0], "n_extra_time": 20, "n_standard": 40},
+      {"site_id": "109", "or": 1.0, "ci95": [0.5, 2.0], "n_extra_time": 10, "n_standard": 30},
+      {"site_id": "112", "or": 1.0, "ci95": [0.5, 2.0], "n_extra_time": 10, "n_standard": 30},
+      {"site_id": "119", "or": 1.0, "ci95": null, "n_extra_time": 5, "n_standard": 25}
+    ]
+  },
+  "single_language_counterfactual": [
+    {
+      "site_id": "101", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.3
+    },
+    {
+      "site_id": "102", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.1
+    },
+    {
+      "site_id": "103", "tier_now": "not_computed", "tier_if_english_only": "not_computed", "reason": "low_coverage",
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "104", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "105", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.1
+    },
+    {
+      "site_id": "106", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "107", "tier_now": "watch", "tier_if_english_only": "look", "reason": null,
+      "share_no_reference_stream": 0.3
+    },
+    {
+      "site_id": "108", "tier_now": "look", "tier_if_english_only": "not_computed", "reason": "insufficient_episodes",
+      "share_no_reference_stream": 0.5
+    },
+    {
+      "site_id": "109", "tier_now": "look", "tier_if_english_only": "look", "reason": null,
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "110", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.1
+    },
+    {
+      "site_id": "111", "tier_now": "look", "tier_if_english_only": "look", "reason": null,
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "112", "tier_now": "watch", "tier_if_english_only": "watch", "reason": null,
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "113", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.3
+    },
+    {
+      "site_id": "114", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "115", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.1
+    },
+    {
+      "site_id": "116", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.4
+    },
+    {
+      "site_id": "117", "tier_now": "not_computed", "tier_if_english_only": "not_computed",
+      "reason": "insufficient_patients", "share_no_reference_stream": 0.0
+    },
+    {
+      "site_id": "118", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.2
+    },
+    {
+      "site_id": "119", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.3
+    },
+    {
+      "site_id": "120", "tier_now": "none", "tier_if_english_only": "none", "reason": null,
+      "share_no_reference_stream": 0.1
+    }
+  ],
+  "note": "Within-site comparisons; power is low at these sample sizes."
+}

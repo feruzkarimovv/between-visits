@@ -1,0 +1,90 @@
+{
+  "_about": "Real browser calls against the deployed live backend (WS1 V10). MEASURED: reported on their own, never pooled with the text-mode evaluation in eval/results/latest.json. Rows with status \"pending\" are the three planned calls of the WS1 V10 table, prepared before the calls: placeholders with every measurement null, not results. agent/voice_check.py fills a row from a real call (procedure: agent/README.md); `expected` is the plan, never a result. conversation_id and checkin_id are stored cut to their prefix and last 4 characters. Shape and definitions: docs/03-api-contracts.md section 6.11.",
+  "run_at": null,
+  "backend": "pending",
+  "agent_llm": "claude-sonnet-5-5",
+  "calls": [
+    {
+      "variant": "en-standard",
+      "conversation_id": null,
+      "checkin_id": null,
+      "scenario": "james_g2_diarrhea",
+      "status": "pending",
+      "started_at": null,
+      "disclosure_first_turn": null,
+      "red_flag_expected": false,
+      "paged": null,
+      "page_level": null,
+      "red_flag_ids": null,
+      "utterance_to_page_s": null,
+      "page_to_ack_s": null,
+      "term": null,
+      "grade": null,
+      "rule_id": null,
+      "expected": {
+        "patient_id": "pat_james",
+        "term": "Diarrhea",
+        "grade": 2,
+        "rule_id": "CTCAE5_DIARRHEA_G2",
+        "paged": false,
+        "red_flag_ids": []
+      }
+    },
+    {
+      "variant": "en-standard",
+      "conversation_id": null,
+      "checkin_id": null,
+      "scenario": "james_g3_diarrhea",
+      "status": "pending",
+      "started_at": null,
+      "disclosure_first_turn": null,
+      "red_flag_expected": true,
+      "paged": null,
+      "page_level": null,
+      "red_flag_ids": null,
+      "utterance_to_page_s": null,
+      "page_to_ack_s": null,
+      "term": null,
+      "grade": null,
+      "rule_id": null,
+      "expected": {
+        "patient_id": "pat_james",
+        "term": "Diarrhea",
+        "grade": 3,
+        "rule_id": "CTCAE5_DIARRHEA_G3",
+        "paged": true,
+        "red_flag_ids": [
+          "RF_DIARRHEA_SEVERE"
+        ]
+      }
+    },
+    {
+      "variant": "es-extra_time",
+      "conversation_id": null,
+      "checkin_id": null,
+      "scenario": "rosa_g3_diarrhea",
+      "status": "pending",
+      "started_at": null,
+      "disclosure_first_turn": null,
+      "red_flag_expected": true,
+      "paged": null,
+      "page_level": null,
+      "red_flag_ids": null,
+      "utterance_to_page_s": null,
+      "page_to_ack_s": null,
+      "term": null,
+      "grade": null,
+      "rule_id": null,
+      "expected": {
+        "patient_id": "pat_rosa",
+        "term": "Diarrhea",
+        "grade": 3,
+        "rule_id": "CTCAE5_DIARRHEA_G3",
+        "paged": true,
+        "red_flag_ids": [
+          "RF_DIARRHEA_SEVERE"
+        ]
+      }
+    }
+  ]
+}

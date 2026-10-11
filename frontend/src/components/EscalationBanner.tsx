@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { BellRing, CheckCircle2, PhoneCall, Siren, WifiOff } from "lucide-react";
+import { BellRing, CheckCircle2, ChevronRight, PhoneCall, Siren, WifiOff } from "lucide-react";
 import { useEscalations } from "@/lib/queries";
+import { LiveDot } from "./chips";
 import { cn } from "./ui/primitives";
 
 /** Open escalations pill in the top bar. Polls every 2 s. */
-export function EscalationBanner() {
+export function EscalationBanner({ className }: { className?: string }) {
   const { data, isError, isPending } = useEscalations("open", 2000);
   const open = data ?? [];
   const emergency = open.filter((e) => e.level === "emergency").length;
@@ -26,19 +27,19 @@ export function EscalationBanner() {
     icon = <BellRing className="size-4" aria-hidden />;
     text = "Checking escalations…";
   } else if (emergency > 0) {
-    tone = "border-red-700 bg-red-700 text-white";
+    tone = "bv-breathe border-red-800 bg-red-700 text-white [--bv-glow:rgb(220_38_38/0.45)]";
     icon = <Siren className="size-4" aria-hidden />;
     text = `${paged} open escalation${paged === 1 ? "" : "s"} · ${emergency} emergency`;
   } else if (urgent > 0) {
-    tone = "border-amber-500 bg-amber-400 text-amber-950";
+    tone = "bv-breathe border-amber-500 bg-amber-400 text-amber-950 [--bv-glow:rgb(245_158_11/0.5)]";
     icon = <BellRing className="size-4" aria-hidden />;
     text = `${urgent} urgent escalation${urgent === 1 ? "" : "s"} open`;
   } else if (callback > 0) {
-    tone = "border-blue-200 bg-blue-50 text-blue-900";
+    tone = "border-blue-200 bg-blue-50 text-blue-900 hover:bg-blue-100/70";
     icon = <PhoneCall className="size-4" aria-hidden />;
     text = `${callback} callback${callback === 1 ? "" : "s"} waiting`;
   } else {
-    tone = "border-green-200 bg-green-50 text-green-800";
+    tone = "border-green-200 bg-green-50 text-green-800 hover:bg-green-100/70";
     icon = <CheckCircle2 className="size-4" aria-hidden />;
     text = "No open escalations";
   }
@@ -49,16 +50,18 @@ export function EscalationBanner() {
       href="/escalations"
       aria-live="polite"
       className={cn(
-        "inline-flex h-9 max-w-full min-w-0 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-semibold whitespace-nowrap transition-colors",
+        "group inline-flex h-9 max-w-full min-w-0 items-center gap-2 rounded-full border pr-2.5 pl-3 text-sm font-semibold whitespace-nowrap transition-colors",
         tone,
-        paged > 0 && "shadow-sm",
+        className,
       )}
     >
+      {paged > 0 ? <LiveDot tone={emergency > 0 ? "live" : "red"} className={emergency > 0 ? "[&>span]:bg-white" : undefined} /> : null}
       {icon}
       <span className="truncate">
         {text}
         {extra}
       </span>
+      <ChevronRight className="size-4 shrink-0 opacity-60 transition-transform group-hover:translate-x-0.5" aria-hidden />
     </Link>
   );
 }

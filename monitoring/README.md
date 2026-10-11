@@ -1,0 +1,75 @@
+# monitoring/: Site Signal statistics
+
+Pre-registered, deterministic, seed-reproducible statistics behind Site Signal: capture discordance between what a site's own patients told Between Visits and what the site's AE log records. A tier is a reason to look, not a finding. The plan is [`docs/11-site-signal-sap.md`](../docs/11-site-signal-sap.md) (the SAP; on statistics it overrides every other document); the product requirements are [`docs/10-site-signal.md`](../docs/10-site-signal.md); tasks are S1–S10 in [`docs/workstreams/WS5-site-signal.md`](../docs/workstreams/WS5-site-signal.md).
+
+**Every Site Signal study is SIMULATED.** Both streams (patient episodes and site AE logs) of sites 101–120 are generated here from `params.yaml`; only live and replayed calls at site 101 are MEASURED, and they never enter a statistic. No LLM is used anywhere in this folder (CLAUDE.md rule 1): grades and red flags come from the real `backend/app/services/rules.py` through `bvsignal/_backend.py`, and every match, evaluability, minimum-data and tier constant is read from `data/signal_rules.json` or `params.yaml`.
+
+## Setup
+
+A separate uv project (Python 3.12; numpy, scipy, pyyaml, pydantic and pydantic-settings; pytest and ruff for development). numpy and scipy live only here; the backend never imports this project.
+
+```bash
+uv sync --project monitoring
+uv run --project monitoring pytest -q          # from the repository root (or: cd monitoring && uv run pytest -q)
+cd monitoring && uv run ruff check .
+```
+
+`monitoring/uv.lock` is committed and frozen by the `sap-v1` tag: numpy does not promise identical random streams across versions.
+
+## Files
+
+| Path | What | Status |
+|---|---|---|
+| `params.yaml` | Every pre-registered parameter (SAP §11.3, §11.4), each number with a citation or `ASSUMPTION`; `signal_rules_sha256` and `frozen_inputs` | S1 |
+| `bvsignal/seed.py` | Evaluation-seed derivation, replicate keys, beacon fetch, run log, frozen-input hashes | S1 |
+| `bvsignal/_backend.py` | Puts `backend/` on `sys.path` and re-exports the rules engine (`grade`, `term_present`, `red_flags`, `level_for`) and `app.services.episodes` (B16); no `.env`, database or LLM | S1, S2 |
+| `bvsignal/roster.py` | Parametric roster (SAP §11.2 step 1): sites 101–120 with fictional names (101 = Hillside Cancer Center, fictional, always honest), patients per site, Spanish share, age and pace, enrollment day | S2 |
+| `bvsignal/simulate.py` | One simulated study per replicate key (SAP §11.2, §11.4): latent episodes, q3w schedule, answers graded by the real `rules.py`, mapping error, red flags, site AE log, answer key; the `Study` object every indicator reads. `python -m bvsignal.simulate --seed dev --studies N [--with-episodes] [--out SCRATCH]` times studies (dev seed only, never into `out/`) | S2 |
+| `quote_bank.json` | Synthetic EN/ES patient phrasings per term × grade band (our own words, AI-assisted; Spanish entries with AI-assisted English translations); never PRO-CTCAE wording, never spoken by the agent | S2 |
+| `planning/plan_power.py`, `planning/planning_grid.json` | Pre-tag planning grid (SAP §11.5 rules P1 and P2), dev seed, **planning only, not a result** | S1 |
+| `planning/check_params_sap.py` | Checks `params.yaml` against the SAP §11.3 and §11.4 tables and the §11.5 values | S1 |
+| `seed_beacon.json` | Beacon round and randomness, the selection times and every failed attempt, fetched once after the tag | after the tag |
+| `bvsignal/indicators.py` | Capture discordance on the `match.py` O, E and V (z, winsorized φ̂, additive τ̂², z\*; SAP §8), the gsm-style rate KRI (§10.1), simaerep classic (legacy) on the same study (§10.2), the AE-to-report ratio ablation (§10.3); tiers from `thresholds.json` (discordance, rate KRI and ablation flag at ≤, simaerep classic at `prob` ≥; Watch implies Look), `not_computed` reasons, rank by z\* ascending, calibrated empirical p-values with BH q-values (report.md only) | S4 |
+| `bvsignal/calibrate.py` | Look and Watch thresholds of all three indicators and the ablation from R = `calibration.r_null` null studies on stream 1 (SAP §9.2–9.3: pooled per-site 5%, 10% of per-study minima, discreteness rule, c_watch := min(c_watch, c_look), −∞ = never assigned) → `out/thresholds.json` (with achieved in-sample rates, MC SE and `expected_false_look_flags_per_study`) and `out/null_pool.json` (the discordance Look pool for the §8.3 p-values); worker processes, output independent of the worker count | S4 |
+| `bvsignal/{match,simaerep_classic,equity,run,validate,blind,report}.py`, `out/` | Analysis and committed outputs | after the `sap-v1` tag (S3, S5–S10) |
+
+## Seeds and pre-registration order (SAP §1.2, §1.3)
+
+- **Dev seed** `20261011` (`params.yaml` `seeds.dev`): development, unit tests and the planning grid only. Dev-seed outputs are never committed, except `planning/planning_grid.json`.
+- **Evaluation seed**: `int(sha256(("sap-v1:" + S + ":" + B).encode()).hexdigest()[:8], 16)`, where `S` is `git rev-parse sap-v1^{commit}` and `B` is the randomness of the first drand mainnet round at least 10 minutes after the `sap-v1` tagger timestamp (NIST beacon 2.0 fallback only if drand has not returned the round by round time + 30 min; the empty string only if neither has by round time + 60 min; every failed attempt is recorded in `seed_beacon.json` `attempts` and cited in SAP §17).
+- Every replicate draws from `numpy.random.SeedSequence(seed, spawn_key=(stream, cell_index, role, i))`; streams are listed in `params.yaml` `streams` and cells in `cell_index`.
+- Before the tag only the S1 files (and B16, `backend/app/services/episodes.py`) may exist; nothing under `monitoring/out/` or `validation/site_signal/` is committed before the tag.
+
+```bash
+make planning-grid                                                      # pre-tag planning grid (dev seed)
+uv run --project monitoring python -m bvsignal.seed --frozen-inputs     # print signal_rules_sha256 and frozen_inputs
+uv run --project monitoring python -m bvsignal.seed --write-frozen      # write them into params.yaml (comments kept)
+uv run --project monitoring python -m bvsignal.seed --check-frozen      # exit 1 on a mismatch no SAP §17 row cites
+uv run --project monitoring python monitoring/planning/check_params_sap.py   # params.yaml vs the SAP tables
+# after the sap-v1 tag is pushed:
+uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait   # retries drand from the round time; NIST from +30 min, empty B from +60 min
+uv run --project monitoring python -m bvsignal.seed --show              # sap_tag_commit=<sha> beacon_round=<n> eval_seed=<int>
+```
+
+Calibration (S4; SAP §9.2): the committed run uses the evaluation seed and is made once by the team lead; development runs use the dev seed and a scratch directory (never `monitoring/out/`):
+
+```bash
+uv run --project monitoring python -m bvsignal.calibrate                                   # evaluation seed -> monitoring/out/, run log
+uv run --project monitoring python -m bvsignal.calibrate --seed dev --out "$TMPDIR/cal"     # development only; --r N, --workers N
+```
+
+`--show` exits non-zero with a clear message before the tag exists, before the beacon file exists, or outside a git checkout. Every evaluation-seed run of `calibrate`, `run`, `validate` and `blind --precompute` refuses a dirty working tree and appends `{utc_time, code_commit, git_dirty, command, output_sha256}` to `validation/site_signal/run_log.jsonl` (`bvsignal.seed.log_run`).
+
+## Outputs and labels
+
+- Every output object carries `data_origin: "SIMULATED"`, `sap_tag_commit`, `eval_seed` and `code_commit` (SAP §15 rule 7).
+- Numbers quoted anywhere come only from `validation/site_signal/summary.json` and `monitoring/out/*.json` (SAP §15 rule 1). `planning_grid.json` is never quoted as a result.
+- Wording: "capture discordance", "a reason to look, not a finding", and "No signal at this sample size" for the `none` tier. Tiers are `watch`, `look`, `none` and `not_computed`; there is no green tier.
+
+## Third-party attribution
+
+The simaerep classic (legacy) comparator, `bvsignal/simaerep_classic.py` (task S5, SAP §10.2), is a Python port of the original (`visit_med75`, `med75_adj`) algorithm of [openpharma/simaerep](https://github.com/openpharma/simaerep), Copyright (c) 2020 F. Hoffmann-La Roche Ltd and simaerep authors, MIT License; the license text is in `tests/fixtures/SIMAEREP_LICENSE`. It is labeled "simaerep classic (legacy)" in every output; simaerep v1.0.0's inframe default is not ported. The port is fixture-tested against the R-computed regression data shipped in the v1.0.0 repository (`R/sysdata.rda`, extracted once by `tests/fixtures/extract_simaerep_fixture.py` into `tests/fixtures/simaerep_*_fixture.csv`; the R-data reader is not a dependency of this project):
+
+```bash
+uv run --project monitoring pytest -q monitoring/tests/test_simaerep_fixture.py   # REQ-028
+```

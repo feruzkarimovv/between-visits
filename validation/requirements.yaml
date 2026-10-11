@@ -1,5 +1,5 @@
 # Between Visits requirements (GxP-lite traceability)
-# Each requirement must have at least one pytest test tagged @pytest.mark.req("REQ-xxx").
+# Each requirement must have at least one pytest test tagged @pytest.mark.req("REQ-xxx") (backend/tests or monitoring/tests).
 # `make validate` builds validation/traceability.md and validation/summary.json from these.
 version: 1
 requirements:
@@ -63,3 +63,59 @@ requirements:
     title: Demo mode without keys
     text: Demo mode runs the full replay end to end without external API keys.
     risk: low
+  - id: REQ-016
+    title: Local dates
+    text: The check-in day filter, patient timeline dates, AESTDTC fallback and SAE onset use the DISPLAY_TZ local date of the call.
+    risk: medium
+  - id: REQ-017
+    title: Safe startup and demo-only controls
+    text: Outside DEMO_MODE the backend refuses to start with the default, empty or short tool secret, and /api/demo/* returns 404 unless DEMO_MODE=1.
+    risk: medium
+  - id: REQ-018
+    title: Role gating
+    text: "Role-restricted actions return 403 wrong_role for any other role: investigator-only assessment/SAE edit/sign, CRA-only query actions, coordinator-only query responses, cra/sponsor-only Site Signal views."
+    risk: medium
+  - id: REQ-019
+    title: Tamper-evident audit
+    text: Audit events form a hash chain and GET /api/audit/verify reports the first modified event.
+    risk: medium
+  - id: REQ-020
+    title: Parseable, consistent exports
+    text: AE/CM CSVs start with the header row, carry ORIGIN=between_visits, and AEOUT agrees with the SAE report outcome.
+    risk: medium
+  - id: REQ-021
+    title: No LLM on the statistics path
+    text: Site flags, thresholds and tiers are computed only by pre-specified code in monitoring/ and services/site_signal.py; neither imports an LLM client.
+    risk: high
+  - id: REQ-022
+    title: Pre-registration order
+    text: "The sap-v1 tag exists; its commit is an ancestor of every commit that added evaluation outputs; the eval seed equals the derivation from the tag commit and the recorded beacon round (docs/11 §1.3), and a NIST or empty beacon value is backed by failed attempts past the §1.3 deadlines in monitoring/seed_beacon.json; every committed evaluation output's sha256 is in validation/site_signal/run_log.jsonl and no log line predates the tag."
+    risk: high
+  - id: REQ-023
+    title: Calibrated thresholds
+    text: "Look and Watch thresholds are read only from monitoring/out/thresholds.json; on fresh null seeds the Look per-site rate is ≤ 0.05 and the Watch family-wise rate ≤ 0.10, each + 2·√(SE_cal² + SE_val²), one-sided (docs/11 §12.1); validate --quick --check reproduces the committed per-replicate hashes exactly."
+    risk: high
+  - id: REQ-024
+    title: Stream independence
+    text: AE rows with origin=between_visits never match an episode, and red-flag-paged episodes are excluded from O/E and reported as a separate stratum.
+    risk: high
+  - id: REQ-025
+    title: Never green
+    text: 'Sites below minimum data or coverage, sites where drafts reached site staff (integrated_mode), studies below 10 computed sites, and any computation or load error yield "not computed" with a reason; no tier means "clean".'
+    risk: high
+  - id: REQ-026
+    title: Evidence on every flag
+    text: "Every site at Look or Watch exposes at least one evaluable unmatched episode with verbatim quote, quote language, date, source and data_origin; every translation, including the AI-assisted translations of synthetic quotes, carries translation_is_ai: true."
+    risk: high
+  - id: REQ-027
+    title: Human-approved, audited site queries
+    text: A site query reaches the site inbox only after CRA approval; draft, edit, approve, answer and close each write an AuditEvent; text comes from data/site_queries.json and contains subject IDs only.
+    risk: high
+  - id: REQ-028
+    title: Comparators on identical data
+    text: "The gsm-style rate KRI, simaerep classic (legacy) and the AE-to-report ratio ablation are computed on the same simulated study and calibrated by the same null procedure; the port reproduces the R fixture p-values (max relative difference < 1e-9)."
+    risk: medium
+  - id: REQ-030
+    title: SIMULATED / MEASURED labeling
+    text: Every Site Signal run, row and episode payload carries data_origin (SIMULATED, MEASURED, or MIXED for the site 101 card and mixed queries), no statistic pools SIMULATED with MEASURED data, and simulated quotes are marked source synthetic.
+    risk: medium

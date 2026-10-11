@@ -8,6 +8,12 @@ export const API_BASE_URL = (
 
 export const USE_FIXTURES = process.env.NEXT_PUBLIC_USE_FIXTURES === "1";
 
+/**
+ * Optional dashboard token for the private live instance (docs/03 §6.8). Inlined into the browser bundle,
+ * so it keeps casual traffic off that instance; it is not authentication. Unset by default and in demo mode.
+ */
+const DASHBOARD_TOKEN = process.env.NEXT_PUBLIC_BV_DASHBOARD_TOKEN || "";
+
 export const NETWORK_ERROR_MESSAGE =
   "Can't reach the backend. Check that `make dev` is running.";
 
@@ -57,9 +63,31 @@ function parseError(status: number, json: unknown): ApiError {
   return new ApiError(status, `http_${status}`, `Request failed (${status})`);
 }
 
+/** Demo identity headers, plus X-BV-Token when NEXT_PUBLIC_BV_DASHBOARD_TOKEN is set (docs/03 §6.8). */
+function requestHeaders(accept: string): Record<string, string> {
+  const identity = getIdentity();
+  const headers: Record<string, string> = {
+    Accept: accept,
+    "X-BV-User": identity.user,
+    "X-BV-Role": identity.role,
+  };
+  if (DASHBOARD_TOKEN) headers["X-BV-Token"] = DASHBOARD_TOKEN;
+  return headers;
+}
+
+function parseJson(text: string): unknown {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * The one way the dashboard talks to the backend. Adds the demo identity
- * headers, parses JSON and throws `ApiError` for `{"error":{code,message}}`.
+ * headers (and X-BV-Token when NEXT_PUBLIC_BV_DASHBOARD_TOKEN is set), parses
+ * JSON and throws `ApiError` for `{"error":{code,message}}`.
  * With NEXT_PUBLIC_USE_FIXTURES=1 every call is served from src/fixtures.
  */
 export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> {
@@ -74,11 +102,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
     return res.body as T;
   }
 
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    "X-BV-User": identity.user,
-    "X-BV-Role": identity.role,
-  };
+  const headers = requestHeaders("application/json");
   let body: string | undefined;
   if (init.body !== undefined) {
     headers["Content-Type"] = "application/json";
@@ -99,22 +123,85 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
     throw new ApiError(0, "network_error", NETWORK_ERROR_MESSAGE);
   }
 
-  const text = await res.text();
-  let json: unknown = null;
-  if (text) {
-    try {
-      json = JSON.parse(text);
-    } catch {
-      json = null;
-    }
-  }
+  const json = parseJson(await res.text());
   if (!res.ok) throw parseError(res.status, json);
   return json as T;
 }
 
+export interface DownloadResult {
+  /** The file name the browser saved (from Content-Disposition, else the fallback). */
+  filename: string;
+  /** The `X-BV-Note` response header (docs/03 §6.5), when the export sends one. */
+  note: string | null;
+  bytes: number;
+}
+
+/** `filename` from a Content-Disposition header (`filename*=UTF-8''...` first), without any path part. */
+function filenameFrom(disposition: string | null): string | null {
+  if (!disposition) return null;
+  const star = /filename\*\s*=\s*(?:[\w-]+'[^']*')?([^;]+)/i.exec(disposition);
+  const plain = /filename\s*=\s*("([^"]*)"|[^;]+)/i.exec(disposition);
+  let name: string | null = null;
+  if (star) {
+    try {
+      name = decodeURIComponent(star[1].trim().replace(/^"|"$/g, ""));
+    } catch {
+      name = null;
+    }
+  }
+  if (!name && plain) name = (plain[2] ?? plain[1]).trim();
+  const base = name?.split(/[\\/]/).pop()?.trim();
+  return base ? base : null;
+}
+
+/**
+ * Downloads a file from the API with the same headers as `apiFetch()` (a plain link would not send X-BV-Token),
+ * then hands it to the browser as a blob. Throws `ApiError` like `apiFetch()`, keyed on `error.code`.
+ */
+export async function apiDownload(path: string, fallbackFilename: string): Promise<DownloadResult> {
+  if (USE_FIXTURES) {
+    throw new ApiError(404, "export_unavailable", "Downloads need the backend; fixture mode has no export files.");
+  }
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, { method: "GET", headers: requestHeaders("*/*"), cache: "no-store" });
+  } catch {
+    throw new ApiError(0, "network_error", NETWORK_ERROR_MESSAGE);
+  }
+  if (!res.ok) throw parseError(res.status, parseJson(await res.text()));
+
+  const blob = await res.blob();
+  const filename = filenameFrom(res.headers.get("Content-Disposition")) ?? fallbackFilename;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // Revoke later: some browsers read the blob after click() returns.
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  return { filename, note: res.headers.get("X-BV-Note"), bytes: blob.size };
+}
+
+/** True when `e` is an `ApiError` with one of these `error.code` values. Handle errors by code, not HTTP status. */
+export function hasErrorCode(e: unknown, ...codes: string[]): e is ApiError {
+  return isApiError(e) && codes.includes(e.code);
+}
+
+/** Extra guidance shown after the server's message, keyed on `error.code`. */
+const CODE_HINTS: Record<string, string> = {
+  wrong_role: "Switch the demo role in the top bar.",
+};
+
 /** Human message for a toast or error state. */
 export function errorMessage(e: unknown): string {
-  if (isApiError(e)) return e.message;
+  if (isApiError(e)) {
+    const hint = CODE_HINTS[e.code];
+    return hint ? `${e.message} ${hint}` : e.message;
+  }
   if (e instanceof Error) return e.message;
   return "Something went wrong.";
 }

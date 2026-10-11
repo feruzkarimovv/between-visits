@@ -1,20 +1,28 @@
 """Dashboard API (/api). Thin: logic lives in app/services/*."""
 
 import json
+import logging
+import threading
+from collections.abc import Callable
 from datetime import date
+from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.responses import PlainTextResponse
 from sqlmodel import Session, select
 
 from app import content
-from app.audit import write_audit
+from app.audit import verify_chain, write_audit
 from app.config import ROOT, get_settings
 from app.db import get_session
 from app.errors import ApiError
 from app.models import AuditEvent, CheckIn, CheckInPlan, DraftEntry, Escalation, Patient, SAEReport, Study
 from app.schemas import (
+    DEFAULT_ROLE,
+    ROLES,
     AuditOut,
+    AuditVerifyOut,
     CheckInDetail,
     CheckInListItem,
     CheckInOut,
@@ -35,12 +43,15 @@ from app.schemas import (
     PlanRedFlagOut,
     RejectIn,
     ResolveIn,
+    Role,
     SAEOut,
     SAEPatchIn,
+    SiteSignalHealth,
     SponsorInboxItem,
     StudyOut,
     TermTimeline,
     TimelinePoint,
+    VoiceChecksOut,
     WebSession,
     WebStartedIn,
 )
@@ -50,20 +61,46 @@ from app.services import checkins as checkin_svc
 from app.services import elevenlabs, review, sae
 from app.services import escalation as esc_svc
 from app.services import export as export_svc
-from app.timeutil import utcnow
+from app.timeutil import local_date, utcnow
 
 router = APIRouter(prefix="/api", tags=["api"])
+log = logging.getLogger("bv.api")
 
 
 class Actor:
-    def __init__(self, user: str, role: str):
+    def __init__(self, user: str, role: Role):
         self.user, self.role = user, role
+
+
+def normalize_role(value: str | None) -> Role:
+    """`X-BV-Role` -> Role. Case-insensitive; a missing or unknown value means coordinator (docs/03 §6.1)."""
+    role = (value or "").strip().lower()
+    return next((r for r in ROLES if r == role), DEFAULT_ROLE)
 
 
 def actor(
     x_bv_user: str | None = Header(default=None), x_bv_role: str | None = Header(default=None)
 ) -> Actor:
-    return Actor(x_bv_user or "Unknown user", (x_bv_role or "coordinator").lower())
+    return Actor(x_bv_user or "Unknown user", normalize_role(x_bv_role))
+
+
+def require_role(*roles: Role, action: str = "use this route") -> Callable[..., Actor]:
+    """Dependency for a role-restricted route (docs/03 §6.1). Any other role gets 403 `wrong_role`.
+
+    Use it in place of `actor`: it returns the same Actor. The role is checked before the route body runs, so a
+    wrong role is 403 even for a missing entity or an invalid body. The Site Signal router reuses it.
+    """
+    if not roles or any(r not in ROLES for r in roles):
+        raise ValueError(f"require_role needs known roles, got {roles!r}")
+    allowed = frozenset(roles)
+    message = f"Only the {' or '.join(roles)} role can {action}."
+
+    def dependency(who: Actor = Depends(actor)) -> Actor:
+        if who.role not in allowed:
+            raise ApiError(403, "wrong_role", message)
+        return who
+
+    return dependency
 
 
 def _get(session: Session, model, id_: str, what: str):  # noqa: ANN001, ANN202
@@ -76,6 +113,55 @@ def _get(session: Session, model, id_: str, what: str):  # noqa: ANN001, ANN202
 # ---- health and reference -----------------------------------------------------------------------------
 
 
+SIGNAL_RUN_FILE = "signal_run.json"
+_signal_run_cache: dict[Path, tuple[tuple[int, int], dict[str, Any] | None]] = {}
+_signal_run_lock = threading.Lock()
+
+
+def _signal_run_meta(doc: Any) -> dict[str, Any]:
+    """`{sap_tag_commit, generated_at}` from a loaded signal_run.json, or ValueError when it is not
+    `{run, sites, rows, ...}` (docs/02 § Files behind Site Signal)."""
+    if not isinstance(doc, dict):
+        raise ValueError("signal_run.json is not a JSON object")
+    run = doc.get("run")
+    if not isinstance(run, dict) or not isinstance(doc.get("sites"), list) or not isinstance(doc.get("rows"), list):
+        raise ValueError("signal_run.json needs a run object and sites and rows lists")
+    meta = {k: run.get(k) for k in ("sap_tag_commit", "generated_at")}
+    if any(v is not None and not isinstance(v, str) for v in meta.values()):
+        raise ValueError("run.sap_tag_commit and run.generated_at must be strings or null")
+    return meta
+
+
+def site_signal_health() -> SiteSignalHealth:
+    """`health.site_signal` (docs/03 §6.7): available only when MONITORING_OUT/signal_run.json exists and loads.
+
+    Read-only and never raises: a missing, unreadable or malformed file means `available: false`. The result is
+    cached per file mtime and size, so polling health does not re-parse the run. Nothing on the safety path reads it.
+    """
+    path = get_settings().monitoring_out / SIGNAL_RUN_FILE
+    meta: dict[str, Any] | None = None
+    try:
+        st = path.stat()
+        key = (st.st_mtime_ns, st.st_size)
+        with _signal_run_lock:
+            cached = _signal_run_cache.get(path)
+        if cached is not None and cached[0] == key:
+            meta = cached[1]
+        else:
+            try:
+                meta = _signal_run_meta(json.loads(path.read_text(encoding="utf-8")))
+            except (OSError, ValueError) as exc:  # unreadable, not JSON (JSONDecodeError is a ValueError), bad shape
+                log.warning("site_signal_unavailable path=%s reason=%s", path, exc)
+            with _signal_run_lock:
+                _signal_run_cache[path] = (key, meta)
+    except OSError:  # missing (the normal state until the committed study exists)
+        meta = None
+    if meta is None:
+        return SiteSignalHealth(available=False, sap_tag_commit=None, generated_at=None, data_origin="SIMULATED")
+    return SiteSignalHealth(available=True, sap_tag_commit=meta["sap_tag_commit"], generated_at=meta["generated_at"],
+                            data_origin="SIMULATED")
+
+
 @router.get("/health", response_model=Health)
 def health(request: Request) -> Health:
     s = get_settings()
@@ -83,7 +169,8 @@ def health(request: Request) -> Health:
     return Health(ok=True, demo_mode=s.demo_mode, version=request.app.version, commit=request.app.state.commit,
                   app_env=s.app_env, pager_channel=s.effective_pager_channel,
                   phone_calls_enabled=ready["phone"] is None, browser_calls_enabled=ready["web"] is None,
-                  phone_calls_note=ready["phone"], browser_calls_note=ready["web"])
+                  phone_calls_note=ready["phone"], browser_calls_note=ready["web"],
+                  site_signal=site_signal_health())
 
 
 @router.get("/study", response_model=StudyOut)
@@ -149,7 +236,7 @@ def patient_detail(patient_id: str, session: Session = Depends(get_session)) -> 
     for c in sorted(cis, key=lambda c: c.created_at):
         if c.status == "scheduled":
             continue
-        d = (c.started_at or c.created_at).date()
+        d = local_date(c.started_at or c.created_at)
         for f in session.exec(select(Finding).where(Finding.checkin_id == c.id)).all():
             ans = session.exec(select(Answer).where(Answer.checkin_id == c.id, Answer.term == f.term)).first()
             timeline.setdefault(f.term, []).append(TimelinePoint(
@@ -179,10 +266,9 @@ def list_checkins(date_: date | None = Query(default=None, alias="date"), sessio
     seen: set[str] = set()
     rows = session.exec(select(CheckIn).order_by(CheckIn.created_at.desc())).all()  # type: ignore[attr-defined]
     for c in rows:
-        when = (c.scheduled_for or c.created_at)
-        if c.status != "scheduled" and c.started_at:
-            when = c.started_at
-        if when.date() != day and (c.created_at.date() != day):
+        # `day` is a DISPLAY_TZ local day (docs/03 §6.4): compare local dates, never UTC dates
+        when = c.started_at or c.scheduled_for or c.created_at
+        if local_date(when) != day and local_date(c.created_at) != day:
             continue
         p = pats.get(c.patient_id)
         if p is None:
@@ -334,10 +420,9 @@ def reject_draft(draft_id: str, body: RejectIn, who: Actor = Depends(actor), ses
 
 
 @router.post("/drafts/{draft_id}/investigator", response_model=InvestigatorOut)
-def investigator(draft_id: str, body: InvestigatorIn, who: Actor = Depends(actor),
+def investigator(draft_id: str, body: InvestigatorIn,
+                 who: Actor = Depends(require_role("investigator", action="assess seriousness and relatedness")),
                  session: Session = Depends(get_session)) -> InvestigatorOut:
-    if who.role != "investigator":
-        raise ApiError(409, "wrong_role", "Only the investigator role can assess seriousness and relatedness.")
     d = _get(session, DraftEntry, draft_id, "draft")
     report = review.investigator(session, d, body, who.user)
     session.commit()
@@ -360,18 +445,17 @@ def sae_get(sae_id: str, session: Session = Depends(get_session)) -> SAEOut:
 
 
 @router.patch("/sae/{sae_id}", response_model=SAEOut)
-def sae_patch(sae_id: str, body: SAEPatchIn, who: Actor = Depends(actor), session: Session = Depends(get_session)) -> SAEOut:
-    if who.role != "investigator":
-        raise ApiError(409, "wrong_role", "Only the investigator role can edit the serious-event report.")
+def sae_patch(sae_id: str, body: SAEPatchIn,
+              who: Actor = Depends(require_role("investigator", action="edit the serious-event report")),
+              session: Session = Depends(get_session)) -> SAEOut:
     r = sae.edit(session, _get(session, SAEReport, sae_id, "sae"), body.narrative_final, body.payload, who.user, who.role)
     session.commit()
     return sae_out(session, r)
 
 
 @router.post("/sae/{sae_id}/sign", response_model=SAEOut)
-def sae_sign(sae_id: str, who: Actor = Depends(actor), session: Session = Depends(get_session)) -> SAEOut:
-    if who.role != "investigator":
-        raise ApiError(409, "wrong_role", "Only the investigator role can sign the serious-event report.")
+def sae_sign(sae_id: str, who: Actor = Depends(require_role("investigator", action="sign the serious-event report")),
+             session: Session = Depends(get_session)) -> SAEOut:
     r = sae.sign(session, _get(session, SAEReport, sae_id, "sae"), who.user, who.role)
     session.commit()
     return sae_out(session, r)
@@ -395,13 +479,15 @@ def sponsor_inbox(session: Session = Depends(get_session)) -> list[SponsorInboxI
 @router.get("/export/ae.csv", response_class=PlainTextResponse)
 def export_ae(session: Session = Depends(get_session)) -> PlainTextResponse:
     return PlainTextResponse(export_svc.ae_csv(session), media_type="text/csv",
-                             headers={"Content-Disposition": "attachment; filename=ae.csv"})
+                             headers={"Content-Disposition": "attachment; filename=ae.csv",
+                                      "X-BV-Note": export_svc.ae_note()})
 
 
 @router.get("/export/cm.csv", response_class=PlainTextResponse)
 def export_cm(session: Session = Depends(get_session)) -> PlainTextResponse:
     return PlainTextResponse(export_svc.cm_csv(session), media_type="text/csv",
-                             headers={"Content-Disposition": "attachment; filename=cm.csv"})
+                             headers={"Content-Disposition": "attachment; filename=cm.csv",
+                                      "X-BV-Note": export_svc.CM_NOTE})
 
 
 @router.get("/export/sae/{sae_id}.json")
@@ -418,8 +504,14 @@ def audit(entity_id: str | None = None, checkin_id: str | None = None, limit: in
         q = q.where(AuditEvent.entity_id == entity_id)
     if checkin_id:
         q = q.where(AuditEvent.checkin_id == checkin_id)
-    rows = session.exec(q.order_by(AuditEvent.ts.desc(), AuditEvent.id.desc()).limit(min(limit, 1000))).all()  # type: ignore[attr-defined]
+    rows = session.exec(q.order_by(AuditEvent.seq.desc()).limit(min(limit, 1000))).all()  # type: ignore[union-attr]
     return [AuditOut(**a.model_dump()) for a in rows]
+
+
+@router.get("/audit/verify", response_model=AuditVerifyOut)
+def audit_verify(session: Session = Depends(get_session)) -> AuditVerifyOut:
+    """Any role; always 200. Walks the hash chain in seq order and names the first event that no longer matches."""
+    return AuditVerifyOut(**verify_chain(session))
 
 
 def _read_json(path: str, code: str) -> dict:
@@ -432,6 +524,14 @@ def _read_json(path: str, code: str) -> dict:
 @router.get("/eval/latest")
 def eval_latest() -> dict:
     return _read_json("eval/results/latest.json", "no_eval_run")
+
+
+@router.get("/eval/voice-checks", response_model=VoiceChecksOut, response_model_exclude_unset=True)
+def eval_voice_checks() -> VoiceChecksOut:
+    """Any role (docs/03 §6.11): real browser calls against the live backend, labeled MEASURED; never pooled
+    with the text-mode evaluation. 404 `no_voice_checks` when the file is absent."""
+    doc = _read_json("eval/results/voice_checks.json", "no_voice_checks")
+    return VoiceChecksOut.model_validate({**doc, "data_origin": "MEASURED"})
 
 
 @router.get("/validation/latest")

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="548" viewBox="0 0 760 548" font-family="Helvetica, Arial, sans-serif" font-size="12">
+<rect x="0" y="0" width="760" height="548" fill="#ffffff"/>
+<text x="72" y="26" font-size="15" font-weight="bold" fill="#111827">Capture discordance funnel · SIMULATED</text>
+<text x="72" y="46" fill="#374151">A reason to look, not a finding. Lines approximate; tiers use each site's exact z*.</text>
+<line x1="72" y1="392.00" x2="732" y2="392.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="64" y="396.00" text-anchor="end" fill="#374151">0.00</text>
+<line x1="72" y1="313.50" x2="732" y2="313.50" stroke="#e5e7eb" stroke-width="1"/>
+<text x="64" y="317.50" text-anchor="end" fill="#374151">0.50</text>
+<line x1="72" y1="235.00" x2="732" y2="235.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="64" y="239.00" text-anchor="end" fill="#374151">1.00</text>
+<line x1="72" y1="156.50" x2="732" y2="156.50" stroke="#e5e7eb" stroke-width="1"/>
+<text x="64" y="160.50" text-anchor="end" fill="#374151">1.50</text>
+<line x1="72" y1="78.00" x2="732" y2="78.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="64" y="82.00" text-anchor="end" fill="#374151">2.00</text>
+<line x1="72.00" y1="392" x2="72.00" y2="397" stroke="#374151"/>
+<text x="72.00" y="411" text-anchor="middle" fill="#374151">0</text>
+<line x1="182.00" y1="392" x2="182.00" y2="397" stroke="#374151"/>
+<text x="182.00" y="411" text-anchor="middle" fill="#374151">5</text>
+<line x1="292.00" y1="392" x2="292.00" y2="397" stroke="#374151"/>
+<text x="292.00" y="411" text-anchor="middle" fill="#374151">10</text>
+<line x1="402.00" y1="392" x2="402.00" y2="397" stroke="#374151"/>
+<text x="402.00" y="411" text-anchor="middle" fill="#374151">15</text>
+<line x1="512.00" y1="392" x2="512.00" y2="397" stroke="#374151"/>
+<text x="512.00" y="411" text-anchor="middle" fill="#374151">20</text>
+<line x1="622.00" y1="392" x2="622.00" y2="397" stroke="#374151"/>
+<text x="622.00" y="411" text-anchor="middle" fill="#374151">25</text>
+<line x1="732.00" y1="392" x2="732.00" y2="397" stroke="#374151"/>
+<text x="732.00" y="411" text-anchor="middle" fill="#374151">30</text>
+<line x1="72" y1="392" x2="732" y2="392" stroke="#374151"/>
+<line x1="72" y1="78" x2="72" y2="392" stroke="#374151"/>
+<text x="402.00" y="428" text-anchor="middle" fill="#111827">E, expected matched episodes (SIMULATED)</text>
+<text x="18" y="235.00" text-anchor="middle" fill="#111827" transform="rotate(-90 18 235.00)">O/E (SIMULATED)</text>
+<line x1="72" y1="235.00" x2="732" y2="235.00" stroke="#6b7280" stroke-dasharray="2 3"/>
+<polyline points="94.00,392.00 95.89,392.00 97.94,392.00 100.17,392.00 102.59,392.00 105.22,392.00 108.07,392.00 111.17,392.00 114.53,392.00 118.18,392.00 122.15,387.26 126.46,382.62 131.13,378.22 136.21,374.05 141.73,370.08 147.72,366.33 154.22,362.78 161.28,359.41 168.95,356.23 177.27,353.23 186.32,350.40 196.13,347.72 206.79,345.20 218.37,342.83 230.94,340.60 244.59,338.50 259.42,336.53 275.51,334.68 292.99,332.95 311.97,331.32 332.58,329.80 354.96,328.38 379.27,327.05 405.66,325.81 434.31,324.65 465.43,323.57 499.22,322.57 535.91,321.63 575.75,320.76 619.02,319.95 666.00,319.19" fill="none" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6 4"/>
+<polyline points="94.00,392.00 95.89,392.00 97.94,392.00 100.17,392.00 102.59,392.00 105.22,392.00 108.07,392.00 111.17,392.00 114.53,392.00 118.18,392.00 122.15,392.00 126.46,392.00 131.13,392.00 136.21,392.00 141.73,392.00 147.72,392.00 154.22,392.00 161.28,392.00 168.95,392.00 177.27,392.00 186.32,392.00 196.13,392.00 206.79,391.90 218.37,388.52 230.94,385.34 244.59,382.36 259.42,379.55 275.51,376.92 292.99,374.45 311.97,372.14 332.58,369.97 354.96,367.95 379.27,366.06 405.66,364.29 434.31,362.64 465.43,361.10 499.22,359.67 535.91,358.34 575.75,357.10 619.02,355.94 666.00,354.87" fill="none" stroke="#b91c1c" stroke-width="1.5"/>
+<circle cx="280.79" cy="375.46" r="5" fill="#d97706" stroke="#ffffff" stroke-width="1"/>
+<text x="287.79" y="369.46" font-size="10" fill="#111827">105</text>
+<circle cx="279.13" cy="341.97" r="5" fill="#d97706" stroke="#ffffff" stroke-width="1"/>
+<text x="286.13" y="335.97" font-size="10" fill="#111827">118</text>
+<circle cx="343.32" cy="315.62" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="350.32" y="309.62" font-size="10" fill="#111827">110</text>
+<circle cx="480.74" cy="273.70" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="487.74" y="267.70" font-size="10" fill="#111827">103</text>
+<circle cx="412.27" cy="260.04" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="419.27" y="254.04" font-size="10" fill="#111827">113</text>
+<circle cx="305.43" cy="258.83" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="312.43" y="252.83" font-size="10" fill="#111827">104</text>
+<circle cx="241.03" cy="248.96" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="248.03" y="242.96" font-size="10" fill="#111827">116</text>
+<circle cx="538.09" cy="243.79" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="545.09" y="237.79" font-size="10" fill="#111827">111</text>
+<circle cx="438.66" cy="222.44" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="445.66" y="216.44" font-size="10" fill="#111827">108</text>
+<circle cx="250.34" cy="217.69" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="257.34" y="211.69" font-size="10" fill="#111827">101</text>
+<circle cx="268.09" cy="198.25" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="275.09" y="192.25" font-size="10" fill="#111827">114</text>
+<circle cx="341.77" cy="199.95" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="348.77" y="193.95" font-size="10" fill="#111827">115</text>
+<circle cx="405.30" cy="143.29" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="412.30" y="137.29" font-size="10" fill="#111827">120</text>
+<circle cx="371.84" cy="138.57" r="5" fill="#475569" stroke="#ffffff" stroke-width="1"/>
+<text x="378.84" y="132.57" font-size="10" fill="#111827">107</text>
+<text x="72" y="470" fill="#6b7280">Not computed (no position: grey, with a reason)</text>
+<circle cx="82.00" cy="484" r="5" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="82.00" y="502" text-anchor="middle" font-size="10" fill="#6b7280">102</text>
+<circle cx="130.00" cy="484" r="5" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="130.00" y="502" text-anchor="middle" font-size="10" fill="#6b7280">106</text>
+<circle cx="178.00" cy="484" r="5" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="178.00" y="502" text-anchor="middle" font-size="10" fill="#6b7280">109</text>
+<circle cx="226.00" cy="484" r="5" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="226.00" y="502" text-anchor="middle" font-size="10" fill="#6b7280">112</text>
+<circle cx="274.00" cy="484" r="5" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="274.00" y="502" text-anchor="middle" font-size="10" fill="#6b7280">117</text>
+<circle cx="322.00" cy="484" r="5" fill="none" stroke="#9ca3af" stroke-width="1.5"/>
+<text x="322.00" y="502" text-anchor="middle" font-size="10" fill="#6b7280">119</text>
+<rect x="474" y="68" width="256" height="96" fill="#ffffff" stroke="#e5e7eb"/>
+<circle cx="482" cy="78" r="5" fill="#b91c1c"/>
+<text x="494" y="82" fill="#111827">Watch</text>
+<circle cx="482" cy="96" r="5" fill="#d97706"/>
+<text x="494" y="100" fill="#111827">Look</text>
+<circle cx="482" cy="114" r="5" fill="#475569"/>
+<text x="494" y="118" fill="#111827">No signal at this sample size</text>
+<line x1="477" y1="132" x2="488" y2="132" stroke="#d97706" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="494" y="136" fill="#111827">Look lower limit</text>
+<line x1="477" y1="150" x2="488" y2="150" stroke="#b91c1c" stroke-width="1.5"/>
+<text x="494" y="154" fill="#111827">Watch lower limit</text>
+<text x="732" y="538" text-anchor="end" font-size="10" fill="#6b7280">SIMULATED · docs/11-site-signal-sap.md §8.4</text>
+</svg>

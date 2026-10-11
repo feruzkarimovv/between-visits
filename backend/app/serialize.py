@@ -22,6 +22,7 @@ from app.schemas import (
     TranscriptTurn,
 )
 from app.services import escalation as esc_svc
+from app.services.export import ORIGIN
 from app.timeutil import ensure_utc, utcnow
 
 
@@ -110,7 +111,7 @@ def draft_out(session: Session, d: DraftEntry, with_patient: bool = False) -> Dr
         evidence=[EvidenceOut(**{k: ev.get(k) for k in EvidenceOut.model_fields}) for ev in d.evidence or []],
         reviewed_by=d.reviewed_by, reviewed_at=d.reviewed_at, review_note=d.review_note,
         investigator=d.investigator, created_at=d.created_at, sae_report_id=sae.id if sae else None,
-        patient=patient_brief(p) if p else None,
+        patient=patient_brief(p) if p else None, origin=ORIGIN,
     )
 
 

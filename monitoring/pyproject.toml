@@ -1,0 +1,40 @@
+[project]
+name = "between-visits-monitoring"
+version = "0.1.0"
+description = "Site Signal statistics for Between Visits: pre-registered (sap-v1), deterministic, SIMULATED data only, no LLM on this path"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy>=2.1",
+  "scipy>=1.14",
+  "pyyaml>=6.0",
+  # pydantic and pydantic-settings are needed only to import the backend's app.content and
+  # app.services.rules (bvsignal/_backend.py); the backend never imports this project.
+  "pydantic>=2.8",
+  "pydantic-settings>=2.4",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+# bvsignal is installed (editable) into the project environment so that
+# `uv run --project monitoring python -m bvsignal.seed ...` works from the repository root.
+[build-system]
+requires = ["uv_build>=0.10.0,<0.11"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "bvsignal"
+module-root = ""
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# -rs: every skip prints its reason (test_sap_order.py skips only outside a git checkout, never in CI)
+addopts = "-rs"

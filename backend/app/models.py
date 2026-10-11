@@ -7,10 +7,11 @@ Timestamps are stored as UTC and always come back timezone-aware.
 from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Column, DateTime, TypeDecorator
+from sqlalchemy import JSON, Column, DateTime, Integer, String, TypeDecorator
 from sqlmodel import Field, SQLModel
 
-from app.timeutil import ensure_utc, utcnow
+from app import timeutil
+from app.timeutil import ensure_utc
 
 
 class UTCDateTime(TypeDecorator):
@@ -106,7 +107,7 @@ class CheckIn(SQLModel, table=True):
     ended_at: datetime | None = Field(default=None, sa_column=dt_col())
     duration_s: int | None = None
     termination_reason: str | None = None
-    created_at: datetime = Field(default_factory=utcnow, sa_column=dt_col(False))
+    created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
 
 
 class Answer(SQLModel, table=True):
@@ -123,7 +124,7 @@ class Answer(SQLModel, table=True):
     quote_lang: str = "en"
     t_s: float | None = None
     source: str = "live_tool"  # live_tool | post_call_extraction | replay
-    created_at: datetime = Field(default_factory=utcnow, sa_column=dt_col(False))
+    created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
 
 
 class Finding(SQLModel, table=True):
@@ -138,7 +139,7 @@ class Finding(SQLModel, table=True):
     red_flag_ids: list[str] = Field(default_factory=list, sa_column=json_col())
     escalation_level: str = "none"
     answer_ids: list[str] = Field(default_factory=list, sa_column=json_col())
-    updated_at: datetime = Field(default_factory=utcnow, sa_column=dt_col(False))
+    updated_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
 
 
 class Escalation(SQLModel, table=True):
@@ -151,7 +152,7 @@ class Escalation(SQLModel, table=True):
     summary_en: str = ""
     patient_language: str = "en"
     status: str = "open"  # open | acknowledged | resolved
-    created_at: datetime = Field(default_factory=utcnow, sa_column=dt_col(False))
+    created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
     paged_at: datetime | None = Field(default=None, sa_column=dt_col())
     last_paged_at: datetime | None = Field(default=None, sa_column=dt_col())  # bookkeeping for re-page
     page_channel: str | None = None
@@ -179,7 +180,7 @@ class DraftEntry(SQLModel, table=True):
     reviewed_at: datetime | None = Field(default=None, sa_column=dt_col())
     review_note: str | None = None
     investigator: dict[str, Any] | None = Field(default=None, sa_column=json_col())
-    created_at: datetime = Field(default_factory=utcnow, sa_column=dt_col(False))
+    created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
 
 
 class SAEReport(SQLModel, table=True):
@@ -197,12 +198,38 @@ class SAEReport(SQLModel, table=True):
     signed_at: datetime | None = Field(default=None, sa_column=dt_col())
     sent_at: datetime | None = Field(default=None, sa_column=dt_col())
     sponsor_received_at: datetime | None = Field(default=None, sa_column=dt_col())
-    created_at: datetime = Field(default_factory=utcnow, sa_column=dt_col(False))
+    created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
+
+
+class SiteQuery(SQLModel, table=True):
+    """A CRA-approved, templated data-completeness query to one site (docs/02 § SiteQuery, docs/03 §5.4).
+    Every state change writes an AuditEvent (`site_query.*`); there is no delete."""
+
+    id: str = Field(primary_key=True)  # sq_...
+    site_id: str = Field(index=True)
+    signal_run_id: str = "sr_committed"
+    template_id: str
+    episode_ids: list[str] = Field(default_factory=list, sa_column=json_col())
+    subject_ids: list[str] = Field(default_factory=list, sa_column=json_col())
+    body_en: str
+    edited: bool = False
+    status: str = "draft"  # draft | sent | answered | closed
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
+    approved_by: str | None = None
+    approved_at: datetime | None = Field(default=None, sa_column=dt_col())
+    response_code: str | None = None
+    response_note: str | None = None
+    responded_by: str | None = None
+    responded_at: datetime | None = Field(default=None, sa_column=dt_col())
+    closed_by: str | None = None
+    closed_at: datetime | None = Field(default=None, sa_column=dt_col())
+    closure_note: str | None = None
 
 
 class AuditEvent(SQLModel, table=True):
     id: str = Field(primary_key=True)
-    ts: datetime = Field(default_factory=utcnow, sa_column=dt_col(False))
+    ts: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
     actor: str
     role: str
     action: str
@@ -212,6 +239,10 @@ class AuditEvent(SQLModel, table=True):
     before: dict[str, Any] | None = Field(default=None, sa_column=json_col())
     after: dict[str, Any] | None = Field(default=None, sa_column=json_col())
     note: str | None = None
+    # Hash chain (B13, docs/03 §6.6). app.audit assigns all three when the event is written; callers never set them.
+    seq: int | None = Field(default=None, sa_column=Column(Integer, nullable=False, unique=True))
+    prev_hash: str | None = Field(default=None, sa_column=Column(String(64), nullable=False))
+    hash: str | None = Field(default=None, sa_column=Column(String(64), nullable=False))
 
 
 def parse_date(s: str) -> date:

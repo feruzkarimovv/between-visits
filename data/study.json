@@ -2,7 +2,7 @@
   "_about": "Example study: real public registry information only (ClinicalTrials.gov, retrieved Oct 9 2026). All patients and events in this project are synthetic and are not findings about this study or its drug. The UI refers to the drug by class only.",
   "id": "std_demo01",
   "nct_id": "NCT02760498",
-  "registry_title": "A Phase 2 Study of REGN2810, a Fully Human Monoclonal Antibody to Programmed Death-1 (PD-1), in Patients With Advanced Cutaneous Squamous Cell Carcinoma",
+  "registry_title": "A phase 2 study of an anti-PD-1 monoclonal antibody in patients with advanced cutaneous squamous cell carcinoma (class-only paraphrase of the public registry title)",
   "title_short": "Open-label PD-1 immunotherapy study in advanced skin cancer (example)",
   "drug_class": "anti-PD-1 monoclonal antibody (immunotherapy)",
   "masking": "open_label",
@@ -30,7 +30,7 @@
   "site_name": "Hillside Cancer Center (fictional)",
   "study_team_name": {
     "en": "the Hillside research team",
-    "es": "el equipo de investigación de Hillside"
+    "es": "equipo de investigación de Hillside"
   },
   "sponsor_display_name": "Sponsor safety team (mock)",
   "active_plan_id": "plan_v1"

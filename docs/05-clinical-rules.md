@@ -9,7 +9,7 @@ Everything clinical lives in `data/` as data, never in code. This doc explains w
 | **NCI PRO-CTCAE** item wording | NCI holds all rights; terms forbid modifying, translating or redistributing items without NCI's written consent, and it is not intended for diagnostic or therapeutic use on individual patients | **Not included.** Our questions in `data/symptom_items.json` are our own wording (MIT). A site that registered its study with NCI can load the official items locally into `data/local/symptom_items.local.json` (gitignored, same item codes); the backend uses that wording when present and the agent still says it verbatim. Never call our questions "PRO-CTCAE". |
 | **NCI CTCAE v5.0** | U.S. government publication, reusable with credit | Grade text in `data/ctcae_rules.json` is verbatim from NCI's v5.0 workbook, credited. |
 | **MedDRA** codes, hierarchy, SOC columns | Licensed; may not be redistributed or exposed to non-subscribers, including open-source repos | **Not included.** CTCAE term names are used as the AE term; SDTM `AEDECOD`/`AEBODSYS` are left empty with a note "coded downstream by licensed sponsor". |
-| Medication Guides (Libtayo) | Manufacturer copyright | Red-flag symptoms are condensed in our own words, with the source named. |
+| US Medication Guide of an approved anti-PD-1 antibody (class only) | Manufacturer copyright | Red-flag symptoms are condensed in our own words, with the source named by drug class. |
 | Example study NCT02760498 | Public registry and posted protocol | Registry facts and protocol page references only; all patients and events are synthetic. |
 
 How to say it in the pitch: "standard symptom questions, graded with the National Cancer Institute's CTCAE, and ready to plug in NCI's official PRO-CTCAE items once a study registers." That is accurate.
@@ -154,8 +154,18 @@ The narrative draft (Gemini) may use only facts present in the payload and evide
 
 ## 8. Exports (SDTM-style CSV, confirmed drafts only)
 
-**AE:** `STUDYID, DOMAIN ("AE"), USUBJID, AESEQ, AESPID (check-in ID), AETERM (CTCAE term), AEDECOD (empty: coded downstream by licensed sponsor), AEBODSYS (empty), AETOXGR ("1"–"5", provisional or clinician-confirmed), AESER (Y/N), AESDTH, AESLIFE, AESHOSP, AESDISAB, AESCONG, AESMIE (Y/N), AEREL (NOT RELATED / UNLIKELY RELATED / POSSIBLY RELATED / PROBABLY RELATED / RELATED), AEOUT (RECOVERED/RESOLVED, RECOVERING/RESOLVING, NOT RECOVERED/NOT RESOLVED, RECOVERED/RESOLVED WITH SEQUELAE, FATAL, UNKNOWN), AESTDTC, AEENDTC` (ISO 8601). Add a header comment line with `# CTCAE v5.0; synthetic data`.
+**AE:** `STUDYID, DOMAIN ("AE"), USUBJID, AESEQ, AESPID (check-in ID), AETERM (CTCAE term), AEDECOD (empty: coded downstream by licensed sponsor), AEBODSYS (empty), AETOXGR ("1"–"5", provisional or clinician-confirmed), AESER (Y/N), AESDTH, AESLIFE, AESHOSP, AESDISAB, AESCONG, AESMIE (Y/N), AEREL (NOT RELATED / UNLIKELY RELATED / POSSIBLY RELATED / PROBABLY RELATED / RELATED), AEOUT (RECOVERED/RESOLVED, RECOVERING/RESOLVING, NOT RECOVERED/NOT RESOLVED, RECOVERED/RESOLVED WITH SEQUELAE, FATAL, UNKNOWN), AESTDTC, AEENDTC, ORIGIN` (dates ISO 8601).
 
-**CM:** `STUDYID, DOMAIN ("CM"), USUBJID, CMSEQ, CMTRT (as reported), CMDECOD (empty: WHODrug is licensed), CMINDC, CMDOSE, CMDOSU, CMDOSFRQ, CMROUTE (ORAL, INTRAVENOUS, ... UNKNOWN), CMSTDTC, CMENDTC`.
+- **Header row first.** Line 1 of each file is the header row, so a standard CSV reader (`csv.DictReader`) reads the columns correctly. There is no comment line.
+- **The note travels in the `X-BV-Note` response header** (CORS exposes it and `Content-Disposition` to the dashboard):
+  - ae.csv: `CTCAE v5.0; synthetic data; AEDECOD/AEBODSYS coded downstream by licensed sponsor; ORIGIN is a sponsor-defined column`
+  - cm.csv: `synthetic data; CMDECOD empty: WHODrug coding is licensed and done downstream`
+- **`ORIGIN`** is a trailing, sponsor-defined (non-SDTM) column, `between_visits` on every row: every exported row is a confirmed Between Visits draft. In a real submission it would be the supplemental qualifier SUPPAE, QNAM `ORIGIN`. Site Signal excludes rows with this origin from matching (REQ-024).
+- **`AEOUT` agrees with the SAE report.** One helper, `outcome_of(payload)` in `backend/app/services/export.py`, gives both `AEOUT` and the SAE report's `reaction.outcome`: a known `outcome` key is used as is; with no `outcome`, an event with `ongoing: true` is `not_recovered` (NOT RECOVERED/NOT RESOLVED); anything else is `unknown` (UNKNOWN).
+- `AESTDTC` is the draft's onset date, else the `DISPLAY_TZ` local date of the call (§6.4 of `docs/03`).
+
+Fixed under CAPA-001 (`validation/capa.md`), tested by REQ-020 (`backend/tests/test_exports.py`).
+
+**CM:** `STUDYID, DOMAIN ("CM"), USUBJID, CMSEQ, CMTRT (as reported), CMDECOD (empty: WHODrug is licensed), CMINDC, CMDOSE, CMDOSU, CMDOSFRQ, CMROUTE (ORAL, INTRAVENOUS, ... UNKNOWN), CMSTDTC, CMENDTC`. Header row first, note in `X-BV-Note` (above); no `ORIGIN` column.
 
 `USUBJID = STUDYID + "-" + subject_id`. These match SDTMIG v3.3 variable names and the CDISC controlled-terminology values listed above.

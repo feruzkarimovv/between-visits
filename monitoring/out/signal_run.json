@@ -1,0 +1,1211 @@
+{
+ "_about": "Site Signal committed evaluation study (docs/11-site-signal-sap.md §11.4, §12.7): both streams are SIMULATED; grades and red flags come from the real rules.py; tiers use the sap-v1 thresholds from thresholds.json; capture discordance is a reason to look, not a finding",
+ "data_origin": "SIMULATED",
+ "run": {
+  "id": "sr_committed",
+  "data_origin": "SIMULATED",
+  "sap_tag_commit": "68838978bb305e0f730d30e5cbf3c00bceca5a25",
+  "eval_seed": 92794863,
+  "generated_at": "2026-10-11T12:18:52Z",
+  "code_commit": "9204a1e025443d19150cc4bb7c41c02d485fb620",
+  "design": {
+   "n_sites": 20,
+   "window_weeks": 36,
+   "data_cut_date": "2026-09-14",
+   "patients_per_site": [
+    40,
+    80
+   ],
+   "mu": 1.5,
+   "gross_f": 0.9,
+   "study_start_date": "2026-01-05"
+  },
+  "thresholds": {
+   "discordance": {
+    "look": -1.7329400110284978,
+    "watch": -2.4672159681302848
+   },
+   "rate_kri": {
+    "look": -1.6856073651955399,
+    "watch": -2.4435375610874623
+   },
+   "simaerep_classic": {
+    "look": 0.9942914228628514,
+    "watch": 0.996003996003996
+   }
+  },
+  "expected_false_look_flags_per_study": 0.772,
+  "phi": 2.4016170770559997,
+  "tau2": 0.07571509819257921,
+  "n_computed_sites": 14,
+  "study_not_computed_reason": null,
+  "seed_label": "eval",
+  "seed": 92794863,
+  "beacon_round": 6542582,
+  "numpy_version": "2.5.4",
+  "scipy_version": "1.18.1",
+  "thresholds_sha256": "2f3b8c4dc13c123c8a125d8bfa77114a2314103d262824dd78acfa3f61b666a0",
+  "outputs": {
+   "episodes.json": "33e3cbdcf10afcb4f3c2293bcd93ee7857a99590d2c5abd79351f8ac65f074ad",
+   "site_ae.json": "c645f015f345311469935d93a79a8d311f25bfa02fcee4972bb043e21ed82872"
+  }
+ },
+ "sites": [
+  {
+   "site_id": "101",
+   "name": "Hillside Cancer Center (fictional)",
+   "region": "Northeast",
+   "n_patients": 66,
+   "spanish_share": 0.36363636363636365,
+   "extra_time_share": 0.21212121212121213,
+   "call_completion": 0.8494304110946013,
+   "is_live_site": true,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "102",
+   "name": "Bluebell Valley Oncology (fictional)",
+   "region": "Midwest",
+   "n_patients": 43,
+   "spanish_share": 0.0,
+   "extra_time_share": 0.18604651162790697,
+   "call_completion": 0.8677811550151976,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "103",
+   "name": "Cobblestone Cancer Clinic (fictional)",
+   "region": "Northeast",
+   "n_patients": 57,
+   "spanish_share": 0.03508771929824561,
+   "extra_time_share": 0.17543859649122806,
+   "call_completion": 0.8578061520603598,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "104",
+   "name": "Driftwood Bay Oncology (fictional)",
+   "region": "West",
+   "n_patients": 54,
+   "spanish_share": 0.09259259259259259,
+   "extra_time_share": 0.14814814814814814,
+   "call_completion": 0.8400713436385255,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "105",
+   "name": "Elm Hollow Cancer Care (fictional)",
+   "region": "South",
+   "n_patients": 77,
+   "spanish_share": 0.03896103896103896,
+   "extra_time_share": 0.22077922077922077,
+   "call_completion": 0.8453652285348142,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "106",
+   "name": "Foxglove Regional Oncology (fictional)",
+   "region": "Midwest",
+   "n_patients": 75,
+   "spanish_share": 0.17333333333333334,
+   "extra_time_share": 0.10666666666666667,
+   "call_completion": 0.8509820666097353,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "107",
+   "name": "Granite Pass Cancer Center (fictional)",
+   "region": "West",
+   "n_patients": 63,
+   "spanish_share": 0.4603174603174603,
+   "extra_time_share": 0.09523809523809523,
+   "call_completion": 0.8676545733265202,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "108",
+   "name": "Heron Creek Oncology (fictional)",
+   "region": "South",
+   "n_patients": 69,
+   "spanish_share": 0.21739130434782608,
+   "extra_time_share": 0.18840579710144928,
+   "call_completion": 0.8556273062730627,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "109",
+   "name": "Indigo Meadow Cancer Clinic (fictional)",
+   "region": "South",
+   "n_patients": 46,
+   "spanish_share": 0.2826086956521739,
+   "extra_time_share": 0.15217391304347827,
+   "call_completion": 0.8559139784946237,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "110",
+   "name": "Juniper Flats Oncology (fictional)",
+   "region": "West",
+   "n_patients": 76,
+   "spanish_share": 0.19736842105263158,
+   "extra_time_share": 0.14473684210526316,
+   "call_completion": 0.8563696919233972,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "111",
+   "name": "Kestrel Point Cancer Care (fictional)",
+   "region": "Northeast",
+   "n_patients": 75,
+   "spanish_share": 0.2,
+   "extra_time_share": 0.13333333333333333,
+   "call_completion": 0.8489116517285531,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "112",
+   "name": "Maple Ridge Oncology (fictional)",
+   "region": "Midwest",
+   "n_patients": 6,
+   "spanish_share": 0.16666666666666666,
+   "extra_time_share": 0.0,
+   "call_completion": 0.8426966292134831,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "113",
+   "name": "Lantern Hill Cancer Center (fictional)",
+   "region": "Northeast",
+   "n_patients": 45,
+   "spanish_share": 0.26666666666666666,
+   "extra_time_share": 0.17777777777777778,
+   "call_completion": 0.8465530022238695,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "114",
+   "name": "Mossbank Oncology Group (fictional)",
+   "region": "Midwest",
+   "n_patients": 71,
+   "spanish_share": 0.11267605633802817,
+   "extra_time_share": 0.18309859154929578,
+   "call_completion": 0.8567518248175182,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "115",
+   "name": "Nettlefield Cancer Clinic (fictional)",
+   "region": "South",
+   "n_patients": 77,
+   "spanish_share": 0.23376623376623376,
+   "extra_time_share": 0.18181818181818182,
+   "call_completion": 0.853495186270406,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "116",
+   "name": "Orchard Lane Oncology (fictional)",
+   "region": "West",
+   "n_patients": 66,
+   "spanish_share": 0.48484848484848486,
+   "extra_time_share": 0.24242424242424243,
+   "call_completion": 0.8356761997091614,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "117",
+   "name": "Quillfeather Cancer Care (fictional)",
+   "region": "Midwest",
+   "n_patients": 70,
+   "spanish_share": 0.24285714285714285,
+   "extra_time_share": 0.11428571428571428,
+   "call_completion": 0.533953488372093,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "118",
+   "name": "Saltmarsh Oncology Partners (fictional)",
+   "region": "South",
+   "n_patients": 60,
+   "spanish_share": 0.3,
+   "extra_time_share": 0.16666666666666666,
+   "call_completion": 0.8650241028387788,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "119",
+   "name": "Tamarack Bend Cancer Center (fictional)",
+   "region": "West",
+   "n_patients": 40,
+   "spanish_share": 0.525,
+   "extra_time_share": 0.225,
+   "call_completion": 0.8638956805215974,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "120",
+   "name": "Willowmere Oncology (fictional)",
+   "region": "Northeast",
+   "n_patients": 55,
+   "spanish_share": 0.12727272727272726,
+   "extra_time_share": 0.12727272727272726,
+   "call_completion": 0.859122401847575,
+   "is_live_site": false,
+   "data_origin": "SIMULATED"
+  }
+ ],
+ "rows": [
+  {
+   "site_id": "105",
+   "n_patients": 77,
+   "n_episodes_evaluable": 19,
+   "n_pending": 6,
+   "n_paged": 45,
+   "call_completion": 0.8453652285348142,
+   "O": 1,
+   "E": 9.490530303030305,
+   "V": 7.75652163887249,
+   "oe_ratio": 0.10536818998203949,
+   "z_raw": -3.0486060848836627,
+   "z_adj": -2.2238872268344085,
+   "tier": "look",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -2.812436564113716,
+     "tier": "watch"
+    },
+    "simaerep_classic": {
+     "prob": 0.9933399933399933,
+     "p_value": 4.638154155228658e-37,
+     "tier": "none"
+    }
+   },
+   "rank": 1,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "118",
+   "n_patients": 60,
+   "n_episodes_evaluable": 19,
+   "n_pending": 5,
+   "n_paged": 44,
+   "call_completion": 0.8650241028387788,
+   "O": 3,
+   "E": 9.415157692768915,
+   "V": 4.979074928413111,
+   "oe_ratio": 0.31863513048794473,
+   "z_raw": -2.874967935821686,
+   "z_adj": -1.8762219312594988,
+   "tier": "look",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -2.567184731986783,
+     "tier": "watch"
+    },
+    "simaerep_classic": {
+     "prob": 0.9933399933399933,
+     "p_value": 2.6137777583712956e-30,
+     "tier": "none"
+    }
+   },
+   "rank": 2,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "110",
+   "n_patients": 76,
+   "n_episodes_evaluable": 25,
+   "n_pending": 5,
+   "n_paged": 48,
+   "call_completion": 0.8563696919233972,
+   "O": 6,
+   "E": 12.332638292653014,
+   "V": 8.04788259147485,
+   "oe_ratio": 0.48651390380713677,
+   "z_raw": -2.232255320434319,
+   "z_adj": -1.4317238889527948,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -0.2995748035968866,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.6253746253746253,
+     "p_value": 0.3586722062930339,
+     "tier": "none"
+    }
+   },
+   "rank": 3,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "103",
+   "n_patients": 57,
+   "n_episodes_evaluable": 38,
+   "n_pending": 4,
+   "n_paged": 80,
+   "call_completion": 0.8578061520603598,
+   "O": 14,
+   "E": 18.579235542577052,
+   "V": 9.494674446039392,
+   "oe_ratio": 0.7535293886509453,
+   "z_raw": -1.4861168003289584,
+   "z_adj": -0.7671518027339399,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 0.20979168284112046,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 4,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "113",
+   "n_patients": 45,
+   "n_episodes_evaluable": 32,
+   "n_pending": 7,
+   "n_paged": 79,
+   "call_completion": 0.8465530022238695,
+   "O": 13,
+   "E": 15.466728373442736,
+   "V": 7.990969340833534,
+   "oe_ratio": 0.8405138880127843,
+   "z_raw": -0.8726128359931842,
+   "z_adj": -0.4828051159766207,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 4.304277218569832,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 5,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "104",
+   "n_patients": 54,
+   "n_episodes_evaluable": 22,
+   "n_pending": 3,
+   "n_paged": 36,
+   "call_completion": 0.8400713436385255,
+   "O": 9,
+   "E": 10.6104346151995,
+   "V": 5.493084947846158,
+   "oe_ratio": 0.8482216163989603,
+   "z_raw": -0.687123717279146,
+   "z_adj": -0.4301427462794102,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -0.45595029178610924,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.6253746253746253,
+     "p_value": 0.27477580831032605,
+     "tier": "none"
+    }
+   },
+   "rank": 6,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "116",
+   "n_patients": 66,
+   "n_episodes_evaluable": 16,
+   "n_pending": 4,
+   "n_paged": 45,
+   "call_completion": 0.8356761997091614,
+   "O": 7,
+   "E": 7.683073737706459,
+   "V": 4.7496458743117005,
+   "oe_ratio": 0.9110936897098727,
+   "z_raw": -0.3134274093068311,
+   "z_adj": -0.22496958546353704,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -0.47095359960760674,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.5293595293595293,
+     "p_value": 0.42274078985461727,
+     "tier": "none"
+    }
+   },
+   "rank": 7,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "111",
+   "n_patients": 75,
+   "n_episodes_evaluable": 44,
+   "n_pending": 6,
+   "n_paged": 77,
+   "call_completion": 0.8489116517285531,
+   "O": 20,
+   "E": 21.185697115384627,
+   "V": 15.664470910774495,
+   "oe_ratio": 0.9440331319320336,
+   "z_raw": -0.2995821257041115,
+   "z_adj": -0.16827633502316391,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 1.0494117248573076,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 8,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "108",
+   "n_patients": 69,
+   "n_episodes_evaluable": 35,
+   "n_pending": 9,
+   "n_paged": 66,
+   "call_completion": 0.8556273062730627,
+   "O": 18,
+   "E": 16.66619915848527,
+   "V": 9.135083678480502,
+   "oe_ratio": 1.0800302953799548,
+   "z_raw": 0.4413008075094822,
+   "z_adj": 0.24284715496063622,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 1.6480576859273122,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 9,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "101",
+   "n_patients": 66,
+   "n_episodes_evaluable": 17,
+   "n_pending": 3,
+   "n_paged": 41,
+   "call_completion": 0.8494304110946013,
+   "O": 9,
+   "E": 8.106296869420309,
+   "V": 4.583127772898838,
+   "oe_ratio": 1.1102480139792366,
+   "z_raw": 0.4174575276260406,
+   "z_adj": 0.28906659511078886,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -0.6364087334109366,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.7102897102897103,
+     "p_value": 0.10082747291528331,
+     "tier": "none"
+    }
+   },
+   "rank": 10,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "114",
+   "n_patients": 71,
+   "n_episodes_evaluable": 19,
+   "n_pending": 6,
+   "n_paged": 46,
+   "call_completion": 0.8567518248175182,
+   "O": 11,
+   "E": 8.913344642352275,
+   "V": 4.730662733982242,
+   "oe_ratio": 1.2341046421264652,
+   "z_raw": 0.9593779473842636,
+   "z_adj": 0.6365407527348373,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 0.8924130654028611,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 11,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "115",
+   "n_patients": 77,
+   "n_episodes_evaluable": 26,
+   "n_pending": 6,
+   "n_paged": 57,
+   "call_completion": 0.853495186270406,
+   "O": 15,
+   "E": 12.26215953307393,
+   "V": 6.478990550576085,
+   "oe_ratio": 1.2232755543215263,
+   "z_raw": 1.0756090931369278,
+   "z_adj": 0.6477750171739545,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 0.48869397467751574,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 12,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "120",
+   "n_patients": 55,
+   "n_episodes_evaluable": 33,
+   "n_pending": 4,
+   "n_paged": 49,
+   "call_completion": 0.859122401847575,
+   "O": 24,
+   "E": 15.150142798857612,
+   "V": 11.79639862146709,
+   "oe_ratio": 1.5841434842323536,
+   "z_raw": 2.576686269597436,
+   "z_adj": 1.638439829656978,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 1.0116634603595969,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 13,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "107",
+   "n_patients": 63,
+   "n_episodes_evaluable": 30,
+   "n_pending": 2,
+   "n_paged": 41,
+   "call_completion": 0.8676545733265202,
+   "O": 22,
+   "E": 13.629277566539928,
+   "V": 11.892655388681492,
+   "oe_ratio": 1.6141721300041842,
+   "z_raw": 2.4273003807102373,
+   "z_adj": 1.6429840438814938,
+   "tier": "none",
+   "not_computed_reason": null,
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 0.24989155163879115,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": 14,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "102",
+   "n_patients": 43,
+   "n_episodes_evaluable": 14,
+   "n_pending": 3,
+   "n_paged": 40,
+   "call_completion": 0.8677811550151976,
+   "O": null,
+   "E": null,
+   "V": null,
+   "oe_ratio": null,
+   "z_raw": null,
+   "z_adj": null,
+   "tier": "not_computed",
+   "not_computed_reason": "insufficient_episodes",
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 1.0545062375645977,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "106",
+   "n_patients": 75,
+   "n_episodes_evaluable": 13,
+   "n_pending": 1,
+   "n_paged": 23,
+   "call_completion": 0.8509820666097353,
+   "O": null,
+   "E": null,
+   "V": null,
+   "oe_ratio": null,
+   "z_raw": null,
+   "z_adj": null,
+   "tier": "not_computed",
+   "not_computed_reason": "insufficient_episodes",
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -1.5789758924580475,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.9933399933399933,
+     "p_value": 2.679643398343322e-09,
+     "tier": "none"
+    }
+   },
+   "rank": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "109",
+   "n_patients": 46,
+   "n_episodes_evaluable": 12,
+   "n_pending": 0,
+   "n_paged": 16,
+   "call_completion": 0.8559139784946237,
+   "O": null,
+   "E": null,
+   "V": null,
+   "oe_ratio": null,
+   "z_raw": null,
+   "z_adj": null,
+   "tier": "not_computed",
+   "not_computed_reason": "insufficient_episodes",
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -0.821169122003123,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.7102897102897103,
+     "p_value": 0.047423308782124605,
+     "tier": "none"
+    }
+   },
+   "rank": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "112",
+   "n_patients": 6,
+   "n_episodes_evaluable": 1,
+   "n_pending": 0,
+   "n_paged": 6,
+   "call_completion": 0.8426966292134831,
+   "O": null,
+   "E": null,
+   "V": null,
+   "oe_ratio": null,
+   "z_raw": null,
+   "z_adj": null,
+   "tier": "not_computed",
+   "not_computed_reason": "insufficient_patients",
+   "comparators": {
+    "rate_kri": {
+     "z_adj": null,
+     "tier": "not_computed"
+    },
+    "simaerep_classic": {
+     "prob": null,
+     "p_value": null,
+     "tier": "not_computed"
+    }
+   },
+   "rank": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "117",
+   "n_patients": 70,
+   "n_episodes_evaluable": 15,
+   "n_pending": 3,
+   "n_paged": 22,
+   "call_completion": 0.533953488372093,
+   "O": null,
+   "E": null,
+   "V": null,
+   "oe_ratio": null,
+   "z_raw": null,
+   "z_adj": null,
+   "tier": "not_computed",
+   "not_computed_reason": "low_coverage",
+   "comparators": {
+    "rate_kri": {
+     "z_adj": -0.903588077498054,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.97002997002997,
+     "p_value": 0.00022808161610199387,
+     "tier": "none"
+    }
+   },
+   "rank": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "119",
+   "n_patients": 40,
+   "n_episodes_evaluable": 13,
+   "n_pending": 3,
+   "n_paged": 34,
+   "call_completion": 0.8638956805215974,
+   "O": null,
+   "E": null,
+   "V": null,
+   "oe_ratio": null,
+   "z_raw": null,
+   "z_adj": null,
+   "tier": "not_computed",
+   "not_computed_reason": "insufficient_episodes",
+   "comparators": {
+    "rate_kri": {
+     "z_adj": 0.8047289479821768,
+     "tier": "none"
+    },
+    "simaerep_classic": {
+     "prob": 0.0,
+     "p_value": 1.0,
+     "tier": "none"
+    }
+   },
+   "rank": null,
+   "data_origin": "SIMULATED"
+  }
+ ],
+ "funnel": {
+  "data_origin": "SIMULATED",
+  "p_bar": 0.45866666666666667,
+  "tau2": 0.07571509819257921,
+  "note": "Lower limits L_t(E) = 1 + c_t sqrt((1 - p_bar)/E + tau2) of docs/11 §8.4 on a grid of E, floored at 0 because O/E >= 0; they approximate V by E(1 - p_bar) and are for display only: tiers always use each site's exact z*",
+  "points": [
+   {
+    "site_id": "105",
+    "E": 9.490530303030305,
+    "oe_ratio": 0.10536818998203949,
+    "tier": "look",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "118",
+    "E": 9.415157692768915,
+    "oe_ratio": 0.31863513048794473,
+    "tier": "look",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "110",
+    "E": 12.332638292653014,
+    "oe_ratio": 0.48651390380713677,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "103",
+    "E": 18.579235542577052,
+    "oe_ratio": 0.7535293886509453,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "113",
+    "E": 15.466728373442736,
+    "oe_ratio": 0.8405138880127843,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "104",
+    "E": 10.6104346151995,
+    "oe_ratio": 0.8482216163989603,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "116",
+    "E": 7.683073737706459,
+    "oe_ratio": 0.9110936897098727,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "111",
+    "E": 21.185697115384627,
+    "oe_ratio": 0.9440331319320336,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "108",
+    "E": 16.66619915848527,
+    "oe_ratio": 1.0800302953799548,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "101",
+    "E": 8.106296869420309,
+    "oe_ratio": 1.1102480139792366,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "114",
+    "E": 8.913344642352275,
+    "oe_ratio": 1.2341046421264652,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "115",
+    "E": 12.26215953307393,
+    "oe_ratio": 1.2232755543215263,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "120",
+    "E": 15.150142798857612,
+    "oe_ratio": 1.5841434842323536,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "107",
+    "E": 13.629277566539928,
+    "oe_ratio": 1.6141721300041842,
+    "tier": "none",
+    "data_origin": "SIMULATED"
+   }
+  ],
+  "limits": [
+   {
+    "E": 1.0,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.0858856503708696,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.1791476456813665,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.2804195081139904,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.3903891703159095,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.5098036484771051,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.6394741167588731,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.7802814175429158,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 1.933182044931763,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 2.099214642146015,
+    "look_lower": 0.0,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 2.2795070569547775,
+    "look_lower": 0.030183006316708894,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 2.4752840030663257,
+    "look_lower": 0.05971348587461811,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 2.687875379522287,
+    "look_lower": 0.08775344253074169,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 2.9187253046084063,
+    "look_lower": 0.11436051252996304,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 3.1694019256486134,
+    "look_lower": 0.13959059788145578,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 3.441608071319632,
+    "look_lower": 0.1634979704756926,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 3.737192818846552,
+    "look_lower": 0.18613536757538218,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 4.058164054654531,
+    "look_lower": 0.20755407824800132,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 4.406702113800222,
+    "look_lower": 0.22780402038522207,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 4.7851745908346395,
+    "look_lower": 0.24693380805789933,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 5.196152422706632,
+    "look_lower": 0.26499080908232775,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 5.642427352956962,
+    "look_lower": 0.2820211928206512,
+    "watch_lower": 0.0,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 6.127030895836055,
+    "look_lower": 0.29806996840054734,
+    "watch_lower": 0.0006503563591124806,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 6.653254929167345,
+    "look_lower": 0.3131810137102784,
+    "watch_lower": 0.02216420683636111,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 7.224674055842078,
+    "look_lower": 0.32739709569755626,
+    "watch_lower": 0.04240388291288322,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 7.845169885845623,
+    "look_lower": 0.3407598826665842,
+    "watch_lower": 0.06142870845727233,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 8.518957403761434,
+    "look_lower": 0.35330994941919436,
+    "watch_lower": 0.07929645050032419,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 9.250613600865218,
+    "look_lower": 0.3650867762158424,
+    "watch_lower": 0.0960633177557868,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 10.04510856630514,
+    "look_lower": 0.37612874263399576,
+    "watch_lower": 0.11178395187644374,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 10.907839248568255,
+    "look_lower": 0.3864731174703202,
+    "watch_lower": 0.12651141307768743,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 11.844666116572435,
+    "look_lower": 0.3961560458659995,
+    "watch_lower": 0.14029716180761798,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 12.861952969420061,
+    "look_lower": 0.4052125348305068,
+    "watch_lower": 0.15319103813699353,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 13.96661016523824,
+    "look_lower": 0.41367643829919654,
+    "watch_lower": 0.16524124048547006,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 15.166141562756124,
+    "look_lower": 0.4215804427871196,
+    "watch_lower": 0.1764943051966965,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 16.46869549449011,
+    "look_lower": 0.42895605459999386,
+    "watch_lower": 0.18699508833035727,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 17.8831201177942,
+    "look_lower": 0.4358335894390283,
+    "watch_lower": 0.19678675086238417,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 19.419023519771347,
+    "look_lower": 0.44224216509578207,
+    "watch_lower": 0.20591074828450495,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 21.08683898433412,
+    "look_lower": 0.44820969778325537,
+    "watch_lower": 0.2144068253807545,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 22.89789586476946,
+    "look_lower": 0.4537629024965595,
+    "watch_lower": 0.22231301674096704,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 24.864496543239632,
+    "look_lower": 0.45892729764691753,
+    "watch_lower": 0.22966565335828182,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "E": 27.0,
+    "look_lower": 0.46372721407165785,
+    "watch_lower": 0.2364993754568221,
+    "data_origin": "SIMULATED"
+   }
+  ]
+ }
+}

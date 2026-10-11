@@ -38,6 +38,7 @@ import {
   TIMELINES,
   VALIDATION,
   dateAt,
+  fixtureChain,
   isoAt,
   walterSae,
   type FixturePatient,
@@ -140,6 +141,7 @@ function freshDb(): Db {
     sae_report_id: "sae_walter",
     created_at: isoAt(-2 * DAY + 10 * MIN),
     patient: patientRef(byId("pat_walter")),
+    origin: "between_visits",
   });
   // Today: Rosa's completed urgent call, James's completed call with a question, Ana no answer
   createSim(byId("pat_rosa"), "phone", Date.now() - 32 * MIN * 1000, "ci_rosa_d3");
@@ -199,6 +201,7 @@ function audit(
     before: (before ?? null) as AuditEvent["before"],
     after: (after ?? null) as AuditEvent["after"],
     note,
+    ...fixtureChain(Math.max(0, ...db.audit.map((a) => a.seq)) + 1),
   });
 }
 
@@ -605,7 +608,7 @@ route("GET", "/api/plan/active", () => ok(PLAN));
 route("GET", "/api/patients", () => ok(PATIENTS.map(patientSummary)));
 route("GET", "/api/patients/([^/]+)", (m) => {
   const p = PATIENTS.find((x) => x.id === m[1]);
-  return p ? ok(patientDetail(p)) : err(404, "not_found", "Patient not found");
+  return p ? ok(patientDetail(p)) : err(404, "patient_not_found", "Patient not found");
 });
 route("GET", "/api/checkins", (_m, q) => {
   const date = q.get("date") ?? dateAt(0);
@@ -613,7 +616,7 @@ route("GET", "/api/checkins", (_m, q) => {
 });
 route("POST", "/api/patients/([^/]+)/checkins", (m, _q, body, identity) => {
   const p = PATIENTS.find((x) => x.id === m[1]);
-  if (!p) return err(404, "not_found", "Patient not found");
+  if (!p) return err(404, "patient_not_found", "Patient not found");
   const live = db.sims.find((s) => s.patient.id === p.id && ["dialing", "in_progress"].includes(s.checkin.status));
   if (live) return err(409, "checkin_in_progress", `${p.subject_id} already has a live check-in.`);
   const req = obj(body) as Partial<CreateCheckInRequest>;
@@ -642,13 +645,13 @@ route("POST", "/api/patients/([^/]+)/checkins", (m, _q, body, identity) => {
 });
 route("POST", "/api/checkins/([^/]+)/web-started", (m) => {
   const sim = db.sims.find((s) => s.id === m[1]);
-  if (!sim) return err(404, "not_found", "Check-in not found");
+  if (!sim) return err(404, "checkin_not_found", "Check-in not found");
   if (sim.startMs === null) sim.startMs = Date.now();
   return ok({ ok: true });
 });
 route("POST", "/api/checkins/([^/]+)/cancel", (m, _q, _b, identity) => {
   const sim = db.sims.find((s) => s.id === m[1]);
-  if (!sim) return err(404, "not_found", "Check-in not found");
+  if (!sim) return err(404, "checkin_not_found", "Check-in not found");
   const before = sim.checkin.status;
   sim.checkin.status = "cancelled";
   audit(identity, "checkin.cancelled", "CheckIn", sim.id, { status: before }, { status: "cancelled" });
@@ -674,7 +677,7 @@ route("GET", "/api/checkins/([^/]+)", (m) => {
       return ok(detail);
     }
   }
-  return err(404, "not_found", "Check-in not found");
+  return err(404, "checkin_not_found", "Check-in not found");
 });
 
 route("GET", "/api/escalations", (_m, q) => {
@@ -684,7 +687,7 @@ route("GET", "/api/escalations", (_m, q) => {
 });
 route("POST", "/api/escalations/([^/]+)/ack", (m, _q, _b, identity) => {
   const e = db.escalations.find((x) => x.id === m[1]);
-  if (!e) return err(404, "not_found", "Escalation not found");
+  if (!e) return err(404, "escalation_not_found", "Escalation not found");
   if (e.status === "open") {
     e.status = "acknowledged";
     e.acknowledged_at = new Date().toISOString();
@@ -696,7 +699,7 @@ route("POST", "/api/escalations/([^/]+)/ack", (m, _q, _b, identity) => {
 });
 route("POST", "/api/escalations/([^/]+)/resolve", (m, _q, body, identity) => {
   const e = db.escalations.find((x) => x.id === m[1]);
-  if (!e) return err(404, "not_found", "Escalation not found");
+  if (!e) return err(404, "escalation_not_found", "Escalation not found");
   const note = String(obj(body).note ?? "");
   const before = e.status;
   if (!e.acknowledged_at) {
@@ -724,7 +727,7 @@ route("GET", "/api/drafts", (_m, q) => {
 });
 route("PATCH", "/api/drafts/([^/]+)", (m, _q, body, identity) => {
   const d = db.drafts.find((x) => x.id === m[1]);
-  if (!d) return err(404, "not_found", "Draft not found");
+  if (!d) return err(404, "draft_not_found", "Draft not found");
   if (d.status !== "draft") return err(409, "not_editable", "Only drafts can be edited.");
   const b = obj(body);
   const before = structuredClone(d.payload);
@@ -734,7 +737,7 @@ route("PATCH", "/api/drafts/([^/]+)", (m, _q, body, identity) => {
 });
 route("POST", "/api/drafts/([^/]+)/confirm", (m, _q, body, identity) => {
   const d = db.drafts.find((x) => x.id === m[1]);
-  if (!d) return err(404, "not_found", "Draft not found");
+  if (!d) return err(404, "draft_not_found", "Draft not found");
   if (d.status !== "draft") return err(409, "not_draft", "Draft was already reviewed.");
   d.status = "confirmed";
   d.reviewed_by = identity.user;
@@ -746,7 +749,7 @@ route("POST", "/api/drafts/([^/]+)/confirm", (m, _q, body, identity) => {
 });
 route("POST", "/api/drafts/([^/]+)/reject", (m, _q, body, identity) => {
   const d = db.drafts.find((x) => x.id === m[1]);
-  if (!d) return err(404, "not_found", "Draft not found");
+  if (!d) return err(404, "draft_not_found", "Draft not found");
   const reason = obj(body).reason;
   if (typeof reason !== "string" || !reason.trim()) return err(422, "reason_required", "A reason is required to reject a draft.");
   d.status = "rejected";
@@ -757,9 +760,9 @@ route("POST", "/api/drafts/([^/]+)/reject", (m, _q, body, identity) => {
   return ok(d);
 });
 route("POST", "/api/drafts/([^/]+)/investigator", (m, _q, body, identity) => {
-  if (identity.role !== "investigator") return err(409, "wrong_role", "Only the investigator can assess seriousness and sign.");
+  if (identity.role !== "investigator") return err(403, "wrong_role", "Only the investigator can assess seriousness and sign.");
   const d = db.drafts.find((x) => x.id === m[1]);
-  if (!d) return err(404, "not_found", "Draft not found");
+  if (!d) return err(404, "draft_not_found", "Draft not found");
   if (d.kind !== "AE" || d.status !== "confirmed") return err(409, "not_confirmed_ae", "Draft must be a confirmed AE.");
   const req = obj(body) as unknown as InvestigatorRequest;
   const before = d.investigator ?? null;
@@ -782,12 +785,12 @@ route("POST", "/api/drafts/([^/]+)/investigator", (m, _q, body, identity) => {
 route("GET", "/api/sae", () => ok(db.saes.map(saeView)));
 route("GET", "/api/sae/([^/]+)", (m) => {
   const s = db.saes.find((x) => x.id === m[1]);
-  return s ? ok(saeView(s)) : err(404, "not_found", "Report not found");
+  return s ? ok(saeView(s)) : err(404, "sae_not_found", "Report not found");
 });
 route("PATCH", "/api/sae/([^/]+)", (m, _q, body, identity) => {
-  if (identity.role !== "investigator") return err(409, "wrong_role", "Only the investigator can edit the report.");
+  if (identity.role !== "investigator") return err(403, "wrong_role", "Only the investigator can edit the report.");
   const s = db.saes.find((x) => x.id === m[1]);
-  if (!s) return err(404, "not_found", "Report not found");
+  if (!s) return err(404, "sae_not_found", "Report not found");
   if (s.status === "sent") return err(409, "already_sent", "Report was already sent.");
   const b = obj(body);
   const before = { narrative_final: s.narrative_final };
@@ -797,9 +800,9 @@ route("PATCH", "/api/sae/([^/]+)", (m, _q, body, identity) => {
   return ok(saeView(s));
 });
 route("POST", "/api/sae/([^/]+)/sign", (m, _q, _b, identity) => {
-  if (identity.role !== "investigator") return err(409, "wrong_role", "Only the investigator can sign.");
+  if (identity.role !== "investigator") return err(403, "wrong_role", "Only the investigator can sign.");
   const s = db.saes.find((x) => x.id === m[1]);
-  if (!s) return err(404, "not_found", "Report not found");
+  if (!s) return err(404, "sae_not_found", "Report not found");
   s.status = "signed";
   s.signed_by = identity.user;
   s.signed_at = new Date().toISOString();
@@ -809,7 +812,7 @@ route("POST", "/api/sae/([^/]+)/sign", (m, _q, _b, identity) => {
 });
 route("POST", "/api/sae/([^/]+)/send", (m, _q, _b, identity) => {
   const s = db.saes.find((x) => x.id === m[1]);
-  if (!s) return err(404, "not_found", "Report not found");
+  if (!s) return err(404, "sae_not_found", "Report not found");
   if (s.status !== "signed") return err(409, "not_signed", "The investigator must sign before sending.");
   const now = new Date().toISOString();
   s.status = "sent";
@@ -831,7 +834,7 @@ route("GET", "/api/validation/latest", () => ok(VALIDATION));
 
 route("GET", "/api/demo/scenarios", () => ok(SCENARIOS));
 route("POST", "/api/demo/replay/([^/]+)", (m, _q, _b, identity) => {
-  if (m[1] !== "rosa_es_urgent") return err(404, "not_found", "Scenario not found");
+  if (m[1] !== "rosa_es_urgent") return err(404, "scenario_not_found", "Scenario not found");
   const p = byId("pat_rosa");
   const live = db.sims.find((s) => s.patient.id === p.id && ["dialing", "in_progress"].includes(s.checkin.status));
   if (live) return err(409, "checkin_in_progress", `${p.subject_id} already has a live check-in.`);

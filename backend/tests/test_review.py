@@ -48,7 +48,7 @@ def test_review_to_sponsor(client, session, fake_pager):
                        "relatedness": "possibly_related"}, headers=INVESTIGATOR).status_code == 409
     assert client.post(f"/api/drafts/{ae['id']}/confirm", json={}, headers=COORD).json()["status"] == "confirmed"
     assert client.post(f"/api/drafts/{ae['id']}/investigator", json={"is_serious": True, "seriousness_criteria": ["hospitalization"],
-                       "relatedness": "possibly_related"}, headers=COORD).status_code == 409
+                       "relatedness": "possibly_related"}, headers=COORD).status_code == 403  # wrong_role (docs/03 §6.1)
     r = client.post(f"/api/drafts/{ae['id']}/investigator", json={"is_serious": True, "seriousness_criteria": ["hospitalization"],
                     "relatedness": "possibly_related", "sign": True}, headers=INVESTIGATOR)
     assert r.status_code == 200
@@ -62,7 +62,7 @@ def test_review_to_sponsor(client, session, fake_pager):
     assert "anti-PD-1" in full["payload"]["suspect_product"]["description"]
 
     assert client.post(f"/api/sae/{sae['id']}/send", headers=COORD).status_code == 409  # must be signed first
-    assert client.post(f"/api/sae/{sae['id']}/sign", headers=COORD).status_code == 409
+    assert client.post(f"/api/sae/{sae['id']}/sign", headers=COORD).status_code == 403  # wrong_role
     assert client.post(f"/api/sae/{sae['id']}/sign", headers=INVESTIGATOR).json()["status"] == "signed"
     assert client.post(f"/api/sae/{sae['id']}/send", headers=COORD).json()["status"] == "sent"
     inbox = client.get("/api/sponsor/inbox").json()
@@ -79,10 +79,10 @@ def test_review_to_sponsor(client, session, fake_pager):
     assert {a.actor for a in human} <= {"Jess Kim", "Dr. Patel"}
 
     ae_csv = client.get("/api/export/ae.csv").text
-    rows = list(csv.reader(io.StringIO(ae_csv.split("\n", 1)[1])))
+    rows = list(csv.reader(io.StringIO(ae_csv)))  # header row is line 1 (B14)
     assert rows[0] == AE_COLUMNS and rows[1][AE_COLUMNS.index("AETOXGR")] == "3"
     assert rows[1][AE_COLUMNS.index("AESHOSP")] == "Y" and rows[1][AE_COLUMNS.index("AEDECOD")] == ""
-    cm_rows = list(csv.reader(io.StringIO(client.get("/api/export/cm.csv").text.split("\n", 1)[1])))
+    cm_rows = list(csv.reader(io.StringIO(client.get("/api/export/cm.csv").text)))
     assert cm_rows[0] == CM_COLUMNS and len(cm_rows) == 2
 
 
@@ -97,8 +97,12 @@ def test_dashboard_reads(client, session, fake_pager):
     assert len(today) == 6
     assert client.get("/api/patients/pat_rosa").json()["subject_id"] == "101-007"
     assert client.get("/api/checkins/nope").json()["error"]["code"] == "checkin_not_found"
-    assert client.get("/api/demo/scenarios").json()[0]["id"] == "rosa_es_urgent"
     assert client.get("/openapi.json").status_code == 200
+
+
+def test_demo_scenarios_in_demo_mode(demo_mode, client):
+    assert client.get("/api/health").json()["demo_mode"] is True
+    assert client.get("/api/demo/scenarios").json()[0]["id"] == "rosa_es_urgent"
 
 
 def test_phone_checkin_without_keys_is_503(client):

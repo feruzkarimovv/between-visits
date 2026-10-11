@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { Check, ClipboardCheck, FileWarning, Pencil, PenLine, X, XCircle } from "lucide-react";
+import { ArrowUpRight, Check, ClipboardCheck, FileWarning, Hourglass, Pencil, PenLine, ShieldAlert, X, XCircle } from "lucide-react";
 import type {
   AEPayload,
   CMPayload,
@@ -20,6 +20,7 @@ import { useIdentity } from "@/lib/role";
 import { formatDay, fullName, humanize } from "@/lib/format";
 import { NURSE_TASK_LABELS, RELATEDNESS_LABELS, RELATEDNESS_ORDER, SERIOUSNESS_LABELS, SERIOUSNESS_ORDER } from "@/lib/labels";
 import {
+  Avatar,
   Button,
   ButtonLink,
   Card,
@@ -29,14 +30,18 @@ import {
   Label,
   LoadingRows,
   PageHeader,
+  Segmented,
   inputClass,
+  selectClass,
   cn,
 } from "@/components/ui/primitives";
-import { Chip, DraftStatusChip } from "@/components/chips";
+import { Chip, DraftStatusChip, OriginTag } from "@/components/chips";
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvidenceQuote } from "@/components/EvidenceQuote";
 import { AiLabel } from "@/components/AiLabel";
 import { RelativeTime } from "@/components/RelativeTime";
+import { DraftKindIcon, KIND_LABEL, draftTitle } from "@/components/DraftKind";
+import { ExportDownloads } from "@/components/DownloadButton";
 
 export default function ReviewPage() {
   return (
@@ -53,7 +58,9 @@ const KINDS = [
   { value: "NURSE_TASK", label: "Nurse tasks" },
 ];
 
-const STATUSES = [
+type StatusValue = "draft" | "confirmed" | "rejected" | "";
+
+const STATUSES: { value: StatusValue; label: string }[] = [
   { value: "draft", label: "Needs review" },
   { value: "confirmed", label: "Confirmed" },
   { value: "rejected", label: "Rejected" },
@@ -73,6 +80,8 @@ function ReviewQueue() {
     checkin_id: sp.get("checkin_id") ?? "",
   };
   const drafts = useDrafts(filters);
+  // Same filters without the status, for the counts on the status tabs.
+  const all = useDrafts({ ...filters, status: "" });
   const patients = usePatients();
 
   const setFilter = (key: keyof DraftFilters, value: string) => {
@@ -84,28 +93,31 @@ function ReviewQueue() {
   };
 
   const list = drafts.data ?? [];
+  const counts = (s: StatusValue) => (all.data ? (s ? all.data.filter((d) => d.status === s).length : all.data.length) : null);
 
   return (
     <>
       <PageHeader
+        eyebrow="Humans decide"
         title="Review queue"
-        subtitle="Every entry is a draft until someone on the study team confirms it. Evidence shows the patient's own words."
+        subtitle="Every entry is a draft until someone on the study team confirms it. Evidence shows the patient's own words, in their language, with the second it was said."
+        actions={<ExportDownloads />}
       />
 
-      <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-line bg-white p-3">
-        <div>
-          <Label htmlFor="f-status">Status</Label>
-          <select id="f-status" className={cn(inputClass, "w-44")} value={filters.status} onChange={(e) => setFilter("status", e.target.value)}>
-            {STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+      <div className="mb-5 flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-3 shadow-card">
+        <div className="max-w-full min-w-0">
+          <div className="mb-1.5 text-sm font-medium text-ink-muted">Status</div>
+          <Segmented<StatusValue>
+            className="max-w-full overflow-x-auto"
+            label="Status"
+            value={(filters.status ?? "") as StatusValue}
+            onChange={(v) => setFilter("status", v)}
+            options={STATUSES.map((s) => ({ value: s.value, label: s.label, count: counts(s.value) }))}
+          />
         </div>
         <div>
           <Label htmlFor="f-kind">Kind</Label>
-          <select id="f-kind" className={cn(inputClass, "w-48")} value={filters.kind} onChange={(e) => setFilter("kind", e.target.value)}>
+          <select id="f-kind" className={cn(selectClass, "h-10 w-48")} value={filters.kind} onChange={(e) => setFilter("kind", e.target.value)}>
             {KINDS.map((k) => (
               <option key={k.value} value={k.value}>
                 {k.label}
@@ -115,7 +127,7 @@ function ReviewQueue() {
         </div>
         <div>
           <Label htmlFor="f-patient">Patient</Label>
-          <select id="f-patient" className={cn(inputClass, "w-56")} value={filters.patient_id} onChange={(e) => setFilter("patient_id", e.target.value)}>
+          <select id="f-patient" className={cn(selectClass, "h-10 w-60")} value={filters.patient_id} onChange={(e) => setFilter("patient_id", e.target.value)}>
             <option value="">All patients</option>
             {(patients.data ?? []).map((p) => (
               <option key={p.id} value={p.id}>
@@ -125,16 +137,16 @@ function ReviewQueue() {
           </select>
         </div>
         {filters.checkin_id ? (
-          <div className="flex items-center gap-2 self-center pt-5">
-            <Chip tone="accent">
-              Check-in {filters.checkin_id}
-              <button type="button" onClick={() => setFilter("checkin_id", "")} className="ml-1 rounded hover:bg-accent-100" aria-label="Clear check-in filter">
+          <div className="flex h-10 items-center">
+            <Chip tone="accent" className="h-8 pr-1">
+              Check-in <span className="font-mono">{filters.checkin_id}</span>
+              <button type="button" onClick={() => setFilter("checkin_id", "")} className="ml-1 rounded-full p-0.5 hover:bg-accent-100" aria-label="Clear check-in filter">
                 <X className="size-3.5" aria-hidden />
               </button>
             </Chip>
           </div>
         ) : null}
-        <div className="ml-auto self-center pt-5 text-sm text-ink-subtle tabular">
+        <div className="ml-auto flex h-10 items-center px-2 text-sm text-ink-subtle tabular">
           {drafts.data ? `${list.length} entr${list.length === 1 ? "y" : "ies"}` : ""}
         </div>
       </div>
@@ -150,7 +162,7 @@ function ReviewQueue() {
           </EmptyState>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {list.map((d) => (
             <DraftCard key={d.id} draft={d} />
           ))}
@@ -161,14 +173,6 @@ function ReviewQueue() {
 }
 
 // ---------------------------------------------------------------- draft card
-
-function draftTitle(d: DraftEntry): string {
-  if (d.kind === "AE") return d.payload.term;
-  if (d.kind === "CM") return d.payload.medication_name;
-  return NURSE_TASK_LABELS[d.payload.category] ?? humanize(d.payload.category);
-}
-
-const KIND_LABEL = { AE: "Adverse event", CM: "Medication", NURSE_TASK: "Nurse task" } as const;
 
 function DraftCard({ draft: d }: { draft: DraftEntry }) {
   const [mode, setMode] = useState<"view" | "edit" | "reject">("view");
@@ -207,48 +211,62 @@ function DraftCard({ draft: d }: { draft: DraftEntry }) {
     onSuccess: () => setMode("view"),
   });
   const busy = confirm.isPending || reject.isPending;
+  const patientName = d.patient ? fullName(d.patient) || d.patient.subject_id : null;
 
   return (
-    <Card as="article" className={cn(d.status === "rejected" && "opacity-75")}>
-      <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
-        <Chip tone={d.kind === "NURSE_TASK" ? "blue" : "gray"}>{KIND_LABEL[d.kind]}</Chip>
-        <h2 className="text-lg font-semibold text-ink">{draftTitle(d)}</h2>
-        {d.kind === "AE" ? <GradeBadge grade={d.payload.provisional_grade} /> : null}
-        <DraftStatusChip status={d.status} />
-        <div className="ml-auto flex flex-wrap items-center gap-x-3 text-sm text-ink-subtle">
-          {d.patient ? (
-            <Link href={`/patients/${d.patient.id}`} className="hover:underline">
-              <span className="font-medium text-ink">{fullName(d.patient)}</span> <span className="font-mono">{d.patient.subject_id}</span>
+    <Card as="article" className={cn("bv-enter overflow-hidden", d.status === "rejected" && "opacity-75")}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-line px-5 py-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <DraftKindIcon kind={d.kind} className="size-11" />
+          <div className="min-w-0">
+            <div className="text-sm text-ink-subtle">{KIND_LABEL[d.kind]}</div>
+            <h2 className="truncate text-xl leading-7 font-semibold text-ink">{draftTitle(d)}</h2>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {d.kind === "AE" ? <GradeBadge grade={d.payload.provisional_grade} /> : null}
+          <DraftStatusChip status={d.status} />
+          {d.kind === "AE" && d.status === "confirmed" ? <OriginTag origin={d.origin} /> : null}
+        </div>
+        <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-subtle">
+          {d.patient && patientName ? (
+            <Link href={`/patients/${d.patient.id}`} className="group inline-flex items-center gap-2">
+              <Avatar name={patientName} seed={d.patient.id} size="sm" />
+              <span className="leading-tight">
+                <span className="block font-medium text-ink group-hover:underline">{patientName}</span>
+                <span className="font-mono">{d.patient.subject_id}</span>
+              </span>
             </Link>
           ) : null}
-          <Link href={`/checkins/${d.checkin_id}`} className="text-accent-700 hover:underline">
-            Check-in
-          </Link>
-          {d.created_at ? <RelativeTime iso={d.created_at} /> : null}
+          <span className="flex flex-col items-end leading-tight">
+            <Link href={`/checkins/${d.checkin_id}`} className="inline-flex items-center gap-0.5 font-medium text-accent-700 hover:underline">
+              Open check-in
+              <ArrowUpRight className="size-3.5" aria-hidden />
+            </Link>
+            {d.created_at ? <RelativeTime iso={d.created_at} /> : null}
+          </span>
         </div>
       </div>
 
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-        <div className="min-w-0 space-y-3">
-          {mode === "edit" ? (
-            <EditForm draft={d} onDone={() => setMode("view")} />
-          ) : (
-            <PayloadView draft={d} nonEnglish={nonEnglish} />
-          )}
+      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <div className="min-w-0 space-y-4">
+          {mode === "edit" ? <EditForm draft={d} onDone={() => setMode("view")} /> : <PayloadView draft={d} nonEnglish={nonEnglish} />}
           {d.status !== "draft" && d.reviewed_by ? (
-            <p className="text-sm text-ink-muted">
-              {d.status === "confirmed" ? "Confirmed" : "Rejected"} by <strong>{d.reviewed_by}</strong>{" "}
+            <p className="flex flex-wrap items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-2 text-sm text-ink-muted">
+              {d.status === "confirmed" ? <Check className="size-4 text-green-700" aria-hidden /> : <XCircle className="size-4 text-ink-subtle" aria-hidden />}
+              {d.status === "confirmed" ? "Confirmed" : "Rejected"} by <strong className="text-ink">{d.reviewed_by}</strong>{" "}
               {d.reviewed_at ? <RelativeTime iso={d.reviewed_at} /> : null}
               {d.review_note ? <> · “{d.review_note}”</> : null}
             </p>
           ) : null}
         </div>
-        <div className="min-w-0 space-y-2">
-          <h3 className="text-sm font-medium text-ink-subtle">
-            Evidence ({d.evidence.length})
+        <div className="min-w-0 space-y-3">
+          <h3 className="flex items-center gap-2 text-sm font-medium text-ink-subtle">
+            Evidence
+            <span className="rounded-full bg-gray-100 px-1.5 text-ink-muted tabular">{d.evidence.length}</span>
           </h3>
           {d.evidence.length === 0 ? (
-            <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900">No evidence attached. Don&apos;t confirm without checking the call.</p>
+            <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-900">No evidence attached. Don&apos;t confirm without checking the call.</p>
           ) : (
             d.evidence.map((ev, i) => <EvidenceQuote key={i} evidence={ev} checkinId={d.checkin_id} />)
           )}
@@ -256,7 +274,7 @@ function DraftCard({ draft: d }: { draft: DraftEntry }) {
       </div>
 
       {d.status === "draft" && mode !== "edit" ? (
-        <div className="border-t border-line bg-gray-50/70 px-4 py-3">
+        <div className="border-t border-line bg-gray-50/80 px-5 py-3.5">
           {mode === "reject" ? (
             <form
               className="flex flex-wrap items-end gap-2"
@@ -277,7 +295,7 @@ function DraftCard({ draft: d }: { draft: DraftEntry }) {
               </Button>
             </form>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="success" loading={confirm.isPending} disabled={busy} onClick={() => confirm.mutate()} icon={<Check className="size-4" aria-hidden />}>
                 Confirm
               </Button>
@@ -287,6 +305,7 @@ function DraftCard({ draft: d }: { draft: DraftEntry }) {
               <Button variant="ghost" disabled={busy} onClick={() => setMode("reject")} icon={<X className="size-4" aria-hidden />}>
                 Reject
               </Button>
+              <span className="ml-auto hidden text-sm text-ink-subtle sm:block">Your decision is saved to the audit trail.</span>
             </div>
           )}
         </div>
@@ -303,27 +322,37 @@ function PayloadView({ draft: d, nonEnglish }: { draft: DraftEntry; nonEnglish: 
     return (
       <>
         <div>
-          <div className="mb-1 flex items-center gap-2 text-sm text-ink-subtle">
+          <div className="mb-1.5 flex items-center gap-2 text-sm text-ink-subtle">
             Verbatim (English){nonEnglish ? <AiLabel>AI translation, verify</AiLabel> : null}
           </div>
-          <p className="text-[15px] text-ink">{p.verbatim_en}</p>
+          <p className="text-lg leading-7 text-ink">{p.verbatim_en}</p>
         </div>
-        <dl className="grid grid-cols-2 gap-3">
+        <dl className="grid grid-cols-2 gap-4">
           <Field label="Onset">{formatDay(p.onset_date)}</Field>
           <Field label="Ongoing">{p.ongoing ? "Yes" : "No"}</Field>
         </dl>
-        <div className="rounded-md bg-gray-50 p-3 text-sm">
+        <div className="rounded-xl border border-line bg-gray-50/70 p-3.5 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <GradeBadge grade={p.provisional_grade} />
             {p.rule_id ? <span className="font-mono text-ink-muted">{p.rule_id}</span> : null}
           </div>
-          <p className="mt-1.5 text-ink-muted">
-            {p.grade_basis === "rule" && p.rule_text ? <>CTCAE v5.0: {p.rule_text}</> : "No phone-gradable CTCAE rule. A clinician assigns the grade."}
+          <p className="mt-2 leading-6 text-ink-muted">
+            {p.grade_basis === "rule" && p.rule_text ? (
+              <>
+                <span className="font-medium text-ink">CTCAE v5.0:</span> {p.rule_text}
+              </>
+            ) : (
+              "No phone-gradable CTCAE rule. A clinician assigns the grade."
+            )}
           </p>
           {p.answers.length ? (
-            <p className="mt-1.5 text-ink-subtle">
-              Answers: {p.answers.map((a) => `${humanize(a.item_code)} = ${a.numeric_value ?? humanize(a.option_code ?? "")}`).join(" · ")}
-            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {p.answers.map((a, i) => (
+                <code key={i} className="rounded-md bg-white px-1.5 py-0.5 font-mono text-sm text-ink-muted ring-1 ring-line">
+                  {humanize(a.item_code)} = {a.numeric_value ?? humanize(a.option_code ?? "")}
+                </code>
+              ))}
+            </div>
           ) : null}
         </div>
       </>
@@ -332,13 +361,13 @@ function PayloadView({ draft: d, nonEnglish }: { draft: DraftEntry; nonEnglish: 
   if (d.kind === "CM") {
     const p = d.payload;
     return (
-      <dl className="grid grid-cols-2 gap-3">
+      <dl className="grid grid-cols-2 gap-4">
         <Field label="Medication">{p.medication_name}</Field>
         {p.as_reported_en ? (
-          <Field label={<span className="inline-flex items-center gap-1.5">As reported <AiLabel>AI extraction, verify</AiLabel></span>}>{p.as_reported_en}</Field>
+          <Field label={<span className="flex flex-wrap items-center gap-1.5">As reported <AiLabel>AI extraction, verify</AiLabel></span>}>{p.as_reported_en}</Field>
         ) : null}
         <Field label="Over the counter">{p.otc ? "Yes" : "No"}</Field>
-        <Field label={<span className="inline-flex items-center gap-1.5">Indication {nonEnglish ? <AiLabel>AI translation, verify</AiLabel> : null}</span>}>{p.indication_en ?? "—"}</Field>
+        <Field label={<span className="flex flex-wrap items-center gap-1.5">Indication {nonEnglish ? <AiLabel>AI translation, verify</AiLabel> : null}</span>}>{p.indication_en ?? "—"}</Field>
         <Field label="Start date">{formatDay(p.start_date)}</Field>
         <Field label="Dose">{p.dose_text ?? "Not reported"}</Field>
       </dl>
@@ -346,17 +375,17 @@ function PayloadView({ draft: d, nonEnglish }: { draft: DraftEntry; nonEnglish: 
   }
   const p = d.payload;
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <Field label="Category">{NURSE_TASK_LABELS[p.category] ?? humanize(p.category)}</Field>
       <div>
-        <div className="mb-1 flex items-center gap-2 text-sm text-ink-subtle">
+        <div className="mb-1.5 flex items-center gap-2 text-sm text-ink-subtle">
           What the patient asked or said{nonEnglish ? <AiLabel>AI translation, verify</AiLabel> : null}
         </div>
-        <p className="text-[15px] text-ink">{p.text_en}</p>
+        <p className="text-lg leading-7 text-ink">{p.text_en}</p>
         {p.detail ? <p className="mt-1 text-sm text-ink-muted">{p.detail}</p> : null}
       </div>
       {p.category === "medical_question" ? (
-        <p className="text-sm text-ink-subtle">The agent gave no advice and told the patient the nurse will follow up.</p>
+        <p className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">The agent gave no advice and told the patient the nurse will follow up.</p>
       ) : null}
     </div>
   );
@@ -382,12 +411,16 @@ function EditForm({ draft: d, onDone }: { draft: DraftEntry; onDone: () => void 
 
   return (
     <form
-      className="space-y-3 rounded-md border border-accent-200 bg-accent-50/30 p-3"
+      className="space-y-3 rounded-xl border border-accent-200 bg-accent-50/40 p-4"
       onSubmit={(e) => {
         e.preventDefault();
         save.mutate();
       }}
     >
+      <div className="flex items-center gap-2 text-sm font-semibold text-accent-900">
+        <Pencil className="size-4" aria-hidden />
+        Editing draft
+      </div>
       {d.kind === "AE" ? (
         <>
           <div>
@@ -403,7 +436,7 @@ function EditForm({ draft: d, onDone }: { draft: DraftEntry; onDone: () => void 
               <Label htmlFor={id("grade")}>Grade (clinician)</Label>
               <select
                 id={id("grade")}
-                className={inputClass}
+                className={selectClass}
                 value={ae.provisional_grade ?? ""}
                 onChange={(e) => setAe({ ...ae, provisional_grade: e.target.value ? Number(e.target.value) : null })}
               >
@@ -417,7 +450,7 @@ function EditForm({ draft: d, onDone }: { draft: DraftEntry; onDone: () => void 
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="size-4" checked={!!ae.ongoing} onChange={(e) => setAe({ ...ae, ongoing: e.target.checked })} />
+            <input type="checkbox" className="size-4 accent-accent-700" checked={!!ae.ongoing} onChange={(e) => setAe({ ...ae, ongoing: e.target.checked })} />
             Ongoing
           </label>
         </>
@@ -440,7 +473,7 @@ function EditForm({ draft: d, onDone }: { draft: DraftEntry; onDone: () => void 
             <input id={id("dose")} className={inputClass} value={cm.dose_text ?? ""} onChange={(e) => setCm({ ...cm, dose_text: e.target.value || null })} />
           </div>
           <label className="flex items-center gap-2 self-end pb-2 text-sm">
-            <input type="checkbox" className="size-4" checked={!!cm.otc} onChange={(e) => setCm({ ...cm, otc: e.target.checked })} />
+            <input type="checkbox" className="size-4 accent-accent-700" checked={!!cm.otc} onChange={(e) => setCm({ ...cm, otc: e.target.checked })} />
             Over the counter
           </label>
         </div>
@@ -495,15 +528,23 @@ function InvestigatorPanel({ draft: d }: { draft: DraftEntry & { kind: "AE" } })
 
   if (inv?.signed_by) {
     return (
-      <div className="border-t border-line bg-white px-4 py-3">
+      <div className={cn("border-t px-5 py-4", inv.is_serious ? "border-red-200 bg-red-50/50" : "border-line bg-white")}>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <PenLine className="size-4 text-ink-subtle" aria-hidden />
+          <span className="flex size-8 items-center justify-center rounded-lg bg-white text-ink-muted ring-1 ring-line">
+            <PenLine className="size-4" aria-hidden />
+          </span>
           <span>
             Investigator assessment signed by <strong>{inv.signed_by}</strong> {inv.signed_at ? <RelativeTime iso={inv.signed_at} /> : null}
           </span>
-          {inv.is_serious ? <Chip tone="red">Serious</Chip> : <Chip tone="gray">Not serious</Chip>}
+          {inv.is_serious ? (
+            <Chip tone="red" strong icon={<ShieldAlert className="size-3.5" aria-hidden />}>
+              Serious
+            </Chip>
+          ) : (
+            <Chip tone="gray">Not serious</Chip>
+          )}
           {inv.seriousness_criteria.map((c) => (
-            <Chip key={c} tone="gray">
+            <Chip key={c} tone="red">
               {SERIOUSNESS_LABELS[c]}
             </Chip>
           ))}
@@ -520,8 +561,11 @@ function InvestigatorPanel({ draft: d }: { draft: DraftEntry & { kind: "AE" } })
 
   if (identity.role !== "investigator") {
     return (
-      <div className="border-t border-line bg-gray-50/70 px-4 py-3 text-sm text-ink-muted">
-        Waiting for the investigator&apos;s seriousness and relatedness assessment. (Switch the demo role to <strong>Investigator</strong> to sign.)
+      <div className="flex items-center gap-3 border-t border-line bg-gray-50/80 px-5 py-3.5 text-sm text-ink-muted">
+        <Hourglass className="size-4 shrink-0 text-ink-subtle" aria-hidden />
+        <span>
+          Waiting for the investigator&apos;s seriousness and relatedness assessment. (Switch the demo role to <strong className="text-ink">Investigator</strong> to sign.)
+        </span>
       </div>
     );
   }
@@ -529,7 +573,7 @@ function InvestigatorPanel({ draft: d }: { draft: DraftEntry & { kind: "AE" } })
   const serious = criteria.length > 0;
   return (
     <form
-      className="border-t-2 border-accent-200 bg-accent-50/30 px-4 py-4"
+      className="border-t-2 border-accent-200 bg-gradient-to-b from-accent-50/70 to-white px-5 py-5"
       onSubmit={(e) => {
         e.preventDefault();
         if (!relatedness) return;
@@ -540,15 +584,18 @@ function InvestigatorPanel({ draft: d }: { draft: DraftEntry & { kind: "AE" } })
         <PenLine className="size-4" aria-hidden />
         Investigator assessment
       </h3>
-      <div className="mt-3 grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="mt-4 grid gap-6 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-ink-muted">Seriousness (ICH E2A): check all that apply</legend>
-          <div className="grid gap-1.5 sm:grid-cols-2">
+          <legend className="mb-2 text-sm font-medium text-ink-muted">Seriousness (ICH E2A): check all that apply</legend>
+          <div className="grid gap-2 sm:grid-cols-2">
             {SERIOUSNESS_ORDER.map((c) => (
-              <label key={c} className="flex min-h-9 items-center gap-2 rounded-md border border-line bg-white px-2.5 py-1.5 text-sm has-[:checked]:border-red-300 has-[:checked]:bg-red-50">
+              <label
+                key={c}
+                className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border border-line bg-white px-3 py-2 text-sm shadow-card transition-colors hover:border-gray-400/70 has-[:checked]:border-red-300 has-[:checked]:bg-red-50 has-[:checked]:text-red-950"
+              >
                 <input
                   type="checkbox"
-                  className="size-4"
+                  className="size-4 accent-red-700"
                   checked={criteria.includes(c)}
                   onChange={(e) => setCriteria(e.target.checked ? [...criteria, c] : criteria.filter((x) => x !== c))}
                 />
@@ -556,18 +603,20 @@ function InvestigatorPanel({ draft: d }: { draft: DraftEntry & { kind: "AE" } })
               </label>
             ))}
           </div>
-          <p className="mt-2 text-sm text-ink-muted">
-            {serious ? (
-              <strong className="text-red-800">Serious: a sponsor report will be drafted and the 24-hour clock starts.</strong>
-            ) : (
-              "No criteria checked: not serious."
-            )}
+          <p className={cn("mt-3 rounded-lg px-3 py-2 text-sm", serious ? "bg-red-700 font-medium text-white" : "bg-gray-100 text-ink-muted")}>
+            {serious ? "Serious: a sponsor report will be drafted and the 24-hour clock starts." : "No criteria checked: not serious."}
           </p>
         </fieldset>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
             <Label htmlFor={`rel-${d.id}`}>Relatedness to study drug</Label>
-            <select id={`rel-${d.id}`} className={inputClass} value={relatedness} onChange={(e) => setRelatedness(e.target.value as Relatedness | "")} required>
+            <select
+              id={`rel-${d.id}`}
+              className={cn(selectClass, "h-11 bg-white shadow-card")}
+              value={relatedness}
+              onChange={(e) => setRelatedness(e.target.value as Relatedness | "")}
+              required
+            >
               <option value="">Select…</option>
               {RELATEDNESS_ORDER.map((r) => (
                 <option key={r} value={r}>
@@ -575,6 +624,17 @@ function InvestigatorPanel({ draft: d }: { draft: DraftEntry & { kind: "AE" } })
                 </option>
               ))}
             </select>
+            <div className="mt-2 flex items-center gap-2 text-sm text-ink-subtle" aria-hidden>
+              <span className="flex gap-0.5">
+                {RELATEDNESS_ORDER.map((r, j) => (
+                  <span
+                    key={r}
+                    className={cn("h-3 w-1.5 rounded-sm", relatedness && j <= RELATEDNESS_ORDER.indexOf(relatedness) ? "bg-accent-600" : "bg-gray-200")}
+                  />
+                ))}
+              </span>
+              {relatedness ? RELATEDNESS_LABELS[relatedness] : "Not selected"}
+            </div>
           </div>
           <Button type="submit" variant="primary" size="lg" className="w-full" loading={sign.isPending} disabled={!relatedness} icon={<PenLine className="size-4" aria-hidden />}>
             Sign as {identity.user}

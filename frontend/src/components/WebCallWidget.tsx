@@ -8,7 +8,7 @@ import { apiFetch, errorMessage, USE_FIXTURES } from "@/lib/api";
 import { clearWebSession, loadWebSession } from "@/lib/webSession";
 import { formatDuration } from "@/lib/format";
 import type { OkResponse, WebSession } from "@/lib/types";
-import { Button, Card, CardHeader, cn } from "./ui/primitives";
+import { Button, cn } from "./ui/primitives";
 
 interface Props {
   checkinId: string;
@@ -29,21 +29,28 @@ export function WebCallWidget(props: Props) {
   );
 
   return (
-    <Card className="border-accent-200">
-      <CardHeader
-        title="Browser call"
-        icon={<Headphones className="size-4 text-accent-700" aria-hidden />}
-        subtitle="Talk to the agent from this computer. Use a headset to avoid echo."
-      />
-      <div className="p-4">
+    <section aria-label="Browser call" className="on-dark relative overflow-hidden rounded-2xl border border-rail-line bg-rail-raised text-rail-ink shadow-raised">
+      <div className="bv-grid pointer-events-none absolute inset-0 opacity-50" aria-hidden />
+      <div className="relative flex flex-wrap items-start justify-between gap-3 border-b border-white/10 px-5 py-4">
+        <div className="flex items-start gap-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-live/30 bg-live/10 text-live">
+            <Headphones className="size-[18px]" aria-hidden />
+          </span>
+          <div>
+            <h2 className="text-base font-semibold text-white">Browser call</h2>
+            <p className="text-sm text-rail-muted">Talk to the agent from this computer. Use a headset to avoid echo.</p>
+          </div>
+        </div>
+      </div>
+      <div className="relative p-5">
         {session === undefined ? (
-          <p className="text-sm text-ink-subtle">Loading call session…</p>
+          <p className="text-sm text-rail-muted">Loading call session…</p>
         ) : USE_FIXTURES ? (
           <FixtureCall {...props} />
         ) : session === null ? (
-          <p className="text-sm text-ink-muted">
+          <p className="text-sm leading-6 text-rail-ink/90">
             This browser call&apos;s session isn&apos;t available in this tab (it is kept only in the tab that started the
-            call). Start a new browser call from <strong>Today</strong>.
+            call). Start a new browser call from <strong className="text-white">Today</strong>.
           </p>
         ) : (
           <ConversationProvider>
@@ -51,7 +58,7 @@ export function WebCallWidget(props: Props) {
           </ConversationProvider>
         )}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -144,37 +151,45 @@ function LiveCall({ checkinId, subjectId, checkinStatus, onStarted, session }: P
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <ConnectionPill status={convo.status} />
-        {connected ? (
-          <span className="text-sm text-ink-muted tabular">
-            {convo.isSpeaking ? "Agent speaking" : "Listening"} · {formatDuration(elapsed)}
-          </span>
-        ) : null}
-      </div>
-
-      <MicMeter level={connected ? level : 0} muted={convo.isMuted} active={connected} />
-
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
         {!connected ? (
-          <Button variant="primary" size="lg" onClick={() => void start()} loading={connecting} disabled={over} icon={<Mic className="size-5" aria-hidden />}>
+          <Button
+            variant="primary"
+            size="lg"
+            className="border-live/40 bg-accent-600 px-6 hover:bg-accent-500"
+            onClick={() => void start()}
+            loading={connecting}
+            disabled={over}
+            icon={<Mic className="size-5" aria-hidden />}
+          >
             {over ? "Call ended" : "Start call"}
           </Button>
         ) : (
-          <>
+          <div className="flex flex-wrap gap-2">
             <Button
-              variant="secondary"
+              variant="dark"
+              size="lg"
               onClick={() => convo.setMuted(!convo.isMuted)}
-              icon={convo.isMuted ? <MicOff className="size-4" aria-hidden /> : <Mic className="size-4" aria-hidden />}
+              icon={convo.isMuted ? <MicOff className="size-5" aria-hidden /> : <Mic className="size-5" aria-hidden />}
             >
               {convo.isMuted ? "Unmute" : "Mute"}
             </Button>
-            <Button variant="danger" onClick={() => convo.endSession()} icon={<PhoneOff className="size-4" aria-hidden />}>
+            <Button variant="danger" size="lg" onClick={() => convo.endSession()} icon={<PhoneOff className="size-5" aria-hidden />}>
               End call
             </Button>
-          </>
+          </div>
         )}
+        <div className="flex flex-wrap items-center gap-3">
+          <ConnectionPill status={convo.status} />
+          {connected ? (
+            <span className="text-sm text-rail-ink/90 tabular">
+              {convo.isSpeaking ? "Agent speaking" : "Listening"} · {formatDuration(elapsed)}
+            </span>
+          ) : null}
+        </div>
       </div>
+
+      <MicMeter level={connected ? level : 0} muted={convo.isMuted} active={connected} />
 
       {micError ? <Problem>{micError}</Problem> : null}
       {connError ? <Problem>{`Call connection problem: ${connError}. The token is valid for 15 minutes after the call was created; if it expired, start a new browser call from Today.`}</Problem> : null}
@@ -188,70 +203,78 @@ function FixtureCall({ checkinId, checkinStatus, onStarted }: Props) {
   const [pending, setPending] = useState(false);
   const started = checkinStatus !== "dialing";
   return (
-    <div className="space-y-3">
-      <p className="flex items-start gap-2 text-sm text-ink-muted">
+    <div className="space-y-4">
+      <p className="flex items-start gap-2 text-sm text-rail-muted">
         <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
         Fixture mode: no audio. Starting the call plays a scripted conversation into this page.
       </p>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button
+          variant="primary"
+          size="lg"
+          className="border-live/40 bg-accent-600 px-6 hover:bg-accent-500"
+          disabled={started}
+          loading={pending}
+          icon={<Mic className="size-5" aria-hidden />}
+          onClick={async () => {
+            setPending(true);
+            await postStarted(`conv_fixture_${checkinId}`);
+            setPending(false);
+          }}
+        >
+          {["completed", "cancelled", "failed", "no_answer"].includes(checkinStatus) ? "Call ended" : started ? "Call started" : "Start call"}
+        </Button>
+        <ConnectionPill status={checkinStatus === "in_progress" ? "connected" : "disconnected"} />
+      </div>
       <MicMeter level={started && checkinStatus === "in_progress" ? 0.35 : 0} muted={false} active={checkinStatus === "in_progress"} />
-      <Button
-        variant="primary"
-        size="lg"
-        disabled={started}
-        loading={pending}
-        icon={<Mic className="size-5" aria-hidden />}
-        onClick={async () => {
-          setPending(true);
-          await postStarted(`conv_fixture_${checkinId}`);
-          setPending(false);
-        }}
-      >
-        {["completed", "cancelled", "failed", "no_answer"].includes(checkinStatus) ? "Call ended" : started ? "Call started" : "Start call"}
-      </Button>
     </div>
   );
 }
 
 function ConnectionPill({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    disconnected: { label: "Not connected", cls: "border-gray-300 bg-gray-50 text-ink-muted" },
-    connecting: { label: "Connecting…", cls: "border-accent-200 bg-accent-50 text-accent-800" },
-    connected: { label: "Connected", cls: "border-green-300 bg-green-50 text-green-800" },
-    error: { label: "Connection error", cls: "border-red-300 bg-red-50 text-red-800" },
+    disconnected: { label: "Not connected", cls: "border-white/15 bg-white/5 text-rail-muted" },
+    connecting: { label: "Connecting…", cls: "border-live/40 bg-live/10 text-live" },
+    connected: { label: "Connected", cls: "border-green-400/50 bg-green-500/15 text-green-200" },
+    error: { label: "Connection error", cls: "border-red-400/60 bg-red-500/15 text-red-200" },
   };
   const s = map[status] ?? map.disconnected;
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-sm font-medium", s.cls)}>
-      {status === "connecting" ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <span className={cn("size-2 rounded-full", status === "connected" ? "bg-green-600" : status === "error" ? "bg-red-600" : "bg-gray-400")} aria-hidden />}
+      {status === "connecting" ? (
+        <Loader2 className="size-3.5 animate-spin" aria-hidden />
+      ) : (
+        <span className={cn("size-2 rounded-full", status === "connected" ? "bg-green-400" : status === "error" ? "bg-red-400" : "bg-rail-muted")} aria-hidden />
+      )}
       {s.label}
     </span>
   );
 }
 
 function MicMeter({ level, muted, active }: { level: number; muted: boolean; active: boolean }) {
-  const bars = 16;
+  const bars = 32;
   const lit = Math.round(level * bars);
   return (
     <div className="flex items-center gap-3" aria-label={active ? (muted ? "Microphone muted" : "Microphone level") : "Microphone idle"}>
-      {muted ? <MicOff className="size-4 text-ink-subtle" aria-hidden /> : <Mic className="size-4 text-ink-subtle" aria-hidden />}
-      <div className="flex h-5 items-end gap-0.5" aria-hidden>
+      {muted ? <MicOff className="size-4 text-rail-muted" aria-hidden /> : <Mic className="size-4 text-rail-muted" aria-hidden />}
+      <div className="flex h-6 flex-1 items-end gap-[3px]" aria-hidden>
         {Array.from({ length: bars }, (_, i) => (
           <span
             key={i}
-            className={cn("w-1.5 rounded-sm transition-[height,background-color] duration-75", i < lit && !muted ? "bg-accent-600" : "bg-gray-200")}
+            className={cn("max-w-2 flex-1 rounded-sm transition-[height,background-color] duration-75", i < lit && !muted ? "bg-live" : "bg-white/10")}
             style={{ height: `${30 + (i / bars) * 70}%` }}
           />
         ))}
       </div>
-      <span className="text-sm text-ink-subtle">{!active ? "Mic idle" : muted ? "Muted" : "Mic on"}</span>
+      <span className="w-16 text-sm text-rail-muted">{!active ? "Mic idle" : muted ? "Muted" : "Mic on"}</span>
     </div>
   );
 }
 
 function Problem({ children }: { children: React.ReactNode }) {
   return (
-    <p role="alert" className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900">
-      <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+    <p role="alert" className="flex items-start gap-2 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm leading-6 text-red-100">
+      <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-300" aria-hidden />
       {children}
     </p>
   );

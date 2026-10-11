@@ -1,0 +1,111 @@
+# Render Blueprint for Between Visits (WS0 R6). Steps, env tables and caveats: docs/deploy.md.
+#
+#   bv-demo-api   public demo API: DEMO_MODE=1, replay scenarios only, no external keys
+#   bv-demo-web   public demo dashboard (production Next.js build, no dev badge), calls bv-demo-api
+#   bv-live-api   private live API for real browser calls: DEMO_MODE=0, secrets entered by a human,
+#                 every /api/* request except GET /api/health needs X-BV-Token (BV_DASHBOARD_TOKEN, docs/03 §6.8).
+#                 Its dashboard runs locally (http://localhost:3000) against it.
+#
+# All three build the repo's Dockerfiles with the repo root as build context (the root .dockerignore keeps .env,
+# data/patients.local.json, data/local/ and agent/agents.lock.json out of every image) and deploy on every push to
+# main. Each API is a single instance: SQLite lives on the container disk, which is ephemeral (state resets on
+# every deploy and restart; the image reseeds on start).
+#
+# Secrets are `sync: false`: Render asks for them in its dashboard when the Blueprint is first created and never
+# reads them from this file. Never put a secret, key, token or phone number here.
+#
+# Service URLs come from each service's RENDER_EXTERNAL_URL (https://<name>.onrender.com, or with a suffix when the
+# name is taken), referenced with fromService, so nothing is hard-coded. NEXT_PUBLIC_API_BASE_URL reaches the
+# frontend build as a Docker build argument (Render passes service env vars as build args) and is inlined then.
+
+services:
+  - type: web
+    name: bv-demo-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    branch: main
+    autoDeploy: true            # deprecated alias of autoDeployTrigger: commit; both kept, same meaning
+    autoDeployTrigger: commit
+    plan: starter               # always-on; pricing UNVERIFIED
+    region: virginia
+    numInstances: 1             # SQLite: one instance only
+    healthCheckPath: /api/health
+    envVars:
+      - key: DEMO_MODE
+        value: "1"
+      - key: APP_ENV
+        value: demo
+      - key: CORS_ORIGINS       # the bv-demo-web URL
+        fromService:
+          type: web
+          name: bv-demo-web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PUBLIC_BASE_URL    # its own URL
+        fromService:
+          type: web
+          name: bv-demo-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: TOOL_SHARED_SECRET # random and unknown to anyone: nothing calls the demo API's agent tools
+        generateValue: true
+
+  - type: web
+    name: bv-demo-web
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: .
+    branch: main
+    autoDeploy: true
+    autoDeployTrigger: commit
+    plan: starter               # pricing UNVERIFIED
+    region: virginia
+    numInstances: 1
+    healthCheckPath: /          # the dashboard has no /api/health of its own
+    envVars:
+      - key: NEXT_PUBLIC_API_BASE_URL   # the bv-demo-api URL; a build arg, inlined by `next build`
+        fromService:
+          type: web
+          name: bv-demo-api
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: bv-live-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    branch: main
+    autoDeploy: true
+    autoDeployTrigger: commit
+    plan: starter               # always-on: the re-page loop runs outside requests; pricing UNVERIFIED
+    region: virginia
+    numInstances: 1             # SQLite and the in-process re-page loop: one instance only
+    healthCheckPath: /api/health
+    envVars:
+      - key: DEMO_MODE
+        value: "0"
+      - key: APP_ENV
+        value: prod
+      - key: PUBLIC_BASE_URL    # its own URL: agent tools and the post-call webhook point here (make sync-agent)
+        fromService:
+          type: web
+          name: bv-live-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: CORS_ORIGINS       # the dashboard for live calls runs locally against this API
+        value: http://localhost:3000
+      # Secrets, entered by a human in the Render dashboard (docs/deploy.md); never in git.
+      - key: TOOL_SHARED_SECRET # equal to the local .env value (the ElevenLabs workspace secret bv_tool_secret)
+        sync: false
+      - key: BV_DASHBOARD_TOKEN # docs/03 §6.8; the local dashboard sends it as NEXT_PUBLIC_BV_DASHBOARD_TOKEN
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_WEBHOOK_SECRET  # printed by `make sync-agent ARGS="--setup-webhook"`
+        sync: false
+      - key: AGENTS_LOCK_JSON   # agent/agents.lock.json on one line (the lock file is never in the image)
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NTFY_TOPIC
+        sync: false
+      - key: NTFY_BACKUP_TOPIC
+        sync: false

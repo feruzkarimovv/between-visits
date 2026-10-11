@@ -1,4 +1,9 @@
-"""Prefixed random IDs: pat_, ci_, ans_, fnd_, esc_, dr_, sae_, aud_ + 10 base32 chars."""
+"""Prefixed random IDs: `prefix_` + 10 base32 chars.
+
+Prefixes: pat_ (Patient), ci_ (CheckIn), ans_ (Answer), fnd_ (Finding), esc_ (Escalation), dr_ (DraftEntry),
+sae_ (SAEReport), aud_ (AuditEvent), sq_ (SiteQuery), sr_ (SignalRun, blind runs only; the committed study is the
+reserved literal `sr_committed`, never a database row).
+"""
 
 import secrets
 

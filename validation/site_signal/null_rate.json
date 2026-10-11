@@ -1,0 +1,984 @@
+{
+ "_about": "Site Signal operating characteristics (docs/11-site-signal-sap.md §12). Every number is SIMULATED; capture discordance is a reason to look, not a finding. Values are unrounded; round only for display.",
+ "data_origin": "SIMULATED",
+ "sap_tag_commit": "68838978bb305e0f730d30e5cbf3c00bceca5a25",
+ "eval_seed": 92794863,
+ "beacon_round": 6542582,
+ "seed_label": "eval",
+ "seed": 92794863,
+ "code_commit": "9204a1e025443d19150cc4bb7c41c02d485fb620",
+ "generated_at": "2026-10-11T08:18:52-04:00",
+ "numpy_version": "2.5.4",
+ "scipy_version": "1.18.1",
+ "scale": 1.0,
+ "thresholds": {
+  "source": "monitoring/out/thresholds.json",
+  "file": "monitoring/out/thresholds.json",
+  "sha256": "2f3b8c4dc13c123c8a125d8bfa77114a2314103d262824dd78acfa3f61b666a0",
+  "r_null": 2000,
+  "served": {
+   "discordance": {
+    "look": -1.7329400110284978,
+    "watch": -2.4672159681302848
+   },
+   "rate_kri": {
+    "look": -1.6856073651955399,
+    "watch": -2.4435375610874623
+   },
+   "simaerep_classic": {
+    "look": 0.9942914228628514,
+    "watch": 0.996003996003996
+   },
+   "ae_report_ratio": {
+    "look": -1.8701229701798285,
+    "watch": -2.769710389565622
+   }
+  },
+  "achieved": {
+   "discordance": {
+    "look": {
+     "rate": 0.04998543170708019,
+     "mc_se": 0.0010000062105683183
+    },
+    "watch": {
+     "rate": 0.1,
+     "mc_se": 0.00670820393249937
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 0.772,
+     "mc_se": 0.0156726135474497
+    },
+    "n_pooled": 30889,
+    "mean_computed_sites": 15.4445,
+    "studies_without_computed_site": 4
+   },
+   "rate_kri": {
+    "look": {
+     "rate": 0.05,
+     "mc_se": 0.0009581017584211737
+    },
+    "watch": {
+     "rate": 0.1,
+     "mc_se": 0.00670820393249937
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 1.0,
+     "mc_se": 0.01916203516842347
+    },
+    "n_pooled": 40000,
+    "mean_computed_sites": 20.0,
+    "studies_without_computed_site": 0
+   },
+   "simaerep_classic": {
+    "look": {
+     "rate": 0.0231,
+     "mc_se": 0.0014943431770397934
+    },
+    "watch": {
+     "rate": 0.0235,
+     "mc_se": 0.0033873108803297047
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 0.462,
+     "mc_se": 0.029886863540795866
+    },
+    "n_pooled": 40000,
+    "mean_computed_sites": 20.0,
+    "studies_without_computed_site": 0
+   },
+   "ae_report_ratio": {
+    "look": {
+     "rate": 0.04998543170708019,
+     "mc_se": 0.0009803592347026702
+    },
+    "watch": {
+     "rate": 0.1,
+     "mc_se": 0.00670820393249937
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 0.772,
+     "mc_se": 0.015235618203112583
+    },
+    "n_pooled": 30889,
+    "mean_computed_sites": 15.4445,
+    "studies_without_computed_site": 4
+   }
+  }
+ },
+ "null": {
+  "indicator": "discordance",
+  "look_per_site": {
+   "rate": 0.04831701147934367,
+   "mc_se": 0.0009714638775196244,
+   "ci95": [
+    0.046412977267123574,
+    0.05022104569156376
+   ],
+   "ci95_method": "normal, cluster-aware MC SE",
+   "n_sites": 30838,
+   "n_studies": 2000
+  },
+  "look_per_study": {
+   "rate": 0.745,
+   "mc_se": 0.015185611657114781,
+   "n": 2000
+  },
+  "watch_fwer": {
+   "rate": 0.108,
+   "mc_se": 0.0069403169956422026,
+   "n": 2000,
+   "ci95": [
+    0.09472934333804138,
+    0.12243176461073849
+   ]
+  },
+  "look_per_site_by_e_tertile": [
+   {
+    "tertile": 1,
+    "e_range": [
+     null,
+     11.372056514913657
+    ],
+    "rate": 0.03453307392996109,
+    "mc_se": 0.0017289983278868369,
+    "ci95": [
+     0.031144299477972915,
+     0.037921848381949265
+    ],
+    "ci95_method": "normal, cluster-aware MC SE",
+    "n_sites": 10280,
+    "n_studies": 2000
+   },
+   {
+    "tertile": 2,
+    "e_range": [
+     11.372056514913657,
+     15.242321398269134
+    ],
+    "rate": 0.04562700651814379,
+    "mc_se": 0.001954382457163142,
+    "ci95": [
+     0.041796487290087135,
+     0.049457525746200444
+    ],
+    "ci95_method": "normal, cluster-aware MC SE",
+    "n_sites": 10279,
+    "n_studies": 2000
+   },
+   {
+    "tertile": 3,
+    "e_range": [
+     15.242321398269134,
+     null
+    ],
+    "rate": 0.06479229497032785,
+    "mc_se": 0.002249743499773991,
+    "ci95": [
+     0.06038287873631773,
+     0.06920171120433796
+    ],
+    "ci95_method": "normal, cluster-aware MC SE",
+    "n_sites": 10279,
+    "n_studies": 2000
+   }
+  ],
+  "by_k_bin": [
+   {
+    "k_bin": "<=12",
+    "n_studies": 138,
+    "look_per_site": {
+     "rate": 0.045033112582781455,
+     "mc_se": 0.004348381964921983,
+     "ci95": [
+      0.036510440540510856,
+      0.053555784625052054
+     ],
+     "ci95_method": "normal, cluster-aware MC SE",
+     "n_sites": 1510,
+     "n_studies": 138
+    },
+    "look_per_study": {
+     "rate": 0.4927536231884058,
+     "mc_se": 0.04851151252775228,
+     "n": 138
+    },
+    "watch_fwer": {
+     "rate": 0.050724637681159424,
+     "mc_se": 0.01867953402525181,
+     "n": 138,
+     "ci95": [
+      0.020634364068956555,
+      0.1017189680513139
+     ]
+    }
+   },
+   {
+    "k_bin": "13-16",
+    "n_studies": 1242,
+    "look_per_site": {
+     "rate": 0.04776378636561007,
+     "mc_se": 0.0012554740064190755,
+     "ci95": [
+      0.045303102529502474,
+      0.05022447020171767
+     ],
+     "ci95_method": "normal, cluster-aware MC SE",
+     "n_sites": 18424,
+     "n_studies": 1242
+    },
+    "look_per_study": {
+     "rate": 0.7085346215780999,
+     "mc_se": 0.01865666175914051,
+     "n": 1242
+    },
+    "watch_fwer": {
+     "rate": 0.10064412238325282,
+     "mc_se": 0.008536880443563408,
+     "n": 1242,
+     "ci95": [
+      0.08447025191506195,
+      0.11873562573153455
+     ]
+    }
+   },
+   {
+    "k_bin": ">=17",
+    "n_studies": 620,
+    "look_per_site": {
+     "rate": 0.04970652971386647,
+     "mc_se": 0.0016391654689098564,
+     "ci95": [
+      0.046493824430101444,
+      0.0529192349976315
+     ],
+     "ci95_method": "normal, cluster-aware MC SE",
+     "n_sites": 10904,
+     "n_studies": 620
+    },
+    "look_per_study": {
+     "rate": 0.8741935483870967,
+     "mc_se": 0.028884226630797784,
+     "n": 620
+    },
+    "watch_fwer": {
+     "rate": 0.13548387096774195,
+     "mc_se": 0.01374467590033989,
+     "n": 620,
+     "ci95": [
+      0.10952668499942907,
+      0.1649688424721261
+     ]
+    }
+   }
+  ],
+  "computability": {
+   "mean_computed_sites": 15.419,
+   "mean_computed_sites_mc_se": 0.04683285340526498,
+   "share_below_min_sites": {
+    "rate": 0.0035,
+    "mc_se": 0.0013205585939290994,
+    "n": 2000
+   },
+   "not_computed_reasons": {
+    "error": 0.0,
+    "integrated_mode": 0.0,
+    "low_coverage": 0.0,
+    "insufficient_patients": 0.0,
+    "insufficient_episodes": 0.22755,
+    "study_below_min_sites": 0.0015
+   },
+   "not_computed_reason_counts": {
+    "error": 0,
+    "integrated_mode": 0,
+    "low_coverage": 0,
+    "insufficient_patients": 0,
+    "insufficient_episodes": 9102,
+    "study_below_min_sites": 60
+   },
+   "n_site_studies": 40000
+  },
+  "r": 2000,
+  "comparators": {
+   "rate_kri": {
+    "indicator": "rate_kri",
+    "look_per_site": {
+     "rate": 0.05185,
+     "mc_se": 0.0009559004251549456,
+     "ci95": [
+      0.04997646959388978,
+      0.05372353040611022
+     ],
+     "ci95_method": "normal, cluster-aware MC SE",
+     "n_sites": 40000,
+     "n_studies": 2000
+    },
+    "look_per_study": {
+     "rate": 1.037,
+     "mc_se": 0.019118008503098912,
+     "n": 2000
+    },
+    "watch_fwer": {
+     "rate": 0.0955,
+     "mc_se": 0.006571900410079264,
+     "n": 2000,
+     "ci95": [
+      0.08296940897718932,
+      0.10923028638028215
+     ]
+    },
+    "look_per_site_by_e_tertile": [
+     {
+      "tertile": 1,
+      "e_range": [
+       null,
+       11.372056514913657
+      ],
+      "rate": 0.04892996108949416,
+      "mc_se": 0.0020840476112319204,
+      "ci95": [
+       0.04484530282941287,
+       0.05301461934957546
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10280,
+      "n_studies": 2000
+     },
+     {
+      "tertile": 2,
+      "e_range": [
+       11.372056514913657,
+       15.242321398269134
+      ],
+      "rate": 0.014884716412102345,
+      "mc_se": 0.0011833111048097404,
+      "ci95": [
+       0.012565469264168953,
+       0.017203963560035736
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10279,
+      "n_studies": 2000
+     },
+     {
+      "tertile": 3,
+      "e_range": [
+       15.242321398269134,
+       null
+      ],
+      "rate": 0.001459285922755132,
+      "mc_se": 0.00037496851047144484,
+      "ci95": [
+       0.0007243611468944699,
+       0.002194210698615794
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10279,
+      "n_studies": 2000
+     }
+    ],
+    "by_k_bin": [
+     {
+      "k_bin": "<=12",
+      "n_studies": 0,
+      "look_per_site": {
+       "rate": null,
+       "mc_se": null,
+       "ci95": null,
+       "n_sites": 0,
+       "n_studies": 0
+      },
+      "look_per_study": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0
+      },
+      "watch_fwer": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0,
+       "ci95": null
+      }
+     },
+     {
+      "k_bin": "13-16",
+      "n_studies": 0,
+      "look_per_site": {
+       "rate": null,
+       "mc_se": null,
+       "ci95": null,
+       "n_sites": 0,
+       "n_studies": 0
+      },
+      "look_per_study": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0
+      },
+      "watch_fwer": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0,
+       "ci95": null
+      }
+     },
+     {
+      "k_bin": ">=17",
+      "n_studies": 2000,
+      "look_per_site": {
+       "rate": 0.05185,
+       "mc_se": 0.0009559004251549456,
+       "ci95": [
+        0.04997646959388978,
+        0.05372353040611022
+       ],
+       "ci95_method": "normal, cluster-aware MC SE",
+       "n_sites": 40000,
+       "n_studies": 2000
+      },
+      "look_per_study": {
+       "rate": 1.037,
+       "mc_se": 0.019118008503098912,
+       "n": 2000
+      },
+      "watch_fwer": {
+       "rate": 0.0955,
+       "mc_se": 0.006571900410079264,
+       "n": 2000,
+       "ci95": [
+        0.08296940897718932,
+        0.10923028638028215
+       ]
+      }
+     }
+    ],
+    "computability": {
+     "mean_computed_sites": 20.0,
+     "mean_computed_sites_mc_se": 0.0,
+     "share_below_min_sites": {
+      "rate": 0.0,
+      "mc_se": 0.0,
+      "n": 2000
+     },
+     "not_computed_reasons": {
+      "error": 0.0,
+      "integrated_mode": 0.0,
+      "low_coverage": 0.0,
+      "insufficient_patients": 0.0,
+      "insufficient_episodes": 0.0,
+      "study_below_min_sites": 0.0
+     },
+     "not_computed_reason_counts": {
+      "error": 0,
+      "integrated_mode": 0,
+      "low_coverage": 0,
+      "insufficient_patients": 0,
+      "insufficient_episodes": 0,
+      "study_below_min_sites": 0
+     },
+     "n_site_studies": 40000
+    },
+    "r": 2000
+   },
+   "simaerep_classic": {
+    "indicator": "simaerep_classic",
+    "look_per_site": {
+     "rate": 0.02615,
+     "mc_se": 0.0015856689197185775,
+     "ci95": [
+      0.023042146025947053,
+      0.029257853974052946
+     ],
+     "ci95_method": "normal, cluster-aware MC SE",
+     "n_sites": 40000,
+     "n_studies": 2000
+    },
+    "look_per_study": {
+     "rate": 0.523,
+     "mc_se": 0.03171337839437155,
+     "n": 2000
+    },
+    "watch_fwer": {
+     "rate": 0.0285,
+     "mc_se": 0.0037207358143249033,
+     "n": 2000,
+     "ci95": [
+      0.02165551844387129,
+      0.036768869858472795
+     ]
+    },
+    "look_per_site_by_e_tertile": [
+     {
+      "tertile": 1,
+      "e_range": [
+       null,
+       11.372056514913657
+      ],
+      "rate": 0.025680933852140077,
+      "mc_se": 0.002103784293885661,
+      "ci95": [
+       0.02155759240488315,
+       0.029804275299397002
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10280,
+      "n_studies": 2000
+     },
+     {
+      "tertile": 2,
+      "e_range": [
+       11.372056514913657,
+       15.242321398269134
+      ],
+      "rate": 0.008366572623796089,
+      "mc_se": 0.0009949242746427815,
+      "ci95": [
+       0.0064165568781515995,
+       0.010316588369440577
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10279,
+      "n_studies": 2000
+     },
+     {
+      "tertile": 3,
+      "e_range": [
+       15.242321398269134,
+       null
+      ],
+      "rate": 0.0011674287382041054,
+      "mc_se": 0.0003355468511003468,
+      "ci95": [
+       0.0005097689949216013,
+       0.0018250884814866094
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10279,
+      "n_studies": 2000
+     }
+    ],
+    "by_k_bin": [
+     {
+      "k_bin": "<=12",
+      "n_studies": 0,
+      "look_per_site": {
+       "rate": null,
+       "mc_se": null,
+       "ci95": null,
+       "n_sites": 0,
+       "n_studies": 0
+      },
+      "look_per_study": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0
+      },
+      "watch_fwer": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0,
+       "ci95": null
+      }
+     },
+     {
+      "k_bin": "13-16",
+      "n_studies": 0,
+      "look_per_site": {
+       "rate": null,
+       "mc_se": null,
+       "ci95": null,
+       "n_sites": 0,
+       "n_studies": 0
+      },
+      "look_per_study": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0
+      },
+      "watch_fwer": {
+       "rate": null,
+       "mc_se": null,
+       "n": 0,
+       "ci95": null
+      }
+     },
+     {
+      "k_bin": ">=17",
+      "n_studies": 2000,
+      "look_per_site": {
+       "rate": 0.02615,
+       "mc_se": 0.0015856689197185775,
+       "ci95": [
+        0.023042146025947053,
+        0.029257853974052946
+       ],
+       "ci95_method": "normal, cluster-aware MC SE",
+       "n_sites": 40000,
+       "n_studies": 2000
+      },
+      "look_per_study": {
+       "rate": 0.523,
+       "mc_se": 0.03171337839437155,
+       "n": 2000
+      },
+      "watch_fwer": {
+       "rate": 0.0285,
+       "mc_se": 0.0037207358143249033,
+       "n": 2000,
+       "ci95": [
+        0.02165551844387129,
+        0.036768869858472795
+       ]
+      }
+     }
+    ],
+    "computability": {
+     "mean_computed_sites": 20.0,
+     "mean_computed_sites_mc_se": 0.0,
+     "share_below_min_sites": {
+      "rate": 0.0,
+      "mc_se": 0.0,
+      "n": 2000
+     },
+     "not_computed_reasons": {
+      "error": 0.0,
+      "integrated_mode": 0.0,
+      "low_coverage": 0.0,
+      "insufficient_patients": 0.0,
+      "insufficient_episodes": 0.0,
+      "study_below_min_sites": 0.0
+     },
+     "not_computed_reason_counts": {
+      "error": 0,
+      "integrated_mode": 0,
+      "low_coverage": 0,
+      "insufficient_patients": 0,
+      "insufficient_episodes": 0,
+      "study_below_min_sites": 0
+     },
+     "n_site_studies": 40000
+    },
+    "r": 2000
+   },
+   "ae_report_ratio": {
+    "indicator": "ae_report_ratio",
+    "look_per_site": {
+     "rate": 0.04980867760555159,
+     "mc_se": 0.0010069067988088668,
+     "ci95": [
+      0.04783517654409769,
+      0.05178217866700549
+     ],
+     "ci95_method": "normal, cluster-aware MC SE",
+     "n_sites": 30838,
+     "n_studies": 2000
+    },
+    "look_per_study": {
+     "rate": 0.768,
+     "mc_se": 0.015595178896133292,
+     "n": 2000
+    },
+    "watch_fwer": {
+     "rate": 0.0945,
+     "mc_se": 0.0065410148295199574,
+     "n": 2000,
+     "ci95": [
+      0.08203138293797992,
+      0.10817141749229185
+     ]
+    },
+    "look_per_site_by_e_tertile": [
+     {
+      "tertile": 1,
+      "e_range": [
+       null,
+       11.372056514913657
+      ],
+      "rate": 0.025778210116731516,
+      "mc_se": 0.001508997179056149,
+      "ci95": [
+       0.022820629993008924,
+       0.02873579024045411
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10280,
+      "n_studies": 2000
+     },
+     {
+      "tertile": 2,
+      "e_range": [
+       11.372056514913657,
+       15.242321398269134
+      ],
+      "rate": 0.0483510069072867,
+      "mc_se": 0.0020341183196987116,
+      "ci95": [
+       0.04436420826038409,
+       0.05233780555418931
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10279,
+      "n_studies": 2000
+     },
+     {
+      "tertile": 3,
+      "e_range": [
+       15.242321398269134,
+       null
+      ],
+      "rate": 0.0752991536141648,
+      "mc_se": 0.00235160517899796,
+      "ci95": [
+       0.07069009215747092,
+       0.07990821507085867
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 10279,
+      "n_studies": 2000
+     }
+    ],
+    "by_k_bin": [
+     {
+      "k_bin": "<=12",
+      "n_studies": 138,
+      "look_per_site": {
+       "rate": 0.05231788079470199,
+       "mc_se": 0.004366556376545487,
+       "ci95": [
+        0.04375958756020912,
+        0.06087617402919486
+       ],
+       "ci95_method": "normal, cluster-aware MC SE",
+       "n_sites": 1510,
+       "n_studies": 138
+      },
+      "look_per_study": {
+       "rate": 0.572463768115942,
+       "mc_se": 0.04920577409960525,
+       "n": 138
+      },
+      "watch_fwer": {
+       "rate": 0.12318840579710146,
+       "mc_se": 0.0279768307963528,
+       "n": 138,
+       "ci95": [
+        0.0734265161449407,
+        0.18989731102071394
+       ]
+      }
+     },
+     {
+      "k_bin": "13-16",
+      "n_studies": 1242,
+      "look_per_site": {
+       "rate": 0.051780286582718195,
+       "mc_se": 0.0013175803449072586,
+       "ci95": [
+        0.049197876559962106,
+        0.054362696605474284
+       ],
+       "ci95_method": "normal, cluster-aware MC SE",
+       "n_sites": 18424,
+       "n_studies": 1242
+      },
+      "look_per_study": {
+       "rate": 0.7681159420289855,
+       "mc_se": 0.01958515043480285,
+       "n": 1242
+      },
+      "watch_fwer": {
+       "rate": 0.09259259259259259,
+       "mc_se": 0.008224859434240998,
+       "n": 1242,
+       "ci95": [
+        0.07704888909494982,
+        0.11009481621629712
+       ]
+      }
+     },
+     {
+      "k_bin": ">=17",
+      "n_studies": 620,
+      "look_per_site": {
+       "rate": 0.04612986060161409,
+       "mc_se": 0.001662252623733901,
+       "ci95": [
+        0.04287190532588843,
+        0.049387815877339744
+       ],
+       "ci95_method": "normal, cluster-aware MC SE",
+       "n_sites": 10904,
+       "n_studies": 620
+      },
+      "look_per_study": {
+       "rate": 0.8112903225806452,
+       "mc_se": 0.029275519497558616,
+       "n": 620
+      },
+      "watch_fwer": {
+       "rate": 0.09193548387096774,
+       "mc_se": 0.01160390303333592,
+       "n": 620,
+       "ci95": [
+        0.07037460937457052,
+        0.11747223560819507
+       ]
+      }
+     }
+    ],
+    "computability": {
+     "mean_computed_sites": 15.419,
+     "mean_computed_sites_mc_se": 0.04683285340526498,
+     "share_below_min_sites": {
+      "rate": 0.0035,
+      "mc_se": 0.0013205585939290994,
+      "n": 2000
+     },
+     "not_computed_reasons": {
+      "error": 0.0,
+      "integrated_mode": 0.0,
+      "low_coverage": 0.0,
+      "insufficient_patients": 0.0,
+      "insufficient_episodes": 0.22755,
+      "study_below_min_sites": 0.0015
+     },
+     "not_computed_reason_counts": {
+      "error": 0,
+      "integrated_mode": 0,
+      "low_coverage": 0,
+      "insufficient_patients": 0,
+      "insufficient_episodes": 9102,
+      "study_below_min_sites": 60
+     },
+     "n_site_studies": 40000
+    },
+    "r": 2000
+   }
+  },
+  "thresholds": "sap-v1",
+  "acceptance": {
+   "nominal": {
+    "look": 0.05,
+    "watch": 0.1
+   },
+   "rule": "rate <= nominal + 2 * sqrt(SE_cal^2 + SE_val^2), unrounded; below nominal is conservative, not a failure (docs/11 §12.1)",
+   "size_rule": "every E_s tertile's Look rate within nominal +/- 0.02",
+   "by_indicator": {
+    "discordance": {
+     "look": {
+      "rate": 0.04831701147934367,
+      "se_cal": 0.0010000062105683183,
+      "se_val": 0.0009714638775196244,
+      "bound": 0.05278837191672896,
+      "status": "conservative"
+     },
+     "watch": {
+      "rate": 0.108,
+      "se_cal": 0.00670820393249937,
+      "se_val": 0.0069403169956422026,
+      "bound": 0.1193047144501026,
+      "status": "pass"
+     },
+     "size_calibration": {
+      "tertile_rates": [
+       0.03453307392996109,
+       0.04562700651814379,
+       0.06479229497032785
+      ],
+      "within": [
+       0.030000000000000002,
+       0.07
+      ],
+      "status": "pass"
+     }
+    },
+    "rate_kri": {
+     "look": {
+      "rate": 0.05185,
+      "se_cal": 0.0009581017584211737,
+      "se_val": 0.0009559004251549456,
+      "bound": 0.052706809636676476,
+      "status": "pass"
+     },
+     "watch": {
+      "rate": 0.0955,
+      "se_cal": 0.00670820393249937,
+      "se_val": 0.006571900410079264,
+      "bound": 0.11878189287585253,
+      "status": "conservative"
+     },
+     "size_calibration": {
+      "tertile_rates": [
+       0.04892996108949416,
+       0.014884716412102345,
+       0.001459285922755132
+      ],
+      "within": [
+       0.030000000000000002,
+       0.07
+      ],
+      "status": "failure"
+     }
+    },
+    "simaerep_classic": {
+     "look": {
+      "rate": 0.02615,
+      "se_cal": 0.0014943431770397934,
+      "se_val": 0.0015856689197185775,
+      "bound": 0.05435770923937193,
+      "status": "conservative"
+     },
+     "watch": {
+      "rate": 0.0285,
+      "se_cal": 0.0033873108803297047,
+      "se_val": 0.0037207358143249033,
+      "bound": 0.11006334934303684,
+      "status": "conservative"
+     },
+     "size_calibration": {
+      "tertile_rates": [
+       0.025680933852140077,
+       0.008366572623796089,
+       0.0011674287382041054
+      ],
+      "within": [
+       0.030000000000000002,
+       0.07
+      ],
+      "status": "failure"
+     }
+    },
+    "ae_report_ratio": {
+     "look": {
+      "rate": 0.04980867760555159,
+      "se_cal": 0.0009803592347026702,
+      "se_val": 0.0010069067988088668,
+      "bound": 0.05281066933704719,
+      "status": "conservative"
+     },
+     "watch": {
+      "rate": 0.0945,
+      "se_cal": 0.00670820393249937,
+      "se_val": 0.0065410148295199574,
+      "bound": 0.11873871660493322,
+      "status": "conservative"
+     },
+     "size_calibration": {
+      "tertile_rates": [
+       0.025778210116731516,
+       0.0483510069072867,
+       0.0752991536141648
+      ],
+      "within": [
+       0.030000000000000002,
+       0.07
+      ],
+      "status": "failure"
+     }
+    }
+   },
+   "status": "pass",
+   "status_note": "discordance (primary); every indicator is in by_indicator",
+   "size_calibration_status": "pass"
+  }
+ }
+}

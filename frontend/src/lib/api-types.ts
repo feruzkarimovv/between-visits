@@ -464,6 +464,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audit/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit Verify
+         * @description Any role; always 200. Walks the hash chain in seq order and names the first event that no longer matches.
+         */
+        get: operations["audit_verify_api_audit_verify_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/eval/latest": {
         parameters: {
             query?: never;
@@ -473,6 +493,27 @@ export interface paths {
         };
         /** Eval Latest */
         get: operations["eval_latest_api_eval_latest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/eval/voice-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Eval Voice Checks
+         * @description Any role (docs/03 §6.11): real browser calls against the live backend, labeled MEASURED; never pooled
+         *     with the text-mode evaluation. 404 `no_voice_checks` when the file is absent.
+         */
+        get: operations["eval_voice_checks_api_eval_voice_checks_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -492,6 +533,202 @@ export interface paths {
         get: operations["validation_latest_api_validation_latest_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sites */
+        get: operations["sites_api_sites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sites/{site_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Site Detail */
+        get: operations["site_detail_api_sites__site_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-signal/answer-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Answer Key */
+        get: operations["answer_key_api_site_signal_answer_key_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-signal/validation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Validation
+         * @description Any role.
+         */
+        get: operations["validation_api_site_signal_validation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-signal/equity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Equity */
+        get: operations["equity_api_site_signal_equity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-queries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Site Queries */
+        get: operations["list_site_queries_api_site_queries_get"];
+        put?: never;
+        /** Create Site Query */
+        post: operations["create_site_query_api_site_queries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-queries/response-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Site Query Response Codes
+         * @description The coded responses a site can give (data/site_queries.json), for the mock site inbox's respond form.
+         *     Declared before `/site-queries/{query_id}` so the literal path wins.
+         */
+        get: operations["site_query_response_codes_api_site_queries_response_codes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-queries/{query_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Site Query */
+        get: operations["get_site_query_api_site_queries__query_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit Site Query */
+        patch: operations["edit_site_query_api_site_queries__query_id__patch"];
+        trace?: never;
+    };
+    "/api/site-queries/{query_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Site Query */
+        post: operations["approve_site_query_api_site_queries__query_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-queries/{query_id}/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Respond Site Query */
+        post: operations["respond_site_query_api_site_queries__query_id__respond_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/site-queries/{query_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Site Query */
+        post: operations["close_site_query_api_site_queries__query_id__close_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -688,6 +925,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/demo/scenarios/{scenario_id}/audio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scenario Audio
+         * @description `scenarios/audio/<id>.mp3` as audio/mpeg (docs/03 §6.2; demo only, any role, no audit).
+         *
+         *     The mp3 is gitignored and exists only where someone put it; serving a recorded call's audio on the public
+         *     instance needs the written consent of the teammate who played the patient (otherwise transcript-only).
+         */
+        get: operations["scenario_audio_api_demo_scenarios__scenario_id__audio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/demo/replay/{scenario_id}": {
         parameters: {
             query?: never;
@@ -697,7 +957,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Replay Scenario */
+        /**
+         * Replay Scenario
+         * @description Starts the replay in the background (docs/03 §6.2); any speed other than 1, 2 or 4 is 422 validation_error.
+         */
         post: operations["replay_scenario_api_demo_replay__scenario_id__post"];
         delete?: never;
         options?: never;
@@ -726,6 +989,37 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AnswerKeyEntry */
+        AnswerKeyEntry: {
+            /** Site Id */
+            site_id: string;
+            /**
+             * Label
+             * @enum {string}
+             */
+            label: "gross_under" | "under_50" | "under_25" | "language_gap" | "decoy_healthy_casemix" | "honest_low_diligence" | "low_coverage" | "small_site" | "honest";
+            /** F */
+            f: number | null;
+        };
+        /** AnswerKeyOut */
+        AnswerKeyOut: {
+            /**
+             * Run Id
+             * @constant
+             */
+            run_id: "sr_committed";
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "SIMULATED";
+            /** Answer Key */
+            answer_key: components["schemas"]["AnswerKeyEntry"][];
+            /** Confusion */
+            confusion: {
+                [key: string]: components["schemas"]["TierConfusion"];
+            };
+        };
         /** AnswerOut */
         AnswerOut: {
             /** Id */
@@ -789,6 +1083,28 @@ export interface components {
             } | null;
             /** Note */
             note: string | null;
+            /** Seq */
+            seq: number;
+            /** Prev Hash */
+            prev_hash: string;
+            /** Hash */
+            hash: string;
+        };
+        /**
+         * AuditVerifyOut
+         * @description `GET /api/audit/verify` (docs/03 §6.6): always 200; a broken chain is ok:false.
+         */
+        AuditVerifyOut: {
+            /** Ok */
+            ok: boolean;
+            /** N Events */
+            n_events: number;
+            /** Head Hash */
+            head_hash: string;
+            /** First Bad Id */
+            first_bad_id: string | null;
+            /** First Bad Seq */
+            first_bad_seq: number | null;
         };
         /** CheckInDetail */
         CheckInDetail: {
@@ -877,6 +1193,17 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** ConfusionCounts */
+        ConfusionCounts: {
+            /** Tp */
+            tp: number;
+            /** Fp */
+            fp: number;
+            /** Fn */
+            fn: number;
+            /** Tn */
+            tn: number;
+        };
         /** CreateCheckInIn */
         CreateCheckInIn: {
             /**
@@ -929,6 +1256,12 @@ export interface components {
             /** Sae Report Id */
             sae_report_id?: string | null;
             patient?: components["schemas"]["PatientBrief"] | null;
+            /**
+             * Origin
+             * @default between_visits
+             * @constant
+             */
+            origin: "between_visits";
         };
         /** DraftPatchIn */
         DraftPatchIn: {
@@ -938,6 +1271,57 @@ export interface components {
             };
             /** Note */
             note?: string | null;
+        };
+        /**
+         * EpisodeEvidence
+         * @description Verbatim quote in the original language. Every translation is an AI translation (REQ-026).
+         */
+        EpisodeEvidence: {
+            /** Quote */
+            quote: string;
+            /** Quote Lang */
+            quote_lang: string;
+            /** Translation En */
+            translation_en: string | null;
+            /** Translation Is Ai */
+            translation_is_ai: boolean;
+            /** T S */
+            t_s: number | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "live_call" | "replay" | "synthetic";
+            /** Checkin Id */
+            checkin_id: string | null;
+        };
+        /**
+         * EquityOut
+         * @description `GET /api/site-signal/equity`: `monitoring/out/equity.json` (docs/11 §14). Nested blocks pass through.
+         */
+        EquityOut: {
+            /**
+             * Data Origin
+             * @default SIMULATED
+             * @constant
+             */
+            data_origin: "SIMULATED";
+            /** Language */
+            language: {
+                [key: string]: unknown;
+            };
+            /** Pace */
+            pace: {
+                [key: string]: unknown;
+            };
+            /** Single Language Counterfactual */
+            single_language_counterfactual: {
+                [key: string]: unknown;
+            }[];
+            /** Note */
+            note?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         /** EscalationOut */
         EscalationOut: {
@@ -1037,6 +1421,36 @@ export interface components {
             /** Answer Ids */
             answer_ids: string[];
         };
+        /** Funnel */
+        Funnel: {
+            /** Points */
+            points: components["schemas"]["FunnelPoint"][];
+            /** Limits */
+            limits: components["schemas"]["FunnelLimit"][];
+        };
+        /** FunnelLimit */
+        FunnelLimit: {
+            /** E */
+            E: number;
+            /** Look Lower */
+            look_lower: number | null;
+            /** Watch Lower */
+            watch_lower: number | null;
+        };
+        /** FunnelPoint */
+        FunnelPoint: {
+            /** Site Id */
+            site_id: string;
+            /** E */
+            E: number;
+            /** Oe Ratio */
+            oe_ratio: number;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "watch" | "look" | "none" | "not_computed";
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1070,6 +1484,7 @@ export interface components {
             phone_calls_note?: string | null;
             /** Browser Calls Note */
             browser_calls_note?: string | null;
+            site_signal: components["schemas"]["SiteSignalHealth"];
         };
         /** InterviewStateOut */
         InterviewStateOut: {
@@ -1150,6 +1565,13 @@ export interface components {
              * @default true
              */
             ok: boolean;
+        };
+        /** PagedStratum */
+        PagedStratum: {
+            /** N */
+            n: number;
+            /** Matched */
+            matched: number;
         };
         /** PatientBrief */
         PatientBrief: {
@@ -1320,6 +1742,16 @@ export interface components {
             /** Rule Based */
             rule_based: boolean;
         };
+        /** RateKriComparator */
+        RateKriComparator: {
+            /** Z Adj */
+            z_adj: number | null;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "watch" | "look" | "none" | "not_computed";
+        };
         /** RecordAnswerIn */
         RecordAnswerIn: {
             /** Checkin Id */
@@ -1366,6 +1798,12 @@ export interface components {
             /** Checkin Id */
             checkin_id: string;
         };
+        /**
+         * ReplaySpeed
+         * @description `POST /api/demo/replay/{id}?speed=`: playback multiplier (2 = twice real time); anything else is 422.
+         * @enum {integer}
+         */
+        ReplaySpeed: 1 | 2 | 4;
         /** ReportRedFlagIn */
         ReportRedFlagIn: {
             /** Checkin Id */
@@ -1405,6 +1843,26 @@ export interface components {
         ResolveIn: {
             /** Note */
             note?: string | null;
+        };
+        /** RunDesign */
+        RunDesign: {
+            /** N Sites */
+            n_sites: number;
+            /** Window Weeks */
+            window_weeks: number;
+            /**
+             * Data Cut Date
+             * Format: date
+             */
+            data_cut_date: string;
+            /** Patients Per Site */
+            patients_per_site: number[];
+        };
+        /** RunThresholds */
+        RunThresholds: {
+            discordance: components["schemas"]["TierThresholds"];
+            rate_kri: components["schemas"]["TierThresholds"];
+            simaerep_classic: components["schemas"]["TierThresholds"];
         };
         /** SAEOut */
         SAEOut: {
@@ -1462,7 +1920,11 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
-        /** ScenarioOut */
+        /**
+         * ScenarioOut
+         * @description `GET /api/demo/scenarios` item (docs/03 §6.2). A scripted scenario is always labeled "Scripted";
+         *     `audio_url` is set only when `scenarios/audio/<id>.mp3` exists on the server (audio is never in git).
+         */
         ScenarioOut: {
             /** Id */
             id: string;
@@ -1472,6 +1934,14 @@ export interface components {
             duration_s: number;
             /** Patient Id */
             patient_id: string;
+            /** Recorded */
+            recorded: boolean;
+            /** Recorded At */
+            recorded_at: string | null;
+            /** Label */
+            label: string;
+            /** Audio Url */
+            audio_url: string | null;
         };
         /** SetSpeakerIn */
         SetSpeakerIn: {
@@ -1486,6 +1956,628 @@ export interface components {
             speaker: "patient" | "caregiver";
             /** Relation */
             relation?: string | null;
+        };
+        /** SignalComparators */
+        SignalComparators: {
+            rate_kri: components["schemas"]["RateKriComparator"];
+            simaerep_classic: components["schemas"]["SimaerepComparator"];
+        };
+        /**
+         * SignalLabels
+         * @description `data/signal_rules.json` `labels` with the `en` strings flattened (docs/03 §5.1). Keys WS4 adds pass through.
+         */
+        SignalLabels: {
+            /** Watch */
+            watch: string;
+            /** Look */
+            look: string;
+            /** None */
+            none: string;
+            /** Not Computed */
+            not_computed: string;
+            /** Footer */
+            footer: string;
+            /** Footer Expected False Look */
+            footer_expected_false_look: string;
+            /** Reasons */
+            reasons: {
+                [key: string]: string;
+            };
+            /** Answer Key */
+            answer_key: {
+                [key: string]: string;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * SignalRunMeta
+         * @description `run` of `GET /api/sites`: the committed study's metadata. Thresholds and the expected number of false
+         *     Look flags are served from thresholds.json (docs/03 §5.1).
+         */
+        SignalRunMeta: {
+            /**
+             * Id
+             * @constant
+             */
+            id: "sr_committed";
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "SIMULATED";
+            /** Sap Tag Commit */
+            sap_tag_commit: string;
+            /** Eval Seed */
+            eval_seed: number;
+            /** Generated At */
+            generated_at: string;
+            /** Code Commit */
+            code_commit: string;
+            design: components["schemas"]["RunDesign"];
+            thresholds: components["schemas"]["RunThresholds"];
+            /** Expected False Look Flags Per Study */
+            expected_false_look_flags_per_study: number;
+            /** Phi */
+            phi: number | null;
+            /** Tau2 */
+            tau2: number | null;
+            /** N Computed Sites */
+            n_computed_sites: number;
+            /** Study Not Computed Reason */
+            study_not_computed_reason: ("error" | "integrated_mode" | "low_coverage" | "insufficient_patients" | "insufficient_episodes" | "study_below_min_sites") | null;
+        };
+        /** SimaerepComparator */
+        SimaerepComparator: {
+            /** Prob */
+            prob: number | null;
+            /** P Value */
+            p_value: number | null;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "watch" | "look" | "none" | "not_computed";
+        };
+        /**
+         * SiteCard
+         * @description `Site` (docs/02): fictional site metadata. `data_origin` is MIXED on the site 101 card with live episodes.
+         */
+        SiteCard: {
+            /** Site Id */
+            site_id: string;
+            /** Name */
+            name: string;
+            /** Region */
+            region: string;
+            /** N Patients */
+            n_patients: number;
+            /** Spanish Share */
+            spanish_share: number;
+            /** Extra Time Share */
+            extra_time_share: number;
+            /** Call Completion */
+            call_completion: number;
+            /** Is Live Site */
+            is_live_site: boolean;
+            /**
+             * Data Origin
+             * @enum {string}
+             */
+            data_origin: "SIMULATED" | "MEASURED" | "MIXED";
+        };
+        /**
+         * SiteDetailOut
+         * @description `GET /api/sites/{site_id}`. MEASURED live episodes come first and never enter `signal`, `strata` or
+         *     `paged_stratum`. `queries` lists the site's queries in every status, newest first.
+         */
+        SiteDetailOut: {
+            site: components["schemas"]["SiteCard"];
+            signal: components["schemas"]["SiteSignalRow"];
+            /** Episodes */
+            episodes: components["schemas"]["SiteEpisode"][];
+            strata: components["schemas"]["SiteStrata"] | null;
+            paged_stratum: components["schemas"]["PagedStratum"] | null;
+            /** Queries */
+            queries: components["schemas"]["SiteQueryOut"][];
+        };
+        /**
+         * SiteEpisode
+         * @description `Episode` (docs/02): `ep_{site}_{n}` from episodes.json (SIMULATED), or `ep_live_{checkin_id}_{term}` built
+         *     at request time for the live site (MEASURED).
+         */
+        SiteEpisode: {
+            /** Episode Id */
+            episode_id: string;
+            /** Site Id */
+            site_id: string;
+            /** Subject Id */
+            subject_id: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "en" | "es";
+            /**
+             * Pace
+             * @enum {string}
+             */
+            pace: "standard" | "extra_time";
+            /** Term */
+            term: string;
+            /** Grade */
+            grade: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "new" | "worsened";
+            /**
+             * Episode Date
+             * Format: date
+             */
+            episode_date: string;
+            /** Checkin Ids */
+            checkin_ids: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "paged" | "pending" | "not_evaluated" | "matched" | "unmatched";
+            /** Paged Level */
+            paged_level: ("urgent" | "emergency") | null;
+            /** Matched Site Ae Id */
+            matched_site_ae_id: string | null;
+            evidence: components["schemas"]["EpisodeEvidence"];
+            /**
+             * Data Origin
+             * @enum {string}
+             */
+            data_origin: "SIMULATED" | "MEASURED";
+        };
+        /**
+         * SiteQueryApproveIn
+         * @description Request `{}`: approval and delivery to the mock site inbox happen at the same instant.
+         */
+        SiteQueryApproveIn: Record<string, never>;
+        /** SiteQueryCloseIn */
+        SiteQueryCloseIn: {
+            /** Note */
+            note?: string | null;
+        };
+        /** SiteQueryCreateIn */
+        SiteQueryCreateIn: {
+            /** Site Id */
+            site_id: string;
+            /** Episode Ids */
+            episode_ids: string[];
+            /** Template Id */
+            template_id: string;
+            /**
+             * Signal Run Id
+             * @default sr_committed
+             */
+            signal_run_id: string;
+        };
+        /**
+         * SiteQueryDetailOut
+         * @description `GET /api/site-queries/{query_id}`: the query, its cited episodes and its audit rows (oldest first).
+         */
+        SiteQueryDetailOut: {
+            /** Id */
+            id: string;
+            /** Site Id */
+            site_id: string;
+            /** Signal Run Id */
+            signal_run_id: string;
+            /** Template Id */
+            template_id: string;
+            /** Title En */
+            title_en: string;
+            /** Body En */
+            body_en: string;
+            /** Edited */
+            edited: boolean;
+            /** Episode Ids */
+            episode_ids: string[];
+            /** Subject Ids */
+            subject_ids: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "sent" | "answered" | "closed";
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Approved By */
+            approved_by: string | null;
+            /** Approved At */
+            approved_at: string | null;
+            /** Response Code */
+            response_code: string | null;
+            /** Response Label En */
+            response_label_en: string | null;
+            /** Response Note */
+            response_note: string | null;
+            /** Responded By */
+            responded_by: string | null;
+            /** Responded At */
+            responded_at: string | null;
+            /** Closed By */
+            closed_by: string | null;
+            /** Closed At */
+            closed_at: string | null;
+            /** Closure Note */
+            closure_note: string | null;
+            /**
+             * Data Origin
+             * @enum {string}
+             */
+            data_origin: "SIMULATED" | "MEASURED" | "MIXED";
+            /** Episodes */
+            episodes: components["schemas"]["SiteQueryEpisode"][];
+            /** Audit */
+            audit: components["schemas"]["AuditOut"][];
+        };
+        /**
+         * SiteQueryEpisode
+         * @description A cited episode. `evidence` is null for the coordinator: the site reviews its own source documents.
+         */
+        SiteQueryEpisode: {
+            /** Episode Id */
+            episode_id: string;
+            /** Site Id */
+            site_id: string;
+            /** Subject Id */
+            subject_id: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "en" | "es";
+            /**
+             * Pace
+             * @enum {string}
+             */
+            pace: "standard" | "extra_time";
+            /** Term */
+            term: string;
+            /** Grade */
+            grade: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "new" | "worsened";
+            /**
+             * Episode Date
+             * Format: date
+             */
+            episode_date: string;
+            /** Checkin Ids */
+            checkin_ids: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "paged" | "pending" | "not_evaluated" | "matched" | "unmatched";
+            /** Paged Level */
+            paged_level: ("urgent" | "emergency") | null;
+            /** Matched Site Ae Id */
+            matched_site_ae_id: string | null;
+            evidence: components["schemas"]["EpisodeEvidence"] | null;
+            /**
+             * Data Origin
+             * @enum {string}
+             */
+            data_origin: "SIMULATED" | "MEASURED";
+        };
+        /**
+         * SiteQueryOut
+         * @description `SiteQueryOut` (docs/03 §5.4). `title_en` and `response_label_en` come from data/site_queries.json;
+         *     `data_origin` from the cited episodes (all simulated SIMULATED, all live MEASURED, a mix MIXED).
+         */
+        SiteQueryOut: {
+            /** Id */
+            id: string;
+            /** Site Id */
+            site_id: string;
+            /** Signal Run Id */
+            signal_run_id: string;
+            /** Template Id */
+            template_id: string;
+            /** Title En */
+            title_en: string;
+            /** Body En */
+            body_en: string;
+            /** Edited */
+            edited: boolean;
+            /** Episode Ids */
+            episode_ids: string[];
+            /** Subject Ids */
+            subject_ids: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "sent" | "answered" | "closed";
+            /** Created By */
+            created_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Approved By */
+            approved_by: string | null;
+            /** Approved At */
+            approved_at: string | null;
+            /** Response Code */
+            response_code: string | null;
+            /** Response Label En */
+            response_label_en: string | null;
+            /** Response Note */
+            response_note: string | null;
+            /** Responded By */
+            responded_by: string | null;
+            /** Responded At */
+            responded_at: string | null;
+            /** Closed By */
+            closed_by: string | null;
+            /** Closed At */
+            closed_at: string | null;
+            /** Closure Note */
+            closure_note: string | null;
+            /**
+             * Data Origin
+             * @enum {string}
+             */
+            data_origin: "SIMULATED" | "MEASURED" | "MIXED";
+        };
+        /** SiteQueryPatchIn */
+        SiteQueryPatchIn: {
+            /** Body En */
+            body_en: string;
+            /** Note */
+            note?: string | null;
+        };
+        /** SiteQueryRespondIn */
+        SiteQueryRespondIn: {
+            /** Response Code */
+            response_code: string;
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * SiteQueryResponseCodeOut
+         * @description `GET /api/site-queries/response-codes`: one entry of data/site_queries.json `response_codes`, in file order.
+         */
+        SiteQueryResponseCodeOut: {
+            /** Code */
+            code: string;
+            /** Label En */
+            label_en: string;
+        };
+        /**
+         * SiteRowOut
+         * @description One `GET /api/sites` row: the `Site` and `SiteSignalRow` fields merged, plus `open_queries`.
+         */
+        SiteRowOut: {
+            /** Site Id */
+            site_id: string;
+            /** Name */
+            name: string;
+            /** Region */
+            region: string;
+            /** N Patients */
+            n_patients: number;
+            /** Spanish Share */
+            spanish_share: number;
+            /** Extra Time Share */
+            extra_time_share: number;
+            /** Call Completion */
+            call_completion: number;
+            /** Is Live Site */
+            is_live_site: boolean;
+            /** N Episodes Evaluable */
+            n_episodes_evaluable: number;
+            /** N Pending */
+            n_pending: number;
+            /** N Paged */
+            n_paged: number;
+            /** O */
+            O: number | null;
+            /** E */
+            E: number | null;
+            /** V */
+            V: number | null;
+            /** Oe Ratio */
+            oe_ratio: number | null;
+            /** Z Raw */
+            z_raw: number | null;
+            /** Z Adj */
+            z_adj: number | null;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "watch" | "look" | "none" | "not_computed";
+            /** Not Computed Reason */
+            not_computed_reason: ("error" | "integrated_mode" | "low_coverage" | "insufficient_patients" | "insufficient_episodes" | "study_below_min_sites") | null;
+            comparators: components["schemas"]["SignalComparators"];
+            /** Rank */
+            rank: number | null;
+            /** Open Queries */
+            open_queries: number;
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "SIMULATED";
+        };
+        /**
+         * SiteSignalHealth
+         * @description `health.site_signal` (docs/03 §6.7). `available` is true only when MONITORING_OUT/signal_run.json exists and
+         *     loads; `sap_tag_commit` and `generated_at` then come from its `run` object, otherwise they are null.
+         */
+        SiteSignalHealth: {
+            /** Available */
+            available: boolean;
+            /** Sap Tag Commit */
+            sap_tag_commit: string | null;
+            /** Generated At */
+            generated_at: string | null;
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "SIMULATED";
+        };
+        /**
+         * SiteSignalRow
+         * @description `SiteSignalRow` (docs/02): one site of the committed run. The statistic is always SIMULATED.
+         *
+         *     REQ-025: `not_computed` always carries a reason and no rank; a computed tier has no reason and a rank.
+         */
+        SiteSignalRow: {
+            /** Site Id */
+            site_id: string;
+            /** N Patients */
+            n_patients: number;
+            /** N Episodes Evaluable */
+            n_episodes_evaluable: number;
+            /** N Pending */
+            n_pending: number;
+            /** N Paged */
+            n_paged: number;
+            /** Call Completion */
+            call_completion: number;
+            /** O */
+            O: number | null;
+            /** E */
+            E: number | null;
+            /** V */
+            V: number | null;
+            /** Oe Ratio */
+            oe_ratio: number | null;
+            /** Z Raw */
+            z_raw: number | null;
+            /** Z Adj */
+            z_adj: number | null;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "watch" | "look" | "none" | "not_computed";
+            /** Not Computed Reason */
+            not_computed_reason: ("error" | "integrated_mode" | "low_coverage" | "insufficient_patients" | "insufficient_episodes" | "study_below_min_sites") | null;
+            comparators: components["schemas"]["SignalComparators"];
+            /** Rank */
+            rank: number | null;
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "SIMULATED";
+        };
+        /**
+         * SiteSignalValidationOut
+         * @description `GET /api/site-signal/validation`: `validation/site_signal/summary.json` verbatim plus `data_origin`.
+         *     Typed top-level keys from docs/11 §12.9; nested blocks pass through as dicts.
+         */
+        SiteSignalValidationOut: {
+            /** Sap Tag Commit */
+            sap_tag_commit: string;
+            /** Eval Seed */
+            eval_seed: number;
+            /** Beacon Round */
+            beacon_round: number | null;
+            /** Code Commit */
+            code_commit: string;
+            /** Generated At */
+            generated_at: string;
+            /** Numpy Version */
+            numpy_version: string;
+            /** Scipy Version */
+            scipy_version: string;
+            /**
+             * Data Origin
+             * @default SIMULATED
+             * @constant
+             */
+            data_origin: "SIMULATED";
+            /** Design */
+            design: {
+                [key: string]: unknown;
+            };
+            /** Null */
+            null: {
+                [key: string]: unknown;
+            };
+            /** Power */
+            power: {
+                [key: string]: unknown;
+            }[];
+            /** Full Mix */
+            full_mix: {
+                [key: string]: unknown;
+            };
+            /** Head To Head */
+            head_to_head: {
+                [key: string]: unknown;
+            };
+            /** Failure Case */
+            failure_case: {
+                [key: string]: unknown;
+            };
+            /** Sensitivity */
+            sensitivity: {
+                [key: string]: unknown;
+            }[];
+            /** Eval Study */
+            eval_study: {
+                [key: string]: unknown;
+            };
+            /** Simaerep Fixture */
+            simaerep_fixture: {
+                [key: string]: unknown;
+            };
+            /** Quick Hashes */
+            quick_hashes: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * SiteStrata
+         * @description Episodes in the O/E set (evaluable and not paged: status matched or unmatched) by language and by pace.
+         */
+        SiteStrata: {
+            /** Language */
+            language: {
+                [key: string]: components["schemas"]["StratumCount"];
+            };
+            /** Pace */
+            pace: {
+                [key: string]: components["schemas"]["StratumCount"];
+            };
+        };
+        /**
+         * SitesOut
+         * @description `GET /api/sites`: computed sites first by `rank`, then not-computed sites by `site_id`.
+         */
+        SitesOut: {
+            run: components["schemas"]["SignalRunMeta"];
+            labels: components["schemas"]["SignalLabels"];
+            funnel: components["schemas"]["Funnel"];
+            /** Sites */
+            sites: components["schemas"]["SiteRowOut"][];
         };
         /** SponsorInboxItem */
         SponsorInboxItem: {
@@ -1527,6 +2619,13 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** StratumCount */
+        StratumCount: {
+            /** Evaluable */
+            evaluable: number;
+            /** Matched */
+            matched: number;
+        };
         /** StudyOut */
         StudyOut: {
             /** Id */
@@ -1552,6 +2651,21 @@ export interface components {
             term: string;
             /** Points */
             points: components["schemas"]["TimelinePoint"][];
+        };
+        /** TierConfusion */
+        TierConfusion: {
+            watch: components["schemas"]["ConfusionCounts"];
+            look: components["schemas"]["ConfusionCounts"];
+        };
+        /**
+         * TierThresholds
+         * @description Look and Watch thresholds of one indicator, from `monitoring/out/thresholds.json`; null = never assigned.
+         */
+        TierThresholds: {
+            /** Look */
+            look: number | null;
+            /** Watch */
+            watch: number | null;
         };
         /** TimelinePoint */
         TimelinePoint: {
@@ -1616,6 +2730,58 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * VoiceCheckCall
+         * @description One real browser call against the deployed live backend (V10). Unknown keys in the file pass through.
+         */
+        VoiceCheckCall: {
+            /** Variant */
+            variant?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Checkin Id */
+            checkin_id?: string | null;
+            /** Scenario */
+            scenario?: string | null;
+            /** Disclosure First Turn */
+            disclosure_first_turn?: boolean | null;
+            /** Red Flag Expected */
+            red_flag_expected?: boolean | null;
+            /** Paged */
+            paged?: boolean | null;
+            /** Utterance To Page S */
+            utterance_to_page_s?: number | null;
+            /** Page To Ack S */
+            page_to_ack_s?: number | null;
+            /** Grade */
+            grade?: number | null;
+            /** Rule Id */
+            rule_id?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * VoiceChecksOut
+         * @description `GET /api/eval/voice-checks`: `eval/results/voice_checks.json` plus `data_origin: "MEASURED"`. Served with
+         *     exclude_unset, so the body is the file as written (never pooled with text-mode evaluation results).
+         */
+        VoiceChecksOut: {
+            /** Run At */
+            run_at?: string | null;
+            /** Backend */
+            backend?: string | null;
+            /** Agent Llm */
+            agent_llm?: string | null;
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "MEASURED";
+            /** Calls */
+            calls?: components["schemas"]["VoiceCheckCall"][];
+        } & {
+            [key: string]: unknown;
         };
         /** WebSession */
         WebSession: {
@@ -2499,6 +3665,26 @@ export interface operations {
             };
         };
     };
+    audit_verify_api_audit_verify_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditVerifyOut"];
+                };
+            };
+        };
+    };
     eval_latest_api_eval_latest_get: {
         parameters: {
             query?: never;
@@ -2521,6 +3707,26 @@ export interface operations {
             };
         };
     };
+    eval_voice_checks_api_eval_voice_checks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceChecksOut"];
+                };
+            };
+        };
+    };
     validation_latest_api_validation_latest_get: {
         parameters: {
             query?: never;
@@ -2539,6 +3745,450 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    sites_api_sites_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    site_detail_api_sites__site_id__get: {
+        parameters: {
+            query?: {
+                run_id?: string;
+                /** @description comma-separated episode statuses to list */
+                status?: string | null;
+            };
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answer_key_api_site_signal_answer_key_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerKeyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validation_api_site_signal_validation_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteSignalValidationOut"];
+                };
+            };
+        };
+    };
+    equity_api_site_signal_equity_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquityOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_site_queries_api_site_queries_get: {
+        parameters: {
+            query?: {
+                site_id?: string | null;
+                /** @description comma-separated: draft, sent, answered, closed */
+                status?: string | null;
+            };
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_site_query_api_site_queries_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteQueryCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    site_query_response_codes_api_site_queries_response_codes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryResponseCodeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_site_query_api_site_queries__query_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path: {
+                query_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryDetailOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_site_query_api_site_queries__query_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path: {
+                query_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteQueryPatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_site_query_api_site_queries__query_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path: {
+                query_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SiteQueryApproveIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    respond_site_query_api_site_queries__query_id__respond_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path: {
+                query_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteQueryRespondIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    close_site_query_api_site_queries__query_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path: {
+                query_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SiteQueryCloseIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2902,9 +4552,50 @@ export interface operations {
             };
         };
     };
-    replay_scenario_api_demo_replay__scenario_id__post: {
+    scenario_audio_api_demo_scenarios__scenario_id__audio_get: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                scenario_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The scenario's call audio. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "audio/mpeg": string;
+                };
+            };
+            /** @description Error `demo_disabled`, `scenario_not_found` or `audio_not_found`. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replay_scenario_api_demo_replay__scenario_id__post: {
+        parameters: {
+            query?: {
+                /** @description Playback multiplier: 1, 2 or 4 (2 = twice real time). Default: REPLAY_SPEED, else 2. */
+                speed?: components["schemas"]["ReplaySpeed"] | null;
+            };
             header?: never;
             path: {
                 scenario_id: string;

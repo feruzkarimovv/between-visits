@@ -1,0 +1,14 @@
+{
+  "name": "between-visits-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright end-to-end smoke (WS0 R10): the serious-event journey and the Site Signal site-query journey against a running make demo.",
+  "scripts": {
+    "test": "playwright test",
+    "install-browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^20"
+  }
+}

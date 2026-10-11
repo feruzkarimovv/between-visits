@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { apiFetch, errorMessage, isApiError, type ApiInit } from "./api";
+import { apiFetch, errorMessage, hasErrorCode, isApiError, type ApiInit } from "./api";
 import { humanize } from "./format";
 import type {
   AuditEvent,
@@ -15,11 +15,20 @@ import type {
   PatientDetail,
   PatientSummary,
   Plan,
+  AnswerKeyResponse,
   SAEReport,
+  SiteDetail,
+  SiteQuery,
+  SiteQueryDetail,
+  SiteQueryResponseCode,
+  SiteSignalEquity,
+  SiteSignalValidation,
+  SitesResponse,
   SponsorInboxItem,
   Study,
   TodayRow,
   ValidationSummary,
+  VoiceChecks,
 } from "./types";
 
 /** Don't retry 4xx; retry network/5xx once. */
@@ -118,7 +127,7 @@ export interface DraftFilters {
   checkin_id?: string;
 }
 
-export function useDrafts(filters: DraftFilters) {
+export function useDrafts(filters: DraftFilters, refetchInterval?: number) {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(filters)) if (v) qs.set(k, v);
   return useQuery({
@@ -134,6 +143,7 @@ export function useDrafts(filters: DraftFilters) {
           (!filters.checkin_id || d.checkin_id === filters.checkin_id),
       );
     },
+    refetchInterval,
     retry,
   });
 }
@@ -150,6 +160,7 @@ export function useSaeList() {
   return useQuery({
     queryKey: ["sae-list"],
     queryFn: () => apiFetch<SAEReport[]>("/api/sae"),
+    refetchInterval: 10_000,
     retry,
   });
 }
@@ -180,6 +191,15 @@ export function useEval() {
   });
 }
 
+/** Real browser calls (MEASURED, docs/03 §6.11); 404 `no_voice_checks` until V10 logs calls (not retried). */
+export function useVoiceChecks() {
+  return useQuery({
+    queryKey: ["eval-voice-checks"],
+    queryFn: () => apiFetch<VoiceChecks>("/api/eval/voice-checks"),
+    retry,
+  });
+}
+
 export function useValidation() {
   return useQuery({
     queryKey: ["validation"],
@@ -188,10 +208,114 @@ export function useValidation() {
   });
 }
 
-export function useScenarios() {
+/**
+ * Site Signal committed study (`GET /api/sites`, cra and sponsor). `enabled` is false for other roles, which
+ * see the role notice instead; a 403 `wrong_role` or 503 `site_signal_unavailable` is not retried.
+ */
+export function useSites(enabled = true) {
+  return useQuery({
+    queryKey: ["sites"],
+    queryFn: () => apiFetch<SitesResponse>("/api/sites"),
+    enabled,
+    staleTime: 60_000,
+    retry,
+  });
+}
+
+/** Site Signal operating characteristics (`GET /api/site-signal/validation`, any role); 404 `no_validation_run`. */
+export function useSiteValidation(enabled = true) {
+  return useQuery({
+    queryKey: ["site-signal-validation"],
+    queryFn: () => apiFetch<SiteSignalValidation>("/api/site-signal/validation"),
+    enabled,
+    staleTime: 5 * 60_000,
+    retry,
+  });
+}
+
+/** Within-site equity analysis (`GET /api/site-signal/equity`, cra and sponsor); 404 `no_equity_run`. */
+export function useSiteEquity(enabled = true) {
+  return useQuery({
+    queryKey: ["site-signal-equity"],
+    queryFn: () => apiFetch<SiteSignalEquity>("/api/site-signal/equity"),
+    enabled,
+    staleTime: 5 * 60_000,
+    retry,
+  });
+}
+
+/**
+ * Site drill-down (`GET /api/sites/{site_id}`, cra and sponsor): card, signal row, every episode with its evidence,
+ * strata, paged stratum and the site's queries. Polled, so a live call or replay at site 101 shows up as its
+ * MEASURED episode without a reload.
+ */
+export function useSiteDetail(siteId: string, enabled = true) {
+  return useQuery({
+    queryKey: ["site", siteId],
+    queryFn: () => apiFetch<SiteDetail>(`/api/sites/${encodeURIComponent(siteId)}`),
+    enabled: enabled && siteId !== "",
+    refetchInterval: 15_000,
+    retry,
+  });
+}
+
+/**
+ * Site queries (`GET /api/site-queries`, cra, sponsor and coordinator), newest first; `siteId` narrows to one site,
+ * `statuses` to those statuses. The coordinator never receives drafts. Polled, so a response or closure made in
+ * another tab shows up without a reload.
+ */
+export function useSiteQueries(opts: { siteId?: string; statuses?: SiteQuery["status"][] } = {}, enabled = true) {
+  const qs = new URLSearchParams();
+  if (opts.siteId) qs.set("site_id", opts.siteId);
+  if (opts.statuses?.length) qs.set("status", opts.statuses.join(","));
+  return useQuery({
+    queryKey: ["site-queries", "list", opts.siteId ?? "all", opts.statuses?.join(",") ?? "any"],
+    queryFn: () => apiFetch<SiteQuery[]>(`/api/site-queries${qs.size ? `?${qs}` : ""}`),
+    enabled,
+    refetchInterval: 10_000,
+    retry,
+  });
+}
+
+/** One site query with its cited episodes and audit rows (`GET /api/site-queries/{query_id}`). */
+export function useSiteQuery(queryId: string, enabled = true) {
+  return useQuery({
+    queryKey: ["site-queries", "detail", queryId],
+    queryFn: () => apiFetch<SiteQueryDetail>(`/api/site-queries/${encodeURIComponent(queryId)}`),
+    enabled: enabled && queryId !== "",
+    staleTime: 30_000,
+    retry,
+  });
+}
+
+/** The coded responses a site can give (`GET /api/site-queries/response-codes`, from data/site_queries.json). */
+export function useSiteQueryResponseCodes(enabled = true) {
+  return useQuery({
+    queryKey: ["site-query-response-codes"],
+    queryFn: () => apiFetch<SiteQueryResponseCode[]>("/api/site-queries/response-codes"),
+    enabled,
+    staleTime: Infinity,
+    retry,
+  });
+}
+
+/** Committed study's answer key (`GET /api/site-signal/answer-key`, cra and sponsor); fetched only after "Reveal". */
+export function useAnswerKey(enabled: boolean) {
+  return useQuery({
+    queryKey: ["site-signal-answer-key"],
+    queryFn: () => apiFetch<AnswerKeyResponse>("/api/site-signal/answer-key"),
+    enabled,
+    staleTime: 5 * 60_000,
+    retry,
+  });
+}
+
+/** Demo replay scenarios; only fetched when `GET /api/health` says `demo_mode: true` (otherwise 404 `demo_disabled`). */
+export function useScenarios(enabled: boolean) {
   return useQuery({
     queryKey: ["demo-scenarios"],
     queryFn: () => apiFetch<DemoScenario[]>("/api/demo/scenarios"),
+    enabled,
     staleTime: 5 * 60_000,
     retry: false,
   });
@@ -206,6 +330,8 @@ export function useApiMutation<TVars, TResult>(opts: {
   success?: string | ((result: TResult, vars: TVars) => string | null);
   invalidate?: QueryKey[];
   onSuccess?: (result: TResult, vars: TVars) => void;
+  /** `error.code` values the caller shows inline (for example 422 `banned_phrase`); these are not toasted. */
+  inlineErrorCodes?: string[];
 }) {
   const qc = useQueryClient();
   return useMutation<TResult, unknown, TVars>({
@@ -220,6 +346,7 @@ export function useApiMutation<TVars, TResult>(opts: {
       for (const key of opts.invalidate ?? []) void qc.invalidateQueries({ queryKey: key });
     },
     onError: (e) => {
+      if (opts.inlineErrorCodes && hasErrorCode(e, ...opts.inlineErrorCodes)) return;
       toast.error(errorMessage(e));
     },
   });

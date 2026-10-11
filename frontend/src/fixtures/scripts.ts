@@ -88,6 +88,7 @@ function draftBase(ctx: { checkinId: string; patientId: string }, key: string) {
     investigator: null,
     sae_report_id: null,
     created_at: new Date().toISOString(),
+    origin: "between_visits" as const,
   };
 }
 

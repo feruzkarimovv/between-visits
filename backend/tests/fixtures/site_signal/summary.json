@@ -1,0 +1,615 @@
+{
+  "_about": "fixture, not a result", "sap_tag_commit": "0000000", "eval_seed": 0, "beacon_round": 0,
+  "code_commit": "0000000", "generated_at": "2026-10-11T00:00:00Z", "numpy_version": "0.0.0",
+  "scipy_version": "0.0.0", "data_origin": "SIMULATED",
+  "design": {"n_sites": 20, "patients_per_site": [40, 80], "mu": 1.5, "gross_f": 0.9, "gate": "shortfall"},
+  "null": {
+    "indicator": "discordance", "look_per_site": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]},
+    "look_per_study": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]},
+    "look_per_site_by_e_tertile": [
+      {"tertile": 1, "rate": 0.0, "mc_se": 0.0},
+      {"tertile": 2, "rate": 0.0, "mc_se": 0.0},
+      {"tertile": 3, "rate": 0.0, "mc_se": 0.0}
+    ],
+    "by_k_bin": [
+      {
+        "k_bin": "<=12", "n_studies": 0, "look_per_study": {"rate": 0.0, "mc_se": 0.0},
+        "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+      },
+      {
+        "k_bin": "13-16", "n_studies": 0, "look_per_study": {"rate": 0.0, "mc_se": 0.0},
+        "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+      },
+      {
+        "k_bin": ">=17", "n_studies": 0, "look_per_study": {"rate": 0.0, "mc_se": 0.0},
+        "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+      }
+    ],
+    "r": 2000,
+    "computability": {
+      "mean_computed_sites": 0.0, "mean_computed_sites_mc_se": 0.0,
+      "share_below_min_sites": {"rate": 0.0, "mc_se": 0.0},
+      "not_computed_reasons": {
+        "error": 0.0, "integrated_mode": 0.0, "low_coverage": 0.0, "insufficient_patients": 0.0,
+        "insufficient_episodes": 0.0, "study_below_min_sites": 0.0
+      }
+    },
+    "comparators": {
+      "rate_kri": {
+        "look_per_site": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]},
+        "look_per_study": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+      },
+      "simaerep_classic": {
+        "look_per_site": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]},
+        "look_per_study": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+      },
+      "ae_report_ratio": {
+        "look_per_site": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]},
+        "look_per_study": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+      }
+    }
+  },
+  "power": [
+    {
+      "indicator": "discordance", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "discordance", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "discordance", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "discordance", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "rate_kri", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40, "mu": 1.5,
+      "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "rate_kri", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40, "mu": 1.5,
+      "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "rate_kri", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "rate_kri", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "simaerep_classic", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "simaerep_classic", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "simaerep_classic", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "simaerep_classic", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "ae_report_ratio", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "ae_report_ratio", "tier": "look", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "ae_report_ratio", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.25, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "ae_report_ratio", "tier": "watch", "design_row": false, "n_sites": 20, "patients_per_site": 40,
+      "mu": 1.5, "f": 0.5, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0
+    },
+    {
+      "indicator": "discordance", "tier": "look", "design_row": true, "n_sites": 20, "patients_per_site": [40, 80],
+      "mu": 1.5, "f": 0.9, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0,
+      "planning_power": 0.0
+    },
+    {
+      "indicator": "discordance", "tier": "watch", "design_row": true, "n_sites": 20, "patients_per_site": [40, 80],
+      "mu": 1.5, "f": 0.9, "power": 0.0, "mc_se": 0.0, "p_computed": 0.0, "null_rate_achieved": 0.0,
+      "planning_power": 0.0
+    }
+  ],
+  "full_mix": {
+    "r": 2000, "note": "includes two scenarios constructed to defeat a rate-based KRI",
+    "detection": [
+      {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "look", "label": "under_50", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "look", "label": "under_25", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "look", "label": "language_gap", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "watch", "label": "under_50", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "watch", "label": "under_25", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "watch", "label": "language_gap", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "look", "label": "under_50", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "look", "label": "under_25", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "look", "label": "language_gap", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "watch", "label": "under_50", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "watch", "label": "under_25", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "watch", "label": "language_gap", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "look", "label": "under_50", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "look", "label": "under_25", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "look", "label": "language_gap", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "watch", "label": "under_50", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "watch", "label": "under_25", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "watch", "label": "language_gap", "rate": 0.0, "mc_se": 0.0}
+    ],
+    "false_flags": [
+      {"indicator": "discordance", "tier": "look", "label": "decoy_healthy_casemix", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "look", "label": "honest_low_diligence", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "look", "label": "honest", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "watch", "label": "decoy_healthy_casemix", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "watch", "label": "honest_low_diligence", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "discordance", "tier": "watch", "label": "honest", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "look", "label": "decoy_healthy_casemix", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "look", "label": "honest_low_diligence", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "look", "label": "honest", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "watch", "label": "decoy_healthy_casemix", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "watch", "label": "honest_low_diligence", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "rate_kri", "tier": "watch", "label": "honest", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "look", "label": "decoy_healthy_casemix", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "look", "label": "honest_low_diligence", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "look", "label": "honest", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "watch", "label": "decoy_healthy_casemix", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "watch", "label": "honest_low_diligence", "rate": 0.0, "mc_se": 0.0},
+      {"indicator": "simaerep_classic", "tier": "watch", "label": "honest", "rate": 0.0, "mc_se": 0.0}
+    ],
+    "not_computed_correct": [
+      {"label": "low_coverage", "rate": 0.0, "mc_se": 0.0},
+      {"label": "small_site", "rate": 0.0, "mc_se": 0.0}
+    ],
+    "per_study": [
+      {
+        "indicator": "discordance", "tier": "look", "mean_flags": {"rate": 0.0, "mc_se": 0.0},
+        "mean_true_flags": {"rate": 0.0, "mc_se": 0.0}, "fdr": {"rate": 0.0, "mc_se": 0.0}
+      },
+      {
+        "indicator": "discordance", "tier": "watch", "mean_flags": {"rate": 0.0, "mc_se": 0.0},
+        "mean_true_flags": {"rate": 0.0, "mc_se": 0.0}, "fdr": {"rate": 0.0, "mc_se": 0.0}
+      },
+      {
+        "indicator": "rate_kri", "tier": "look", "mean_flags": {"rate": 0.0, "mc_se": 0.0},
+        "mean_true_flags": {"rate": 0.0, "mc_se": 0.0}, "fdr": {"rate": 0.0, "mc_se": 0.0}
+      },
+      {
+        "indicator": "rate_kri", "tier": "watch", "mean_flags": {"rate": 0.0, "mc_se": 0.0},
+        "mean_true_flags": {"rate": 0.0, "mc_se": 0.0}, "fdr": {"rate": 0.0, "mc_se": 0.0}
+      },
+      {
+        "indicator": "simaerep_classic", "tier": "look", "mean_flags": {"rate": 0.0, "mc_se": 0.0},
+        "mean_true_flags": {"rate": 0.0, "mc_se": 0.0}, "fdr": {"rate": 0.0, "mc_se": 0.0}
+      },
+      {
+        "indicator": "simaerep_classic", "tier": "watch", "mean_flags": {"rate": 0.0, "mc_se": 0.0},
+        "mean_true_flags": {"rate": 0.0, "mc_se": 0.0}, "fdr": {"rate": 0.0, "mc_se": 0.0}
+      }
+    ],
+    "equity": {
+      "b": 1000, "language_ci_covers_1_null": {"rate": 0.0, "mc_se": 0.0, "n_used": 0, "n_not_computed": 0},
+      "pace_ci_excludes_1_null": {"rate": 0.0, "mc_se": 0.0, "n_used": 0, "n_not_computed": 0},
+      "pace_ci_excludes_1_full_mix": {"rate": 0.0, "mc_se": 0.0, "n_used": 0, "n_not_computed": 0}
+    }
+  },
+  "head_to_head": {
+    "full_mix_note": "includes two scenarios constructed to defeat a rate-based KRI",
+    "grid": [
+      {
+        "comparator": "rate_kri", "tier": "look", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.25,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "rate_kri", "tier": "look", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.5,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "rate_kri", "tier": "watch", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.25,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "rate_kri", "tier": "watch", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.5,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "simaerep_classic", "tier": "look", "n_sites": 20, "patients_per_site": 40, "mu": 1.5,
+        "f": 0.25, "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "simaerep_classic", "tier": "look", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.5,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "simaerep_classic", "tier": "watch", "n_sites": 20, "patients_per_site": 40, "mu": 1.5,
+        "f": 0.25, "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "simaerep_classic", "tier": "watch", "n_sites": 20, "patients_per_site": 40, "mu": 1.5,
+        "f": 0.5, "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "look", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.25,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "look", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.5,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "watch", "n_sites": 20, "patients_per_site": 40, "mu": 1.5,
+        "f": 0.25, "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "watch", "n_sites": 20, "patients_per_site": 40, "mu": 1.5, "f": 0.5,
+        "power_diff": 0.0, "paired_mc_se": 0.0, "comparator_null_rate_achieved": 0.0,
+        "comparator_never_assigned": false
+      }
+    ],
+    "full_mix": [
+      {"comparator": "rate_kri", "tier": "look", "label": "gross_under", "detection_diff": 0.0, "paired_mc_se": 0.0},
+      {"comparator": "rate_kri", "tier": "look", "label": "under_50", "detection_diff": 0.0, "paired_mc_se": 0.0},
+      {"comparator": "rate_kri", "tier": "watch", "label": "gross_under", "detection_diff": 0.0, "paired_mc_se": 0.0},
+      {"comparator": "rate_kri", "tier": "watch", "label": "under_50", "detection_diff": 0.0, "paired_mc_se": 0.0},
+      {
+        "comparator": "simaerep_classic", "tier": "look", "label": "gross_under", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      },
+      {
+        "comparator": "simaerep_classic", "tier": "look", "label": "under_50", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      },
+      {
+        "comparator": "simaerep_classic", "tier": "watch", "label": "gross_under", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      },
+      {
+        "comparator": "simaerep_classic", "tier": "watch", "label": "under_50", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "look", "label": "gross_under", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "look", "label": "under_50", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "watch", "label": "gross_under", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      },
+      {
+        "comparator": "ae_report_ratio", "tier": "watch", "label": "under_50", "detection_diff": 0.0,
+        "paired_mc_se": 0.0
+      }
+    ]
+  },
+  "failure_case": {
+    "between_site_sd_logit": 0.6, "casemix_sd_log": 0.2,
+    "a": {
+      "r_null": 1000, "reps": 300,
+      "power": [
+        {"indicator": "discordance", "tier": "look", "f": 0.25, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "look", "f": 0.5, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "look", "f": 0.75, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "look", "f": 0.85, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "look", "f": 0.9, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "f": 0.25, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "f": 0.5, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "f": 0.75, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "f": 0.85, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "f": 0.9, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "look", "f": 0.25, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "look", "f": 0.5, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "look", "f": 0.75, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "look", "f": 0.85, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "look", "f": 0.9, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "watch", "f": 0.25, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "watch", "f": 0.5, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "watch", "f": 0.75, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "watch", "f": 0.85, "power": 0.0, "mc_se": 0.0},
+        {"indicator": "rate_kri", "tier": "watch", "f": 0.9, "power": 0.0, "mc_se": 0.0}
+      ]
+    },
+    "b": {
+      "r_null": 1000,
+      "null": [
+        {
+          "indicator": "discordance", "look_per_site": {"rate": 0.0, "mc_se": 0.0},
+          "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+        },
+        {
+          "indicator": "rate_kri", "look_per_site": {"rate": 0.0, "mc_se": 0.0},
+          "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+        },
+        {
+          "indicator": "simaerep_classic", "look_per_site": {"rate": 0.0, "mc_se": 0.0},
+          "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+        },
+        {
+          "indicator": "ae_report_ratio", "look_per_site": {"rate": 0.0, "mc_se": 0.0},
+          "watch_fwer": {"rate": 0.0, "mc_se": 0.0, "ci95": [0.0, 0.0]}
+        }
+      ]
+    }
+  },
+  "sensitivity": [
+    {
+      "id": "SE1", "change": "Match window: upper bound 3 days, lower tolerance 0",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": 0
+    },
+    {
+      "id": "SE2", "change": "Match window: upper bound 14 days, lower tolerance 7",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": 0
+    },
+    {
+      "id": "SE3", "change": "Mapping error x2, English only",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE4", "change": "Mapping error x4, English only",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE5", "change": "Mapping error x2, Spanish only",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE6", "change": "Mapping error x4, Spanish only",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE7", "change": "Call completion mean 0.60",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE8", "change": "Call completion mean 0.95",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE9", "change": "Misspecified null: between-site SD 0.2",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE10", "change": "Misspecified null: between-site SD 0.5",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE11", "change": "Misspecified null: between-site SD 0.6",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE12", "change": "Misspecified null: patient random-effect SD 0.0",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE13", "change": "Misspecified null: patient random-effect SD 1.0",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE14", "change": "Page-proximal paged stratum (7 days)",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE15", "change": "Capture boost near pages at the 5 sites with the most paging",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE16", "change": "Reporting propensity correlated across streams",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE17", "change": "One honest site with entry lag mean 25 days",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE18", "change": "Three sites with higher patient-stream mapping error",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE19", "change": "Case-mix SD 0.6",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE20", "change": "Evaluability with next visit + 19 days",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    },
+    {
+      "id": "SE21", "change": "Multiplicative overdispersion instead of additive",
+      "committed_tiers": {"watch": ["112", "107"], "look": ["109", "108", "111"]},
+      "null": {"look_per_site": {"rate": 0.0, "mc_se": 0.0}, "watch_fwer": {"rate": 0.0, "mc_se": 0.0}},
+      "full_mix_detection": [
+        {"indicator": "discordance", "tier": "look", "label": "gross_under", "rate": 0.0, "mc_se": 0.0},
+        {"indicator": "discordance", "tier": "watch", "label": "gross_under", "rate": 0.0, "mc_se": 0.0}
+      ],
+      "matched_status_changes": null
+    }
+  ],
+  "eval_study": {
+    "note": "Illustration only, not evidence of performance (docs/11 section 12.7).",
+    "confusion": {
+      "discordance": {"watch": {"tp": 2, "fp": 0, "fn": 3, "tn": 15}, "look": {"tp": 4, "fp": 1, "fn": 1, "tn": 14}},
+      "rate_kri": {"watch": {"tp": 1, "fp": 0, "fn": 4, "tn": 15}, "look": {"tp": 2, "fp": 1, "fn": 3, "tn": 14}},
+      "simaerep_classic": {
+        "watch": {"tp": 1, "fp": 0, "fn": 4, "tn": 15}, "look": {"tp": 1, "fp": 1, "fn": 4, "tn": 14}
+      }
+    },
+    "caught": [
+      {"indicator": "discordance", "site_id": "107", "label": "gross_under", "tier": "watch"},
+      {"indicator": "discordance", "site_id": "108", "label": "language_gap", "tier": "look"},
+      {"indicator": "discordance", "site_id": "109", "label": "under_50", "tier": "look"},
+      {"indicator": "discordance", "site_id": "112", "label": "gross_under", "tier": "watch"},
+      {"indicator": "rate_kri", "site_id": "107", "label": "gross_under", "tier": "look"},
+      {"indicator": "rate_kri", "site_id": "112", "label": "gross_under", "tier": "watch"},
+      {"indicator": "simaerep_classic", "site_id": "112", "label": "gross_under", "tier": "watch"}
+    ],
+    "missed": [
+      {"indicator": "discordance", "site_id": "115", "label": "under_25", "tier": "none"},
+      {"indicator": "rate_kri", "site_id": "108", "label": "language_gap", "tier": "none"},
+      {"indicator": "rate_kri", "site_id": "109", "label": "under_50", "tier": "none"},
+      {"indicator": "rate_kri", "site_id": "115", "label": "under_25", "tier": "none"},
+      {"indicator": "simaerep_classic", "site_id": "107", "label": "gross_under", "tier": "none"},
+      {"indicator": "simaerep_classic", "site_id": "108", "label": "language_gap", "tier": "none"},
+      {"indicator": "simaerep_classic", "site_id": "109", "label": "under_50", "tier": "none"},
+      {"indicator": "simaerep_classic", "site_id": "115", "label": "under_25", "tier": "none"}
+    ],
+    "not_computed": [
+      {"site_id": "103", "label": "low_coverage", "reason": "low_coverage"},
+      {"site_id": "117", "label": "small_site", "reason": "insufficient_patients"}
+    ]
+  },
+  "simaerep_fixture": {"rows": 10, "max_rel_diff": 0.0},
+  "quick_hashes": {
+    "null_validation": "0000000000000000000000000000000000000000000000000000000000000000",
+    "power_grid": "0000000000000000000000000000000000000000000000000000000000000000",
+    "failure_and_sensitivity": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

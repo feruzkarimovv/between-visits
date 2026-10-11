@@ -1,9 +1,23 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Clock, Languages, Siren, AlertTriangle, PhoneCall, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Ban,
+  CalendarClock,
+  CheckCircle2,
+  CircleDashed,
+  Clock,
+  Languages,
+  PhoneCall,
+  PhoneMissed,
+  Siren,
+  Users,
+  XCircle,
+} from "lucide-react";
 import type {
   CheckInStatus,
+  DraftEntry,
   DraftStatus,
   EscalationLevel,
   EscalationStatus,
@@ -22,11 +36,18 @@ export type Tone = "gray" | "red" | "amber" | "blue" | "green" | "violet" | "acc
 const TONES: Record<Tone, string> = {
   gray: "bg-gray-100 text-gray-800 border-gray-200",
   red: "bg-red-50 text-red-800 border-red-200",
-  amber: "bg-amber-50 text-amber-900 border-amber-300",
+  amber: "bg-amber-50 text-amber-900 border-amber-300/80",
   blue: "bg-blue-50 text-blue-800 border-blue-200",
   green: "bg-green-50 text-green-800 border-green-200",
-  violet: "bg-white text-violet-800 border-violet-400 border-dashed",
+  violet: "bg-violet-50/60 text-violet-800 border-violet-400 border-dashed",
   accent: "bg-accent-50 text-accent-800 border-accent-200",
+};
+
+const STRONG: Partial<Record<Tone, string>> = {
+  red: "border-red-700 bg-red-700 text-white",
+  amber: "border-amber-500 bg-amber-400 text-amber-950",
+  green: "border-green-700 bg-green-700 text-white",
+  blue: "border-blue-700 bg-blue-700 text-white",
 };
 
 export function Chip({
@@ -48,10 +69,8 @@ export function Chip({
     <span
       title={title}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm leading-5 font-medium whitespace-nowrap",
-        TONES[tone],
-        strong && tone === "red" && "border-red-700 bg-red-700 text-white",
-        strong && tone === "amber" && "border-amber-500 bg-amber-400 text-amber-950",
+        "inline-flex items-center gap-1 rounded-full border px-2 py-px text-sm leading-5 font-medium whitespace-nowrap",
+        strong && STRONG[tone] ? STRONG[tone] : TONES[tone],
         className,
       )}
     >
@@ -61,27 +80,32 @@ export function Chip({
   );
 }
 
-const STATUS: Record<TodayStatus, { label: string; tone: Tone; live?: boolean }> = {
-  due: { label: "Due", tone: "gray" },
-  scheduled: { label: "Scheduled", tone: "gray" },
+/** Pulsing dot for anything happening right now. */
+export function LiveDot({ className, tone = "accent" }: { className?: string; tone?: "accent" | "red" | "amber" | "live" }) {
+  const color = { accent: "bg-accent-600", red: "bg-red-600", amber: "bg-amber-500", live: "bg-live" }[tone];
+  return (
+    <span className={cn("relative flex size-2 shrink-0", className)} aria-hidden>
+      <span className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-60", color)} />
+      <span className={cn("relative inline-flex size-2 rounded-full", color)} />
+    </span>
+  );
+}
+
+const STATUS: Record<TodayStatus, { label: string; tone: Tone; live?: boolean; icon?: ReactNode }> = {
+  due: { label: "Due", tone: "gray", icon: <CircleDashed className="size-3.5" aria-hidden /> },
+  scheduled: { label: "Scheduled", tone: "gray", icon: <CalendarClock className="size-3.5" aria-hidden /> },
   dialing: { label: "Dialing", tone: "accent", live: true },
   in_progress: { label: "In call", tone: "accent", live: true },
-  completed: { label: "Completed", tone: "green" },
-  no_answer: { label: "No answer", tone: "amber" },
-  failed: { label: "Failed", tone: "red" },
-  cancelled: { label: "Cancelled", tone: "gray" },
+  completed: { label: "Completed", tone: "green", icon: <CheckCircle2 className="size-3.5" aria-hidden /> },
+  no_answer: { label: "No answer", tone: "amber", icon: <PhoneMissed className="size-3.5" aria-hidden /> },
+  failed: { label: "Failed", tone: "red", icon: <XCircle className="size-3.5" aria-hidden /> },
+  cancelled: { label: "Cancelled", tone: "gray", icon: <Ban className="size-3.5" aria-hidden /> },
 };
 
 export function StatusChip({ status }: { status: TodayStatus | CheckInStatus }) {
   const s = STATUS[status] ?? { label: humanize(status), tone: "gray" as Tone };
   return (
-    <Chip tone={s.tone}>
-      {s.live ? (
-        <span className="relative flex size-2" aria-hidden>
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent-600 opacity-60" />
-          <span className="relative inline-flex size-2 rounded-full bg-accent-600" />
-        </span>
-      ) : null}
+    <Chip tone={s.tone} icon={s.live ? <LiveDot className="mr-0.5" /> : s.icon}>
       {s.label}
     </Chip>
   );
@@ -117,15 +141,27 @@ export function LevelChip({
 
 export function EscalationStatusChip({ status }: { status: EscalationStatus }) {
   if (status === "open") return <Chip tone="red">Open</Chip>;
-  if (status === "acknowledged") return <Chip tone="green">Acknowledged</Chip>;
+  if (status === "acknowledged")
+    return (
+      <Chip tone="green" icon={<CheckCircle2 className="size-3.5" aria-hidden />}>
+        Acknowledged
+      </Chip>
+    );
   return <Chip tone="gray">Resolved</Chip>;
 }
 
-export function LanguageChip({ lang }: { lang: Lang | undefined }) {
+export const LANGUAGE_NAMES: Record<Lang, string> = { en: "English", es: "Spanish" };
+
+export function LanguageChip({ lang, long = false }: { lang: Lang | undefined; long?: boolean }) {
   if (!lang) return null;
   return (
-    <Chip tone={lang === "es" ? "accent" : "gray"} icon={<Languages className="size-3.5" aria-hidden />} title={lang === "es" ? "Spanish" : "English"}>
-      {lang.toUpperCase()}
+    <Chip
+      tone={lang === "es" ? "accent" : "gray"}
+      icon={<Languages className="size-3.5" aria-hidden />}
+      title={LANGUAGE_NAMES[lang]}
+    >
+      {long ? (lang === "es" ? "Español" : "English") : lang.toUpperCase()}
+      {long ? null : <span className="sr-only"> ({LANGUAGE_NAMES[lang]})</span>}
     </Chip>
   );
 }
@@ -153,20 +189,53 @@ export function CaregiverChip({ name, relation }: { name: string | null | undefi
 export function RedFlagChip({ id }: { id: string }) {
   const { short, full, level } = useRedFlagLabel(id);
   return (
-    <Chip tone={level === "emergency" ? "red" : "amber"} title={full} icon={<AlertTriangle className="size-3.5" aria-hidden />}>
+    <Chip
+      tone={level === "emergency" ? "red" : "amber"}
+      title={full}
+      icon={level === "emergency" ? <Siren className="size-3.5" aria-hidden /> : <AlertTriangle className="size-3.5" aria-hidden />}
+    >
       {short}
     </Chip>
   );
 }
 
 export function DraftStatusChip({ status }: { status: DraftStatus }) {
-  if (status === "confirmed") return <Chip tone="green">Confirmed</Chip>;
-  if (status === "rejected") return <Chip tone="gray">Rejected</Chip>;
+  if (status === "confirmed")
+    return (
+      <Chip tone="green" icon={<CheckCircle2 className="size-3.5" aria-hidden />}>
+        Confirmed
+      </Chip>
+    );
+  if (status === "rejected")
+    return (
+      <Chip tone="gray" icon={<XCircle className="size-3.5" aria-hidden />}>
+        Rejected
+      </Chip>
+    );
   return <Chip tone="blue">Draft</Chip>;
 }
 
 export function SaeStatusChip({ status }: { status: SaeStatus }) {
-  if (status === "sent") return <Chip tone="green">Sent to sponsor</Chip>;
+  if (status === "sent")
+    return (
+      <Chip tone="green" icon={<CheckCircle2 className="size-3.5" aria-hidden />}>
+        Sent to sponsor
+      </Chip>
+    );
   if (status === "signed") return <Chip tone="blue">Signed</Chip>;
   return <Chip tone="amber">Draft</Chip>;
+}
+
+/**
+ * Origin of a confirmed draft (docs/03 §6.5): `DraftOut.origin`, and the sponsor-defined `ORIGIN` column of ae.csv.
+ * Every serious-event report is built from a confirmed Between Visits AE draft, so it carries the same origin.
+ */
+export const BETWEEN_VISITS_ORIGIN: DraftEntry["origin"] = "between_visits";
+
+export function OriginTag({ origin = BETWEEN_VISITS_ORIGIN }: { origin?: string }) {
+  return (
+    <Chip tone="gray" className="font-mono" title="ORIGIN column in ae.csv: this entry came from a confirmed Between Visits draft">
+      origin: {origin}
+    </Chip>
+  );
 }

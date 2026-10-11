@@ -1,0 +1,300 @@
+{
+  "_about": "planning only, not a result",
+  "data_origin": "SIMULATED",
+  "sap": "docs/11-site-signal-sap.md \u00a711.5 (rules P1 and P2); simplified model, never quoted as a result (\u00a715 rule 1)",
+  "seed": {
+    "label": "dev",
+    "value": 20261011,
+    "stream": 3,
+    "keys": "numpy.random.SeedSequence(seed, spawn_key=(stream, cell_index, role, i)) -> PCG64",
+    "cell_index": {
+      "p1_15_30": 51,
+      "p1_20_40": 52,
+      "p1_30_60": 53,
+      "p1_40_80": 54,
+      "p2": 55
+    }
+  },
+  "model": {
+    "simplifications": [
+      "paging per cell from paged shares (rules.red_flags over enumerated candidates)",
+      "no mapping error",
+      "no comparators",
+      "P1 ignores planted capture losses"
+    ],
+    "n_sites": 20,
+    "data_cut_day": 252,
+    "calls_per_patient_max": 36,
+    "mu": 1.5,
+    "between_site_sd_logit": 0.35,
+    "patient_re_sd_logit": 0.5,
+    "casemix_sd_log": 0.35,
+    "call_completion": {
+      "mean": 0.85,
+      "kappa": 20.0
+    }
+  },
+  "paged_shares": {
+    "active_red_flags": [
+      "RF_FEVER",
+      "RF_DIARRHEA_SEVERE",
+      "RF_DEHYDRATION",
+      "RF_BREATHING",
+      "RF_BREATHING_SEVERE",
+      "RF_CHEST_PAIN",
+      "RF_NEURO",
+      "RF_SEIZURE_FAINT",
+      "RF_SKIN_SEVERE",
+      "RF_LIVER_KIDNEY",
+      "RF_HEART",
+      "RF_BLEEDING",
+      "RF_SELF_HARM"
+    ],
+    "paged_levels": [
+      "emergency",
+      "urgent"
+    ],
+    "cells": {
+      "Diarrhea": {
+        "2": {
+          "paged_share": 0.145,
+          "candidates": 18
+        },
+        "3": {
+          "paged_share": 1.0,
+          "candidates": 45
+        }
+      },
+      "Fever": {
+        "2": {
+          "paged_share": 1.0,
+          "candidates": 20
+        },
+        "3": {
+          "paged_share": 1.0,
+          "candidates": 16
+        }
+      },
+      "Dyspnea": {
+        "2": {
+          "paged_share": 0.2,
+          "candidates": 2
+        },
+        "3": {
+          "paged_share": 1.0,
+          "candidates": 2
+        }
+      }
+    }
+  },
+  "fever_and_grade3_always_paged": true,
+  "p1": {
+    "rule": "first range (in order) with mean computed sites >= 15 of the 18 sites not designed to be grey and share of studies below the 10-site minimum <= 0.02; else 40-80 (shortfall)",
+    "mu": 1.5,
+    "composition": "docs/11 \u00a711.4 (planted capture losses ignored for computability)",
+    "role": 1,
+    "ranges": [
+      {
+        "patients_per_site": [
+          15,
+          30
+        ],
+        "cell_index": 51,
+        "studies": 200,
+        "mean_computed_sites_of_non_grey": 0.0,
+        "mc_se_mean_computed": 0.0,
+        "non_grey_sites": 18,
+        "share_studies_below_min_sites": 1.0,
+        "mc_se_share_below": 0.0,
+        "mean_computed_sites_all": 0.0,
+        "mean_evaluable_nonpaged_episodes_per_non_grey_site": 8.844722,
+        "paged_share_of_episodes": 0.59926,
+        "not_computed_reason_share_non_grey": {
+          "insufficient_episodes": 0.878056,
+          "study_below_min_sites": 0.121944
+        },
+        "passed": false
+      },
+      {
+        "patients_per_site": [
+          20,
+          40
+        ],
+        "cell_index": 52,
+        "studies": 200,
+        "mean_computed_sites_of_non_grey": 0.155,
+        "mc_se_mean_computed": 0.089132,
+        "non_grey_sites": 18,
+        "share_studies_below_min_sites": 0.985,
+        "mc_se_share_below": 0.008595,
+        "mean_computed_sites_all": 0.155,
+        "mean_evaluable_nonpaged_episodes_per_non_grey_site": 11.946389,
+        "paged_share_of_episodes": 0.598326,
+        "not_computed_reason_share_non_grey": {
+          "computed": 0.008611,
+          "insufficient_episodes": 0.708889,
+          "study_below_min_sites": 0.2825
+        },
+        "passed": false
+      },
+      {
+        "patients_per_site": [
+          30,
+          60
+        ],
+        "cell_index": 53,
+        "studies": 200,
+        "mean_computed_sites_of_non_grey": 9.125,
+        "mc_se_mean_computed": 0.353727,
+        "non_grey_sites": 18,
+        "share_studies_below_min_sites": 0.22,
+        "mc_se_share_below": 0.029292,
+        "mean_computed_sites_all": 9.125,
+        "mean_evaluable_nonpaged_episodes_per_non_grey_site": 17.777778,
+        "paged_share_of_episodes": 0.599389,
+        "not_computed_reason_share_non_grey": {
+          "computed": 0.506944,
+          "insufficient_episodes": 0.391944,
+          "study_below_min_sites": 0.101111
+        },
+        "passed": false
+      },
+      {
+        "patients_per_site": [
+          40,
+          80
+        ],
+        "cell_index": 54,
+        "studies": 200,
+        "mean_computed_sites_of_non_grey": 14.17,
+        "mc_se_mean_computed": 0.13054,
+        "non_grey_sites": 18,
+        "share_studies_below_min_sites": 0.005,
+        "mc_se_share_below": 0.004987,
+        "mean_computed_sites_all": 14.17,
+        "mean_evaluable_nonpaged_episodes_per_non_grey_site": 23.413056,
+        "paged_share_of_episodes": 0.600059,
+        "not_computed_reason_share_non_grey": {
+          "computed": 0.787222,
+          "insufficient_episodes": 0.210278,
+          "study_below_min_sites": 0.0025
+        },
+        "passed": false
+      }
+    ],
+    "chosen": [
+      40,
+      80
+    ],
+    "outcome": "shortfall",
+    "shortfall": "no range passes; at the fallback 40-80: mean computed sites 14.17 of 18 (needs >= 15)"
+  },
+  "p2": {
+    "rule": "smallest f in [0.75, 0.8, 0.85, 0.9] whose one-sided 80% lower bound p - 0.842 * sqrt(p(1 - p) / 500) of Watch power is >= 0.8; else 0.9 (shortfall)",
+    "design": {
+      "n_sites": 20,
+      "patients_per_site": [
+        40,
+        80
+      ],
+      "mu": 1.5
+    },
+    "cell_index": 55,
+    "null": {
+      "studies": 1000,
+      "role": 0,
+      "c_look": -1.74641,
+      "c_watch": -2.586761,
+      "achieved_look_per_site": 0.049979,
+      "achieved_watch_fwer": 0.1,
+      "pooled_site_values": 16327,
+      "mean_computed_sites": 16.327,
+      "share_studies_below_min_sites": 0.0
+    },
+    "power": {
+      "role": 1,
+      "common_random_numbers": true,
+      "planted_sites_per_study": 1,
+      "rows": [
+        {
+          "f": 0.75,
+          "studies": 500,
+          "watch_power": 0.526,
+          "mc_se_watch": 0.02233,
+          "watch_lower_bound_80": 0.507198,
+          "look_power": 0.776,
+          "mc_se_look": 0.018645,
+          "p_planted_computed": 0.802,
+          "qualifies": false
+        },
+        {
+          "f": 0.8,
+          "studies": 500,
+          "watch_power": 0.61,
+          "mc_se_watch": 0.021813,
+          "watch_lower_bound_80": 0.591634,
+          "look_power": 0.794,
+          "mc_se_look": 0.018087,
+          "p_planted_computed": 0.802,
+          "qualifies": false
+        },
+        {
+          "f": 0.85,
+          "studies": 500,
+          "watch_power": 0.672,
+          "mc_se_watch": 0.020996,
+          "watch_lower_bound_80": 0.654321,
+          "look_power": 0.8,
+          "mc_se_look": 0.017889,
+          "p_planted_computed": 0.802,
+          "qualifies": false
+        },
+        {
+          "f": 0.9,
+          "studies": 500,
+          "watch_power": 0.724,
+          "mc_se_watch": 0.019991,
+          "watch_lower_bound_80": 0.707167,
+          "look_power": 0.802,
+          "mc_se_look": 0.017821,
+          "p_planted_computed": 0.802,
+          "qualifies": false
+        }
+      ]
+    },
+    "chosen_f": 0.9,
+    "outcome": "shortfall",
+    "shortfall": "no f qualifies; at the fallback f = 0.9: Watch power 0.724, lower bound 0.707167 (needs >= 0.8); the planted site was computed in 0.802 of studies (a not-computed planted site is a miss)",
+    "design_facts": {
+      "source": "the P2 null studies at the chosen design",
+      "mean_evaluable_nonpaged_episodes_per_site": 23.3783,
+      "paged_share_of_episodes": 0.599083,
+      "share_captured_episodes_outside_match_window": 0.025824,
+      "outside_window_definition": "captured latent episodes whose site AESTDTC falls outside [L_e - lower_tolerance_days, D_e + window_days] of the patient-stream episode containing their first completed call; denominator = captured latent episodes observed on at least one completed call"
+    }
+  },
+  "chosen": {
+    "patients_per_site": [
+      40,
+      80
+    ],
+    "gross_f": 0.9,
+    "p1": "shortfall",
+    "p2": "shortfall"
+  },
+  "provenance": {
+    "numpy_version": "2.5.4",
+    "scipy_version": "1.18.1",
+    "python_version": "3.12.12",
+    "plan_power_sha256": "613c0f72bf32747b3f1d9c5e02cd5e74a957e826c1253b33d291855fa860c0b6",
+    "signal_rules_sha256": "e121686b8555d9f79dbd0473115706a82daaf8213b84ba33709f2484b8dca275",
+    "frozen_inputs": {
+      "red_flags_id_rule_level_sha256": "25fc814b19b36275dd59864d6ca304a2f40de5366ad9d7e882ecff07e3fd1e81",
+      "plan_red_flag_ids_sha256": "3a2486c62d4875b4c63a6aa204b5e12429adb45f6c508d03a14af17398352cc4",
+      "symptom_items_logic_sha256": "571537ffc352527edc6ee705d448b8476200543b5b0f9a3b6ef217eee549eb16",
+      "ctcae_rules_sha256": "199d23700776bfbd09f433a7efe812bfd2b3fe685bd39c4bbe3158a3025120a5",
+      "rules_py_sha256": "ea97d075cbae3ff593d94d9d621257a13ba7428f84d7535c7f99668ce3d1103f",
+      "episodes_py_sha256": "d26a4cabed4a96c90a91c13100ccfd3ee341c9966c93faa5a8a44099d448e512"
+    }
+  }
+}

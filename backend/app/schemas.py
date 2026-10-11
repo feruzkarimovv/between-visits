@@ -1,9 +1,18 @@
 """Request/response models for every endpoint in docs/03-api-contracts.md (they define /openapi.json)."""
 
 from datetime import date, datetime
-from typing import Any, Literal
+from enum import IntEnum
+from typing import Any, Literal, get_args
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+# ---- demo identity (docs/03 §5.1, §6.1) ----------------------------------------------------------------
+
+# `X-BV-Role` values. A missing or unknown header means DEFAULT_ROLE; a role-restricted route answers any other
+# role with 403 `wrong_role` (`require_role` in app/routers/api.py). The role is written to AuditEvent.role.
+Role = Literal["coordinator", "investigator", "sponsor", "cra"]
+ROLES: tuple[Role, ...] = get_args(Role)
+DEFAULT_ROLE: Role = "coordinator"
 
 # ---- agent tools ---------------------------------------------------------------------------------------
 
@@ -70,6 +79,16 @@ class ErrorOut(BaseModel):
     error: ErrorBody
 
 
+class SiteSignalHealth(BaseModel):
+    """`health.site_signal` (docs/03 §6.7). `available` is true only when MONITORING_OUT/signal_run.json exists and
+    loads; `sap_tag_commit` and `generated_at` then come from its `run` object, otherwise they are null."""
+
+    available: bool
+    sap_tag_commit: str | None
+    generated_at: str | None
+    data_origin: Literal["SIMULATED"]
+
+
 class Health(BaseModel):
     ok: bool
     demo_mode: bool
@@ -81,6 +100,7 @@ class Health(BaseModel):
     browser_calls_enabled: bool = False
     phone_calls_note: str | None = None
     browser_calls_note: str | None = None
+    site_signal: SiteSignalHealth
 
 
 class StudyOut(BaseModel):
@@ -269,6 +289,7 @@ class DraftOut(BaseModel):
     created_at: datetime
     sae_report_id: str | None = None
     patient: PatientBrief | None = None
+    origin: Literal["between_visits"] = "between_visits"  # computed, not stored (docs/03 §6.5)
 
 
 class TranscriptTurn(BaseModel):
@@ -446,14 +467,546 @@ class AuditOut(BaseModel):
     before: dict[str, Any] | None
     after: dict[str, Any] | None
     note: str | None
+    seq: int
+    prev_hash: str
+    hash: str
+
+
+class AuditVerifyOut(BaseModel):
+    """`GET /api/audit/verify` (docs/03 §6.6): always 200; a broken chain is ok:false."""
+
+    ok: bool
+    n_events: int
+    head_hash: str
+    first_bad_id: str | None
+    first_bad_seq: int | None
 
 
 class ScenarioOut(BaseModel):
+    """`GET /api/demo/scenarios` item (docs/03 §6.2). A scripted scenario is always labeled "Scripted";
+    `audio_url` is set only when `scenarios/audio/<id>.mp3` exists on the server (audio is never in git)."""
+
     id: str
     title: str
     duration_s: float
     patient_id: str
+    recorded: bool
+    recorded_at: date | None
+    label: str
+    audio_url: str | None
+
+
+class ReplaySpeed(IntEnum):
+    """`POST /api/demo/replay/{id}?speed=`: playback multiplier (2 = twice real time); anything else is 422."""
+
+    X1 = 1
+    X2 = 2
+    X4 = 4
 
 
 class ReplayOut(BaseModel):
     checkin_id: str
+
+
+# ---- real-voice evidence (docs/03 §6.11) -----------------------------------------------------------------
+
+
+class VoiceCheckCall(BaseModel):
+    """One real browser call against the deployed live backend (V10). Unknown keys in the file pass through."""
+
+    model_config = ConfigDict(extra="allow")
+    variant: str | None = None
+    conversation_id: str | None = None
+    checkin_id: str | None = None
+    scenario: str | None = None
+    disclosure_first_turn: bool | None = None
+    red_flag_expected: bool | None = None
+    paged: bool | None = None
+    utterance_to_page_s: float | None = None
+    page_to_ack_s: float | None = None
+    grade: int | None = None
+    rule_id: str | None = None
+
+
+class VoiceChecksOut(BaseModel):
+    """`GET /api/eval/voice-checks`: `eval/results/voice_checks.json` plus `data_origin: "MEASURED"`. Served with
+    exclude_unset, so the body is the file as written (never pooled with text-mode evaluation results)."""
+
+    model_config = ConfigDict(extra="allow")
+    run_at: str | None = None
+    backend: str | None = None
+    agent_llm: str | None = None
+    data_origin: Literal["MEASURED"]
+    calls: list[VoiceCheckCall] = Field(default_factory=list)
+
+
+# ---- Site Signal (docs/03 §5.1-5.3, docs/02 § Site Signal) ------------------------------------------------
+#
+# File-backed shapes of the committed study in MONITORING_OUT (`monitoring/out/*.json`, written by
+# `make site-signal`) and the read payloads built from them. `services/site_signal.py` validates every file
+# against these models; any error is 503 `site_signal_unavailable` (REQ-025). Typed shapes ignore unknown keys,
+# so nothing beyond the contract (a planted label, say) reaches a payload by accident; the validation summary
+# and the equity file are pass-through files and keep every key.
+
+DataOrigin = Literal["SIMULATED", "MEASURED", "MIXED"]
+SignalTier = Literal["watch", "look", "none", "not_computed"]  # no tier means "clean"; none renders green
+NotComputedReason = Literal[
+    "error", "integrated_mode", "low_coverage", "insufficient_patients", "insufficient_episodes",
+    "study_below_min_sites",
+]
+EpisodeStatus = Literal["paged", "pending", "not_evaluated", "matched", "unmatched"]  # docs/11 §6.4 precedence
+QuoteSource = Literal["live_call", "replay", "synthetic"]
+SubjectLanguage = Literal["en", "es"]
+SubjectPace = Literal["standard", "extra_time"]
+AnswerKeyLabel = Literal[
+    "gross_under", "under_50", "under_25", "language_gap", "decoy_healthy_casemix", "honest_low_diligence",
+    "low_coverage", "small_site", "honest",
+]
+COMMITTED_RUN_ID = "sr_committed"  # the committed study: a reserved literal, never a database row
+
+
+class _SignalShape(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+
+class TierThresholds(_SignalShape):
+    """Look and Watch thresholds of one indicator, from `monitoring/out/thresholds.json`; null = never assigned."""
+
+    look: float | None
+    watch: float | None
+
+
+class RunThresholds(_SignalShape):
+    discordance: TierThresholds
+    rate_kri: TierThresholds
+    simaerep_classic: TierThresholds
+
+
+class ThresholdsFile(RunThresholds):
+    """`monitoring/out/thresholds.json` (bvsignal.calibrate): the only source of tier thresholds (REQ-023)."""
+
+    sap_tag_commit: str
+    eval_seed: int
+    expected_false_look_flags_per_study: float
+
+
+class RunDesign(_SignalShape):
+    n_sites: int
+    window_weeks: int
+    data_cut_date: date
+    patients_per_site: list[int]
+
+
+class SignalRunMeta(_SignalShape):
+    """`run` of `GET /api/sites`: the committed study's metadata. Thresholds and the expected number of false
+    Look flags are served from thresholds.json (docs/03 §5.1)."""
+
+    id: Literal["sr_committed"]
+    data_origin: Literal["SIMULATED"]
+    sap_tag_commit: str
+    eval_seed: int
+    generated_at: str
+    code_commit: str
+    design: RunDesign
+    thresholds: RunThresholds
+    expected_false_look_flags_per_study: float
+    phi: float | None
+    tau2: float | None
+    n_computed_sites: int
+    study_not_computed_reason: NotComputedReason | None
+
+
+class SignalRunMetaFile(SignalRunMeta):
+    """`run` as written in signal_run.json. A copy of the thresholds there must agree with thresholds.json."""
+
+    thresholds: RunThresholds | None = None  # type: ignore[assignment]
+    expected_false_look_flags_per_study: float | None = None  # type: ignore[assignment]
+
+
+class SiteCard(_SignalShape):
+    """`Site` (docs/02): fictional site metadata. `data_origin` is MIXED on the site 101 card with live episodes."""
+
+    site_id: str
+    name: str
+    region: str
+    n_patients: int
+    spanish_share: float
+    extra_time_share: float
+    call_completion: float
+    is_live_site: bool
+    data_origin: DataOrigin
+
+
+class SiteFile(SiteCard):
+    data_origin: Literal["SIMULATED"]  # type: ignore[assignment]
+
+
+class RateKriComparator(_SignalShape):
+    z_adj: float | None
+    tier: SignalTier
+
+
+class SimaerepComparator(_SignalShape):
+    prob: float | None
+    p_value: float | None
+    tier: SignalTier
+
+
+class SignalComparators(_SignalShape):
+    rate_kri: RateKriComparator
+    simaerep_classic: SimaerepComparator
+
+
+class SiteSignalRow(_SignalShape):
+    """`SiteSignalRow` (docs/02): one site of the committed run. The statistic is always SIMULATED.
+
+    REQ-025: `not_computed` always carries a reason and no rank; a computed tier has no reason and a rank."""
+
+    site_id: str
+    n_patients: int
+    n_episodes_evaluable: int
+    n_pending: int
+    n_paged: int
+    call_completion: float
+    O: int | None  # noqa: E741  (docs/02 field name: matched evaluable non-paged episodes, a count)
+    E: float | None
+    V: float | None
+    oe_ratio: float | None
+    z_raw: float | None
+    z_adj: float | None
+    tier: SignalTier
+    not_computed_reason: NotComputedReason | None
+    comparators: SignalComparators
+    rank: int | None
+    data_origin: Literal["SIMULATED"]
+
+    @model_validator(mode="after")
+    def _tier_has_reason(self) -> "SiteSignalRow":
+        not_computed = self.tier == "not_computed"
+        if not_computed != (self.not_computed_reason is not None):
+            raise ValueError(f"site {self.site_id}: tier {self.tier!r} with reason {self.not_computed_reason!r}")
+        if not_computed != (self.rank is None):
+            raise ValueError(f"site {self.site_id}: tier {self.tier!r} with rank {self.rank!r}")
+        return self
+
+
+class SiteRowOut(_SignalShape):
+    """One `GET /api/sites` row: the `Site` and `SiteSignalRow` fields merged, plus `open_queries`."""
+
+    site_id: str
+    name: str
+    region: str
+    n_patients: int
+    spanish_share: float
+    extra_time_share: float
+    call_completion: float
+    is_live_site: bool
+    n_episodes_evaluable: int
+    n_pending: int
+    n_paged: int
+    O: int | None  # noqa: E741
+    E: float | None
+    V: float | None
+    oe_ratio: float | None
+    z_raw: float | None
+    z_adj: float | None
+    tier: SignalTier
+    not_computed_reason: NotComputedReason | None
+    comparators: SignalComparators
+    rank: int | None
+    open_queries: int
+    data_origin: Literal["SIMULATED"]
+
+
+class FunnelPoint(_SignalShape):
+    site_id: str
+    E: float
+    oe_ratio: float
+    tier: SignalTier
+
+
+class FunnelLimit(_SignalShape):
+    E: float
+    look_lower: float | None
+    watch_lower: float | None
+
+
+class Funnel(_SignalShape):
+    points: list[FunnelPoint]
+    limits: list[FunnelLimit]
+
+
+class SignalRunFile(_SignalShape):
+    """`monitoring/out/signal_run.json`: `{run, sites, rows, funnel}`."""
+
+    run: SignalRunMetaFile
+    sites: list[SiteFile]
+    rows: list[SiteSignalRow]
+    funnel: Funnel
+
+
+class SignalLabels(BaseModel):
+    """`data/signal_rules.json` `labels` with the `en` strings flattened (docs/03 §5.1). Keys WS4 adds pass through."""
+
+    model_config = ConfigDict(extra="allow")
+    watch: str
+    look: str
+    none: str
+    not_computed: str
+    footer: str
+    footer_expected_false_look: str
+    reasons: dict[str, str]
+    answer_key: dict[str, str]
+
+
+class SitesOut(BaseModel):
+    """`GET /api/sites`: computed sites first by `rank`, then not-computed sites by `site_id`."""
+
+    run: SignalRunMeta
+    labels: SignalLabels
+    funnel: Funnel
+    sites: list[SiteRowOut]
+
+
+class EpisodeEvidence(_SignalShape):
+    """Verbatim quote in the original language. Every translation is an AI translation (REQ-026)."""
+
+    quote: str
+    quote_lang: str
+    translation_en: str | None
+    translation_is_ai: bool
+    t_s: float | None
+    source: QuoteSource
+    checkin_id: str | None
+
+    @model_validator(mode="after")
+    def _translation_labeled(self) -> "EpisodeEvidence":
+        if self.translation_en is not None and not self.translation_is_ai:
+            raise ValueError("a translation must carry translation_is_ai: true")
+        return self
+
+
+class SiteEpisode(_SignalShape):
+    """`Episode` (docs/02): `ep_{site}_{n}` from episodes.json (SIMULATED), or `ep_live_{checkin_id}_{term}` built
+    at request time for the live site (MEASURED)."""
+
+    episode_id: str
+    site_id: str
+    subject_id: str
+    language: SubjectLanguage
+    pace: SubjectPace
+    term: str
+    grade: int
+    kind: Literal["new", "worsened"]
+    episode_date: date
+    checkin_ids: list[str]
+    status: EpisodeStatus
+    paged_level: Literal["urgent", "emergency"] | None
+    matched_site_ae_id: str | None
+    evidence: EpisodeEvidence
+    data_origin: Literal["SIMULATED", "MEASURED"]
+
+    @model_validator(mode="after")
+    def _status_consistent(self) -> "SiteEpisode":
+        if (self.status == "paged") != (self.paged_level is not None):
+            raise ValueError(f"{self.episode_id}: status {self.status!r} with paged_level {self.paged_level!r}")
+        if self.status == "matched" and self.matched_site_ae_id is None:
+            raise ValueError(f"{self.episode_id}: matched without matched_site_ae_id")
+        if self.status == "unmatched" and self.matched_site_ae_id is not None:
+            raise ValueError(f"{self.episode_id}: unmatched with matched_site_ae_id")
+        return self
+
+
+class SiteAERow(_SignalShape):
+    """`SiteAE` (docs/02): one row of the simulated site AE log."""
+
+    site_ae_id: str
+    site_id: str
+    subject_id: str
+    usubjid: str
+    aeseq: int
+    aeterm: str
+    aetoxgr: str
+    aestdtc: date
+    entered_on: date
+    origin: Literal["site", "between_visits"]
+    symptomatic: bool
+    data_origin: Literal["SIMULATED"]
+
+
+class StratumCount(BaseModel):
+    evaluable: int
+    matched: int
+
+
+class SiteStrata(BaseModel):
+    """Episodes in the O/E set (evaluable and not paged: status matched or unmatched) by language and by pace."""
+
+    language: dict[str, StratumCount]
+    pace: dict[str, StratumCount]
+
+
+class PagedStratum(BaseModel):
+    n: int
+    matched: int
+
+
+# ---- site queries (B18, docs/03 §5.4; table SiteQuery in app/models.py) ---------------------------------------
+
+SiteQueryStatus = Literal["draft", "sent", "answered", "closed"]
+
+
+class SiteQueryCreateIn(BaseModel):
+    site_id: str
+    episode_ids: list[str] = Field(min_length=1)
+    template_id: str
+    signal_run_id: str = COMMITTED_RUN_ID
+
+
+class SiteQueryPatchIn(BaseModel):
+    body_en: str
+    note: str | None = None
+
+
+class SiteQueryApproveIn(BaseModel):
+    """Request `{}`: approval and delivery to the mock site inbox happen at the same instant."""
+
+
+class SiteQueryRespondIn(BaseModel):
+    response_code: str  # one of data/site_queries.json `response_codes` (else 422 invalid_response_code)
+    note: str | None = None
+
+
+class SiteQueryCloseIn(BaseModel):
+    note: str | None = None
+
+
+class SiteQueryResponseCodeOut(BaseModel):
+    """`GET /api/site-queries/response-codes`: one entry of data/site_queries.json `response_codes`, in file order."""
+
+    code: str
+    label_en: str
+
+
+class SiteQueryOut(BaseModel):
+    """`SiteQueryOut` (docs/03 §5.4). `title_en` and `response_label_en` come from data/site_queries.json;
+    `data_origin` from the cited episodes (all simulated SIMULATED, all live MEASURED, a mix MIXED)."""
+
+    id: str
+    site_id: str
+    signal_run_id: str
+    template_id: str
+    title_en: str
+    body_en: str
+    edited: bool
+    episode_ids: list[str]
+    subject_ids: list[str]
+    status: SiteQueryStatus
+    created_by: str
+    created_at: datetime
+    approved_by: str | None
+    approved_at: datetime | None
+    response_code: str | None
+    response_label_en: str | None
+    response_note: str | None
+    responded_by: str | None
+    responded_at: datetime | None
+    closed_by: str | None
+    closed_at: datetime | None
+    closure_note: str | None
+    data_origin: DataOrigin
+
+
+class SiteQueryEpisode(SiteEpisode):
+    """A cited episode. `evidence` is null for the coordinator: the site reviews its own source documents."""
+
+    evidence: EpisodeEvidence | None  # type: ignore[assignment]
+
+
+class SiteQueryDetailOut(SiteQueryOut):
+    """`GET /api/site-queries/{query_id}`: the query, its cited episodes and its audit rows (oldest first)."""
+
+    episodes: list[SiteQueryEpisode]
+    audit: list[AuditOut]
+
+
+class SiteDetailOut(BaseModel):
+    """`GET /api/sites/{site_id}`. MEASURED live episodes come first and never enter `signal`, `strata` or
+    `paged_stratum`. `queries` lists the site's queries in every status, newest first."""
+
+    site: SiteCard
+    signal: SiteSignalRow
+    episodes: list[SiteEpisode]
+    strata: SiteStrata | None
+    paged_stratum: PagedStratum | None
+    queries: list[SiteQueryOut]
+
+
+class AnswerKeyEntry(_SignalShape):
+    site_id: str
+    label: AnswerKeyLabel
+    f: float | None
+
+
+class ConfusionCounts(_SignalShape):
+    tp: int
+    fp: int
+    fn: int
+    tn: int
+
+
+class TierConfusion(_SignalShape):
+    watch: ConfusionCounts
+    look: ConfusionCounts
+
+
+class AnswerKeyFile(_SignalShape):
+    """`monitoring/out/answer_key.json`: the planted truth and the confusion counts `run.py` wrote (the backend
+    counts nothing)."""
+
+    data_origin: Literal["SIMULATED"] = "SIMULATED"
+    answer_key: list[AnswerKeyEntry]
+    confusion: dict[str, TierConfusion]
+
+
+class AnswerKeyOut(BaseModel):
+    run_id: Literal["sr_committed"]
+    data_origin: Literal["SIMULATED"]
+    answer_key: list[AnswerKeyEntry]
+    confusion: dict[str, TierConfusion]
+
+
+class EquityOut(BaseModel):
+    """`GET /api/site-signal/equity`: `monitoring/out/equity.json` (docs/11 §14). Nested blocks pass through."""
+
+    model_config = ConfigDict(extra="allow")
+    data_origin: Literal["SIMULATED"] = "SIMULATED"
+    language: dict[str, Any]
+    pace: dict[str, Any]
+    single_language_counterfactual: list[dict[str, Any]]
+    note: str | None = None
+
+
+class SiteSignalValidationOut(BaseModel):
+    """`GET /api/site-signal/validation`: `validation/site_signal/summary.json` verbatim plus `data_origin`.
+    Typed top-level keys from docs/11 §12.9; nested blocks pass through as dicts."""
+
+    model_config = ConfigDict(extra="allow")
+    sap_tag_commit: str
+    eval_seed: int
+    beacon_round: int | None
+    code_commit: str
+    generated_at: str
+    numpy_version: str
+    scipy_version: str
+    data_origin: Literal["SIMULATED"] = "SIMULATED"
+    design: dict[str, Any]
+    null: dict[str, Any]
+    power: list[dict[str, Any]]
+    full_mix: dict[str, Any]
+    head_to_head: dict[str, Any]
+    failure_case: dict[str, Any]
+    sensitivity: list[dict[str, Any]]
+    eval_study: dict[str, Any]
+    simaerep_fixture: dict[str, Any]
+    quick_hashes: dict[str, Any]

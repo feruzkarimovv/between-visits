@@ -19,7 +19,12 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       {children}
-      <Toaster position="bottom-right" richColors closeButton toastOptions={{ style: { fontSize: "14px" } }} />
+      <Toaster
+        position="bottom-right"
+        richColors
+        closeButton
+        toastOptions={{ style: { fontSize: "14px", borderRadius: "14px", fontFamily: "var(--font-sans)", boxShadow: "var(--shadow-pop)" } }}
+      />
     </QueryClientProvider>
   );
 }

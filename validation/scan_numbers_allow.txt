@@ -1,0 +1,16 @@
+# Allowlist for validation/scan_numbers.py: known false positives only (for example a digit run inside a hash).
+# One sha256 hex digest per line of the 10 matched digits (separators and a leading country code 1 removed), never
+# the digits themselves:  printf %s '<10 digits>' | shasum -a 256
+# A real phone number never goes here: remove it from the files, tell the team lead, and rotate whatever it exposes.
+# Fictional 555-exchange numbers need no entry; the scanner ignores them.
+# Lockfiles (uv.lock, package-lock.json, *.lock) need no entry either: their added lines are not checked
+# (validation/secret-scan.md), so the 150 lockfile-hash entries of R1 and S1 were removed.
+
+# docs/03-api-contracts.md: the example eval_seed value in a JSON example, not a phone number (1 entry, reviewed 2026-10-11)
+779af80e863f2a71454e2cd53bcd8028c82b21a58e39f91813081be954481bf6
+
+# monitoring/tests/test_seed.py: the expected derived eval seed (a uint32) in a seed-derivation test, not a phone number (1 entry, reviewed 2026-10-11)
+69b9fd808fe19f70447815f865eed89b595b0390a9234c7671cf37a87da9ad76
+
+# monitoring/params.yaml, monitoring/planning/planning_grid.json: digit run inside the 64-hex symptom_items_logic_sha256 digest, not a phone number (1 entry, reviewed 2026-10-11)
+ddef2828f9dc75327a79e82cf0c4cddaaaf52f4fc85d37251589bf5bf76b7471

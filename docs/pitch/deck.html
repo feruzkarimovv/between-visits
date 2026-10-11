@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Between Visits deck</title>
+<!--
+  Between Visits: 10-slide deck (WS4 D14), outline in docs/08-demo-and-pitch.md § Deck.
+  Self-contained: no external fonts, scripts or stylesheets. 16:9 slides; print to PDF at 13.333 x 7.5 in.
+
+  Numbers:
+  - Site Signal numbers are ss tokens filled by validation/render_numbers.py from validation/site_signal/summary.json
+    and monitoring/out/*.json (all SIMULATED); never type one. Render before export:
+      python3 validation/render_numbers.py --in-place WHAT_IT_GETS_WRONG.md README.md docs/pitch/deck.html docs/08-demo-and-pitch.md
+      python3 validation/render_numbers.py --check WHAT_IT_GETS_WRONG.md README.md docs/pitch/deck.html docs/08-demo-and-pitch.md
+    (the provenance table lands at the foot of WHAT_IT_GETS_WRONG.md).
+  - Evaluation numbers are copied from eval/results/latest.json (text mode, 20 simulated patients), key named in the
+    slide footer.
+  - Real-call (MEASURED) numbers come only from eval/results/voice_checks.json; none is quoted until it exists.
+
+  Screenshots (production build, no dev badge, 125% zoom; WS3 F19) resolve to docs/screenshots/<name>.png:
+    call.png, nurse-ack.png, review.png, sites-funnel.png, site-drilldown.png, site-inbox.png,
+    how-well-it-works.png, report-card.png
+  A missing screenshot shows its expected path in a dashed frame.
+
+  Export: uv run --no-project --with playwright==1.63.0 python docs/pitch/export_pdf.py (headless Chromium; fails unless one
+  page per slide). Or Chrome: Print, "Save as PDF", Margins "None", Background graphics on. Or headless Chrome:
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --no-pdf-header-footer \
+      --print-to-pdf=docs/pitch/deck.pdf docs/pitch/deck.html
+-->
+<style>
+  :root {
+    --bg: #f4f2ee;
+    --slide: #fffdf9;
+    --ink: #1d232b;
+    --muted: #5b6470;
+    --rule: #ddd8cf;
+    --accent: #1f4f8b;
+    --accent-soft: #e6eef8;
+    --urgent: #a1321f;
+    --sim-bg: #ece7f6;
+    --sim-ink: #4b3a7a;
+    --meas-bg: #e3edf8;
+    --meas-ink: #1f4f8b;
+    --ai-bg: #fbf0d9;
+    --ai-ink: #7a5310;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  body { padding: 16px; }
+  .slide {
+    container-type: inline-size;
+    position: relative;
+    width: min(1280px, 100%);
+    aspect-ratio: 16 / 9;
+    margin: 0 auto 16px;
+    background: var(--slide);
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    padding: 4.2cqw 5cqw 5.2cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6cqw;
+    font-size: 1.55cqw;
+    line-height: 1.38;
+  }
+  .kicker { font-size: 1.05cqw; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font-size: 4.4cqw; line-height: 1.05; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 2.9cqw; line-height: 1.12; margin: 0; letter-spacing: -0.005em; }
+  h3 { font-size: 1.6cqw; margin: 0 0 0.5cqw; }
+  p { margin: 0; }
+  ul { margin: 0; padding-left: 1.4em; }
+  li { margin: 0.35em 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 1.15cqw; }
+  .lead { font-size: 2cqw; line-height: 1.3; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw; flex: 1; min-height: 0; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; flex: 1; min-height: 0; }
+  .card { border: 1px solid var(--rule); border-radius: 0.6cqw; padding: 1.4cqw 1.6cqw; background: #fff; }
+  .foot {
+    position: absolute; left: 5cqw; right: 5cqw; bottom: 1.6cqw;
+    display: flex; justify-content: space-between; gap: 2cqw;
+    font-size: 0.95cqw; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 0.7cqw;
+  }
+  .badge {
+    display: inline-block; font-size: 0.9cqw; font-weight: 700; letter-spacing: 0.08em;
+    padding: 0.15em 0.6em; border-radius: 0.3em; vertical-align: middle; white-space: nowrap;
+  }
+  .sim { background: var(--sim-bg); color: var(--sim-ink); }
+  .meas { background: var(--meas-bg); color: var(--meas-ink); }
+  .ai { background: var(--ai-bg); color: var(--ai-ink); }
+  .shot {
+    margin: 0; display: flex; flex-direction: column; gap: 0.5cqw; min-height: 0;
+  }
+  .shot .frame {
+    flex: 1; min-height: 0; border: 1px dashed var(--rule); border-radius: 0.5cqw; overflow: hidden;
+    background: repeating-linear-gradient(135deg, #faf8f4, #faf8f4 1cqw, #f3f0ea 1cqw, #f3f0ea 2cqw);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    color: var(--muted); font-size: 1cqw;
+  }
+  .shot img { width: 100%; height: 100%; object-fit: contain; display: block; background: #fff; }
+  .shot figcaption { font-size: 1.05cqw; color: var(--muted); }
+  .flow { display: flex; align-items: stretch; gap: 0.8cqw; }
+  .flow .step { flex: 1; border: 1px solid var(--rule); border-radius: 0.6cqw; padding: 1.2cqw; background: #fff; }
+  .flow .step b { display: block; font-size: 1.7cqw; margin-bottom: 0.4cqw; color: var(--accent); }
+  .flow .arrow { align-self: center; color: var(--muted); font-size: 2cqw; }
+  .rule-line { font-size: 2.2cqw; font-weight: 700; color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; font-size: 1.2cqw; }
+  th, td { text-align: left; padding: 0.45cqw 0.6cqw; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stat { font-size: 3cqw; font-weight: 700; line-height: 1.05; color: var(--accent); }
+  .quote { font-style: italic; }
+  .urgent { color: var(--urgent); font-weight: 700; }
+  @media print {
+    @page { size: 13.333in 7.5in; margin: 0; }
+    html, body { background: #fff; padding: 0; }
+    .slide {
+      width: 13.333in; height: 7.5in; aspect-ratio: auto; margin: 0; border: 0;
+      break-after: page; page-break-after: always;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 1 · Title -->
+<section class="slide" aria-label="Slide 1: Between Visits">
+  <p class="kicker">HackRU Fall 2026 · Regeneron clinical-trial challenge</p>
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:2cqw;">
+    <h1>Between Visits</h1>
+    <p class="lead">No symptom waits for the next visit, in any language, at any pace.</p>
+    <p>A voice agent calls cancer-trial patients in the days after a dose, in English or Spanish and at their pace. Fixed CTCAE rules grade the answers, the on-call nurse is paged for red flags, and the study team gets drafts with the patient's own words. On the sponsor side, <b>Site Signal</b> points a monitor at sites whose AE log disagrees with what their own patients reported.</p>
+    <p class="rule-line">The AI listens, rules grade, humans decide.</p>
+  </div>
+  <div class="foot"><span>Team: @feruzkarimovv and the teammates listed on Devpost</span><span>Synthetic data only · not a medical device · MIT</span></div>
+</section>
+
+<!-- 2 · Who is hard to reach -->
+<section class="slide" aria-label="Slide 2: Who is hard to reach">
+  <p class="kicker">The problem</p>
+  <h2>The patients trials struggle to reach between visits are the ones who don't speak English and the ones who need more time.</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Non-English speakers</h3>
+      <ul>
+        <li>English-only staff, apps and forms miss them.</li>
+        <li>Clinical questions must not be machine-translated live.</li>
+        <li>Between Visits asks pre-written, approved questions in English or Spanish.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Patients who need more time</h3>
+      <ul>
+        <li>Fast voice bots and small screens fail older patients and people with low vision or literacy.</li>
+        <li>The extra-time variants speak slower, wait longer and read every answer back.</li>
+        <li>A plain phone-style conversation also catches what forms miss.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Source: Regeneron mentor conversation, Oct 10 (README § Why)</span><span>2</span></div>
+</section>
+
+<!-- 3 · Rosa's gap -->
+<section class="slide" aria-label="Slide 3: Rosa's three-week gap">
+  <p class="kicker">Rosa, a synthetic patient</p>
+  <h2>Rosa is 74, speaks Spanish and had her second dose two days ago. Her next visit is in three weeks.</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>What happens in the gap</h3>
+      <ul>
+        <li>Side effects start between visits and surface at the next one, from memory.</li>
+        <li>With an anti-PD-1 antibody, diarrhea can be the first sign of immune-related colitis; the example protocol treats 7 or more stools a day above baseline as grade 3.</li>
+        <li>Serious events must reach the sponsor within 24 hours of site awareness.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Clinician reports miss patient-reported symptoms</h3>
+      <ul>
+        <li>Across three randomized trials, physicians did not report 40.7–74.4% of the symptomatic toxicities patients reported (Di Maio 2015; secondary summary, UNVERIFIED against the full text).</li>
+        <li>NCI built PRO-CTCAE for this reason (NCI).</li>
+        <li>The patient stream is a reference, not the truth: patients report earlier and more often, clinicians judge attribution (Basch 2009; UNVERIFIED).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Sources: docs/10-site-signal.md §2 [1], [3], [5]; README § Why</span><span>3</span></div>
+</section>
+
+<!-- 4 · One picture -->
+<section class="slide" aria-label="Slide 4: Between Visits in one picture">
+  <p class="kicker">How it works</p>
+  <h2>Plan → call → nurse → review → sponsor</h2>
+  <div class="flow">
+    <div class="step"><b>Plan</b>The study team approves plain-language questions in English and Spanish, red flags from the drug class's patient guide, and calls on days 1, 3 and 7 after each dose.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Call</b>The agent says it is an AI, offers a person, and asks only the question the backend hands it, in the patient's language and pace.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Nurse</b>Fixed CTCAE rules grade; a red flag pages the on-call nurse before the agent's next word, and re-pages until acknowledged.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Review</b>Drafts carry the verbatim quote, language, second and source; AI translations are labeled. A person confirms each one.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Sponsor</b>The investigator signs a serious-event report; the sponsor inbox shows the 24-hour clock, subject ID only.</div>
+  </div>
+  <div class="card small">
+    <b>Site Signal</b> (sponsor side): each site's AE log is compared with what its own patients reported on these calls, relative to the other sites. A flag is a reason to look, not a finding.
+  </div>
+  <div class="foot"><span>Built with ElevenLabs and Claude (Anthropic API); FastAPI, Next.js, SQLite; numpy and scipy for Site Signal</span><span>4</span></div>
+</section>
+
+<!-- 5 · Demo screenshots -->
+<section class="slide" aria-label="Slide 5: Demo">
+  <p class="kicker">Demo</p>
+  <h2>Rosa's call, the nurse page, and drafts with evidence</h2>
+  <div class="grid3">
+    <figure class="shot">
+      <div class="frame"><img src="../screenshots/call.png" alt="docs/screenshots/call.png: check-in page during the call, Diarrhea provisional grade 3 and the urgent escalation panel"></div>
+      <figcaption>Live check-in: Diarrhea, <b>provisional</b> grade 3 by a fixed rule; urgent page sent.</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="frame"><img src="../screenshots/nurse-ack.png" alt="docs/screenshots/nurse-ack.png: escalation acknowledged by the on-call nurse"></div>
+      <figcaption>The nurse acknowledges with one tap; the page carries the subject ID only.</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="frame"><img src="../screenshots/review.png" alt="docs/screenshots/review.png: review queue with the Spanish quote and a labeled AI translation"></div>
+      <figcaption>Drafts with Rosa's Spanish words, the second, the source and <span class="badge ai">AI TRANSLATION</span>.</figcaption>
+    </figure>
+  </div>
+  <div class="foot"><span>Synthetic patient. The call is labeled on screen: a real call played by a teammate, or "Scripted replay".</span><span>5</span></div>
+</section>
+
+<!-- 6 · Safety by design -->
+<section class="slide" aria-label="Slide 6: Safety by design">
+  <p class="kicker">Safety by design</p>
+  <h2>Each rule is a tested requirement</h2>
+  <table>
+    <thead><tr><th>Rule</th><th>How it holds</th><th>Proof</th></tr></thead>
+    <tbody>
+      <tr><td>Discloses AI, offers a human</td><td>First sentence of every call, every language</td><td>REQ-001, REQ-002</td></tr>
+      <tr><td>Approved words only</td><td>Questions and escalation lines come from data files in the call's language; no live translation of clinical text</td><td>REQ-003</td></tr>
+      <tr><td>No medical advice</td><td>Medical questions get the approved deferral line and become a nurse task</td><td>REQ-007, judge over every transcript</td></tr>
+      <tr><td>Rules grade, not the AI</td><td>Grades and escalation come only from fixed CTCAE v5 and red-flag rules</td><td>REQ-004, REQ-005</td></tr>
+      <tr><td>Fail safe</td><td>Errors on a red-flag path escalate to a person; paging never waits on statistics</td><td>backend tests</td></tr>
+      <tr><td>A human decides</td><td>Every confirmation, signature and site query is a person's action, audited in a hash chain</td><td>REQ-010, REQ-019</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Real browser calls are reported as <span class="badge meas">MEASURED</span> in their own row (<code>eval/results/voice_checks.json</code>), never pooled with simulated results.</p>
+  <div class="foot"><span>validation/requirements.yaml · validation/traceability.md</span><span>6</span></div>
+</section>
+
+<!-- 7 · Site Signal -->
+<section class="slide" aria-label="Slide 7: Site Signal">
+  <p class="kicker">Site Signal <span class="badge sim">SIMULATED</span></p>
+  <h2>Which sites' AE logs disagree with what their own patients reported?</h2>
+  <div class="grid3">
+    <figure class="shot">
+      <div class="frame"><img src="../screenshots/sites-funnel.png" alt="docs/screenshots/sites-funnel.png: Sites page, funnel and ranked table with Look and Watch tiers, SIMULATED badge"></div>
+      <figcaption>Funnel of observed vs expected capture for 14 computed sites. About 0.77 false Look flags are expected in a study with no problems.</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="frame"><img src="../screenshots/site-drilldown.png" alt="docs/screenshots/site-drilldown.png: a flagged site with unmatched episodes and verbatim patient quotes"></div>
+      <figcaption>A flag opens the unmatched episodes with each patient's verbatim words and provisional, rule-graded grade.</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="frame"><img src="../screenshots/site-inbox.png" alt="docs/screenshots/site-inbox.png: mock site inbox with a CRA-approved query and a coded response"></div>
+      <figcaption>The CRA approves every templated query; "recorded as medical history" is a normal answer.</figcaption>
+    </figure>
+  </div>
+  <p class="small"><b>Capture discordance</b>: episodes patients reported with no matching AE-log entry, compared with the other sites for the same symptom mix. A reason to look, not a finding. Thresholds were frozen in git (tag <code>sap-v1</code>) before any result existed.</p>
+  <div class="foot"><span>Numbers: monitoring/out/signal_run.json, monitoring/out/thresholds.json (SIMULATED 20-site study)</span><span>7</span></div>
+</section>
+
+<!-- 8 · How well it works -->
+<section class="slide" aria-label="Slide 8: How well it works and what it gets wrong">
+  <p class="kicker">How well it works, and what it gets wrong</p>
+  <h2>Every number with its uncertainty, including what it misses</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Between Visits report card <span class="badge sim">SIMULATED PATIENTS, TEXT MODE</span></h3>
+      <table>
+        <tbody>
+          <tr><td>Urgent cases paged</td><td class="num"><b>8 of 8</b> [0.631, 1]</td></tr>
+          <tr><td>Personas passing</td><td class="num">19 of 20 [0.751, 0.999]</td></tr>
+          <tr><td>Expected side effects captured</td><td class="num">1.0 [0.815, 1]</td></tr>
+          <tr><td>Medical advice given</td><td class="num">0 flags</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:0.8cqw">Known miss: P19 (Spanish, extra time), a false urgent page from the post-call safety net. 8 of 8 cannot rule out missing a third of red flags; 59 straight catches would show 95% recall.</p>
+    </div>
+    <div class="card">
+      <h3>Site Signal <span class="badge sim">SIMULATED</span></h3>
+      <table>
+        <thead><tr><th>Planted capture loss</th><th>Look or Watch</th><th>Watch</th></tr></thead>
+        <tbody>
+          <tr><td>25%</td><td class="num">0.15 ± 0.021</td><td class="num">0.03 ± 0.009</td></tr>
+          <tr><td>50%</td><td class="num">0.51 ± 0.029</td><td class="num">0.22 ± 0.024</td></tr>
+          <tr><td>Gross (90%)</td><td class="num">0.77 ± 0.024</td><td class="num">0.70 ± 0.026</td></tr>
+          <tr><td>No planted site: false Look per site</td><td class="num" colspan="2">0.05 ± 0.001 (nominal 0.05)</td></tr>
+          <tr><td>No planted site: any false Watch per study</td><td class="num" colspan="2">0.11 ± 0.007 (nominal 0.10)</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:0.8cqw">Not ahead everywhere: a plain AE-rate KRI flags the gross loss at Look or Watch in 0.99 ± 0.005; discordance needs enough episodes and computed the planted site in 0.77 of studies. Failure case (honest sites differ mainly in recording diligence), 50% loss, Look or Watch: discordance 0.30 ± 0.026 vs plain AE-rate KRI 0.82 ± 0.022. ± is the Monte Carlo SE.</p>
+    </div>
+  </div>
+  <div class="foot"><span>eval/results/latest.json (overall.*, *_ci95: Clopper-Pearson 95%) · validation/site_signal/summary.json · WHAT_IT_GETS_WRONG.md</span><span>8</span></div>
+</section>
+
+<!-- 9 · Readiness -->
+<section class="slide" aria-label="Slide 9: Readiness">
+  <p class="kicker">Readiness</p>
+  <h2>Runs from a fresh clone, and every claim has a check</h2>
+  <div class="grid3">
+    <div class="card"><h3>One command</h3><p><code>make setup &amp;&amp; make seed &amp;&amp; make demo</code>: demo mode replays a call through the real backend with no API keys. MIT licensed.</p></div>
+    <div class="card"><h3>CI</h3><p>Backend tests, data validation with a product-name guard, frontend typecheck and lint, a quickstart job, and a full-history secret scan.</p></div>
+    <div class="card"><h3>Traceability</h3><p>Every requirement maps to tagged tests and their latest result (<code>validation/traceability.md</code>).</p></div>
+    <div class="card"><h3>Pre-registered</h3><p>The Site Signal analysis plan was tagged <code>sap-v1</code> before any output; the evaluation seed comes from a public beacon drawn after the tag.</p></div>
+    <div class="card"><h3>Audit hash chain</h3><p>Every human action is an append-only audit event; <code>GET /api/audit/verify</code> detects tampering inside the database.</p></div>
+    <div class="card"><h3>Honest limits</h3><p><code>WHAT_IT_GETS_WRONG.md</code> and <code>NOT_BUILT.md</code>, one GitHub issue per item not built.</p></div>
+  </div>
+  <div class="foot"><span>README · Makefile · .github/workflows/ci.yml · docs/11-site-signal-sap.md</span><span>9</span></div>
+</section>
+
+<!-- 10 · Next steps -->
+<section class="slide" aria-label="Slide 10: Next steps">
+  <p class="kicker">Next steps</p>
+  <h2>From simulation to a real trial</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Validate Site Signal on real data</h3>
+      <p>Retrospective analysis of completed trials that collected patient-reported and clinician-reported (CTCAE) symptoms for the same patients, with site IDs. Pre-registered as a new plan version before data access. This is the only test that does not depend on our simulator.</p>
+    </div>
+    <div class="card">
+      <h3>Pilot with one site</h3>
+      <ul>
+        <li>Real voice calls with measured speech-recognition error by language and pace.</li>
+        <li>More languages, professionally translated and clinically reviewed.</li>
+        <li>EDC and FHIR integration; phone calls through Twilio.</li>
+        <li>Real authentication, production hardening and regulatory review.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="rule-line">The AI listens, rules grade, humans decide.</p>
+  <div class="foot"><span>NOT_BUILT.md · docs/backlog.md (BL-11, BL-01, BL-03, BL-02, BL-18, BL-19, BL-20)</span><span>10</span></div>
+</section>
+
+</body>
+</html>

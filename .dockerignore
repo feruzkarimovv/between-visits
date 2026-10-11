@@ -1,0 +1,45 @@
+# Build context = repo root for both images (backend/Dockerfile, frontend/Dockerfile; WS0 R5).
+# Anything matched here never reaches the Docker daemon, so no COPY can put it into an image.
+
+# Secrets: .env files anywhere (only the committed placeholders stay), keys and certificates
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!frontend/.env.example
+**/*.pem
+**/*.key
+
+# Gitignored local files that must never enter an image
+data/patients.local.json
+**/*.local.json
+data/local
+agent/agents.lock.json
+eval/results/*.local*
+eval/results/**/*.local*
+
+# Runtime state (the image seeds its own database on first start)
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+scenarios/audio/
+
+# Toolchains, caches and build output (each image installs and builds its own)
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+frontend/.next
+frontend/out
+**/*.tsbuildinfo
+
+# VCS and local tooling
+.git
+.claude
+.idea
+.vscode
+**/.DS_Store
