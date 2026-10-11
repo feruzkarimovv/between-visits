@@ -7,7 +7,7 @@ Timestamps are stored as UTC and always come back timezone-aware.
 from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Column, DateTime, TypeDecorator
+from sqlalchemy import JSON, Column, DateTime, Integer, String, TypeDecorator
 from sqlmodel import Field, SQLModel
 
 from app import timeutil
@@ -213,6 +213,10 @@ class AuditEvent(SQLModel, table=True):
     before: dict[str, Any] | None = Field(default=None, sa_column=json_col())
     after: dict[str, Any] | None = Field(default=None, sa_column=json_col())
     note: str | None = None
+    # Hash chain (B13, docs/03 §6.6). app.audit assigns all three when the event is written; callers never set them.
+    seq: int | None = Field(default=None, sa_column=Column(Integer, nullable=False, unique=True))
+    prev_hash: str | None = Field(default=None, sa_column=Column(String(64), nullable=False))
+    hash: str | None = Field(default=None, sa_column=Column(String(64), nullable=False))
 
 
 def parse_date(s: str) -> date:

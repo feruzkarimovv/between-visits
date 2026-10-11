@@ -13,7 +13,7 @@ Specs live in `docs/`. Read the relevant ones before changing anything:
 4. **Disclose and offer a human** in the agent's first turn, every call, every language.
 5. **Fail safe:** if anything errors on a path that could involve a red flag, escalate. Never fail silent.
 6. **Evidence on every draft** (verbatim quote in original language + timestamp + source). AI translations and AI drafts are always labeled in the UI.
-7. **Nothing is final without a human**, and every human action writes an `AuditEvent` (append-only).
+7. **Nothing is final without a human**, and every human action writes an `AuditEvent` (append-only). The audit log is a hash chain (`GET /api/audit/verify`).
 8. **Synthetic data only.** Never commit real phone numbers, keys or real patient data. Real numbers live in `.env` and `data/patients.local.json` (gitignored). Refer to the study drug by class only: drug class names are anti-PD-1 (CD3 bispecific in roadmap context only); no product brand name, product code or generic name anywhere in git (the product-name guard in `data/validate_data.py` enforces it with a sha256 denylist). The repository is private; changing visibility is a human decision after a fresh secret scan.
 9. **No licensed content in git:** no PRO-CTCAE item wording, no MedDRA codes or hierarchy, no WHODrug. Pages and push notifications carry the subject ID only, never names.
 

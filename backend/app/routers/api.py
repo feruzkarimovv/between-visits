@@ -9,7 +9,7 @@ from fastapi.responses import PlainTextResponse
 from sqlmodel import Session, select
 
 from app import content
-from app.audit import write_audit
+from app.audit import verify_chain, write_audit
 from app.config import ROOT, get_settings
 from app.db import get_session
 from app.errors import ApiError
@@ -18,6 +18,7 @@ from app.schemas import (
     DEFAULT_ROLE,
     ROLES,
     AuditOut,
+    AuditVerifyOut,
     CheckInDetail,
     CheckInListItem,
     CheckInOut,
@@ -446,8 +447,14 @@ def audit(entity_id: str | None = None, checkin_id: str | None = None, limit: in
         q = q.where(AuditEvent.entity_id == entity_id)
     if checkin_id:
         q = q.where(AuditEvent.checkin_id == checkin_id)
-    rows = session.exec(q.order_by(AuditEvent.ts.desc(), AuditEvent.id.desc()).limit(min(limit, 1000))).all()  # type: ignore[attr-defined]
+    rows = session.exec(q.order_by(AuditEvent.seq.desc()).limit(min(limit, 1000))).all()  # type: ignore[union-attr]
     return [AuditOut(**a.model_dump()) for a in rows]
+
+
+@router.get("/audit/verify", response_model=AuditVerifyOut)
+def audit_verify(session: Session = Depends(get_session)) -> AuditVerifyOut:
+    """Any role; always 200. Walks the hash chain in seq order and names the first event that no longer matches."""
+    return AuditVerifyOut(**verify_chain(session))
 
 
 def _read_json(path: str, code: str) -> dict:

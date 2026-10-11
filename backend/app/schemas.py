@@ -455,6 +455,19 @@ class AuditOut(BaseModel):
     before: dict[str, Any] | None
     after: dict[str, Any] | None
     note: str | None
+    seq: int
+    prev_hash: str
+    hash: str
+
+
+class AuditVerifyOut(BaseModel):
+    """`GET /api/audit/verify` (docs/03 §6.6): always 200; a broken chain is ok:false."""
+
+    ok: bool
+    n_events: int
+    head_hash: str
+    first_bad_id: str | None
+    first_bad_seq: int | None
 
 
 class ScenarioOut(BaseModel):
