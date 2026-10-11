@@ -281,3 +281,39 @@ Steps that need a person. Everything around them is done; each item says exactly
    # expected: "2 passed" (serious event: replay ... sponsor inbox; site signal: ... five audit rows)
    ```
    A free Render instance can take a minute to wake up; if the first test times out on "the Replay control shows only when /api/health says demo_mode", open `$DEMO_WEB` in a browser once and run the command again. Then record the result on the R10 row of `PROGRESS.md` (Status `done`, empty Blocker once item 15 is green too).
+
+17. **Fix the failing `make secret-scan` (R12; three gitleaks false positives, nothing to rotate).** Since the committed study run (`0c9dd43`), gitleaks 8.30.1 reports 3 `generic-api-key` findings over the full history, so `make secret-scan` exits 2 and the CI `gitleaks` job is red: `validation/site_signal/run_log.jsonl` lines 2 (`0c9dd43`) and 3 (`d70cb6e`) are sha256 digests under `output_sha256` for the key `monitoring/out/answer_key.json`, and `PROGRESS.md` line 62 (`78de1f2`) is a demo SiteQuery ID. None is a credential. Every future logged `make site-signal` run adds another run-log line with the same key, so a path + regex allowlist is needed, not just fingerprints. Details: `validation/secret-scan.md` § "Appendix: final fresh clone from GitHub (WS0 R12)". The integration lead checked this exact fix with a scratch copy of the config (`no leaks found`, 164 commits). From the main checkout root:
+   ```bash
+   git checkout site-signal-build && git pull --ff-only
+   cat >> .gitleaks.toml <<'TOML'
+
+   [[allowlists]]
+   description = "Site Signal run log: output_sha256 values are sha256 file digests (the key monitoring/out/answer_key.json trips generic-api-key)"
+   condition = "AND"
+   paths = ['''^validation/site_signal/run_log\.jsonl$''']
+   regexTarget = "secret"
+   regexes = ['''^[0-9a-f]{64}$''']
+   TOML
+   printf '%s\n' '78de1f2282a10cdd895a18df049c31145ef5963a:PROGRESS.md:generic-api-key:62' > .gitleaksignore
+   make secret-scan; echo exit=$?   # expected: "no leaks found", "numbers: 0 hits (...)", exit=0
+   git add .gitleaks.toml .gitleaksignore && git commit -m "R1: allowlist sha256 digests in the Site Signal run log, ignore one demo query ID" && git push origin site-signal-build
+   ```
+   Then check the CI `gitleaks` job is green: `gh run list --repo feruzkarimovv/between-visits --workflow CI --branch site-signal-build --limit 1`, then `gh run view <run id> --repo feruzkarimovv/between-visits --json jobs --jq '.jobs[] | select(.name=="gitleaks") | .conclusion'` prints `"success"`. In the raw Markdown the code lines carry the list's 3-space indent: copy them from the rendered view (or remove the indent) so the closing `TOML` line starts at column 0, or add the block to `.gitleaks.toml` in an editor exactly as shown in the appendix.
+
+18. **R12 clean clone on a second laptop by someone who did not build the product (R12 acceptance; after item 17).** The R12 run was done on the build machine with warm uv and npm caches, so it does not count for this part. On a second laptop with uv, Node 22, make, gh (signed in; the repo is private) and gitleaks 8.30.1:
+   ```bash
+   gh repo clone feruzkarimovv/between-visits && cd between-visits
+   git checkout site-signal-build
+   cp .env.example .env            # leave every key empty
+   make setup && make seed && make test   # make test: exit 0
+   make demo                       # backend :8000 + dashboard :3000, DEMO_MODE=1; leave it running
+   ```
+   In a second terminal, from the same folder:
+   ```bash
+   cd e2e && npm ci && npx playwright install chromium && BASE_URL=http://localhost:3000 npx playwright test   # "2 passed"
+   cd .. && make secret-scan; echo exit=$?   # exit=0 once item 17 is pushed
+   ```
+   Stop `make demo` with Ctrl-C. Record who ran it, the date, the machine and each step's result (or the exact failing line) in a new short section at the end of `validation/secret-scan.md`, and on the R12 row of `PROGRESS.md` (Status `done`, empty Blocker), then:
+   ```bash
+   git add validation/secret-scan.md PROGRESS.md && git commit -m "R12: second-laptop clean clone" && git push origin site-signal-build
+   ```
