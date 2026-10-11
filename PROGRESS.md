@@ -32,7 +32,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | A | R9 quickstart CI job | todo | | | |
 | A | V9 pin the agent LLM | todo | | | |
 | A | V11 export real calls as replay scenarios | todo | | | |
-| A | B12 403 wrong_role and cra | todo | | | |
+| A | B12 403 wrong_role and cra | done | 38e8eb0 | pytest tests/test_roles.py 36 passed (coordinator/sponsor/cra/unknown -> POST /api/drafts/{id}/investigator, PATCH /api/sae/{id}, POST /api/sae/{id}/sign 403 wrong_role; investigator -> 200; role checked before entity/body; 403 writes no audit; cra audited as cra); /openapi.json unchanged (no api-types drift); make validate --check 19/19 (REQ-018 PASS 36/36), 179/179 tests; make test exit 0 | |
 | A | B13 audit hash chain | todo | | | |
 | A | B14 export and narrative fixes | done | b4e7a34 | pytest tests/test_exports.py 32 passed; demo server :8090 Rosa replay, 3 drafts confirmed, Diarrhea serious -> SAE: ae.csv X-BV-Note "CTCAE v5.0; synthetic data; AEDECOD/AEBODSYS coded downstream by licensed sponsor; ORIGIN is a sponsor-defined column", DictReader fields STUDYID..ORIGIN, AEOUT NOT RECOVERED/NOT RESOLVED = SAE outcome not_recovered, narrative has no "..", ".;" or "(("; cm.csv X-BV-Note set; CORS exposes X-BV-Note, Content-Disposition; make validate --check 18/18 (REQ-020 PASS 32/32), 143/143 tests; make test exit 0; secret-scan no leaks, 0 numbers | |
 | A | B15 replay speed, provenance, health, voice checks | todo | | | |
