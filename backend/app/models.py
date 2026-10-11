@@ -201,6 +201,32 @@ class SAEReport(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
 
 
+class SiteQuery(SQLModel, table=True):
+    """A CRA-approved, templated data-completeness query to one site (docs/02 § SiteQuery, docs/03 §5.4).
+    Every state change writes an AuditEvent (`site_query.*`); there is no delete."""
+
+    id: str = Field(primary_key=True)  # sq_...
+    site_id: str = Field(index=True)
+    signal_run_id: str = "sr_committed"
+    template_id: str
+    episode_ids: list[str] = Field(default_factory=list, sa_column=json_col())
+    subject_ids: list[str] = Field(default_factory=list, sa_column=json_col())
+    body_en: str
+    edited: bool = False
+    status: str = "draft"  # draft | sent | answered | closed
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))
+    approved_by: str | None = None
+    approved_at: datetime | None = Field(default=None, sa_column=dt_col())
+    response_code: str | None = None
+    response_note: str | None = None
+    responded_by: str | None = None
+    responded_at: datetime | None = Field(default=None, sa_column=dt_col())
+    closed_by: str | None = None
+    closed_at: datetime | None = Field(default=None, sa_column=dt_col())
+    closure_note: str | None = None
+
+
 class AuditEvent(SQLModel, table=True):
     id: str = Field(primary_key=True)
     ts: datetime = Field(default_factory=lambda: timeutil.utcnow(), sa_column=dt_col(False))

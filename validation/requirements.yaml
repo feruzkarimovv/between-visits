@@ -103,6 +103,10 @@ requirements:
     title: Evidence on every flag
     text: "Every site at Look or Watch exposes at least one evaluable unmatched episode with verbatim quote, quote language, date, source and data_origin; every translation, including the AI-assisted translations of synthetic quotes, carries translation_is_ai: true."
     risk: high
+  - id: REQ-027
+    title: Human-approved, audited site queries
+    text: A site query reaches the site inbox only after CRA approval; draft, edit, approve, answer and close each write an AuditEvent; text comes from data/site_queries.json and contains subject IDs only.
+    risk: high
   - id: REQ-030
     title: SIMULATED / MEASURED labeling
     text: Every Site Signal run, row and episode payload carries data_origin (SIMULATED, MEASURED, or MIXED for the site 101 card and mixed queries), no statistic pools SIMULATED with MEASURED data, and simulated quotes are marked source synthetic.

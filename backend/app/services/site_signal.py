@@ -272,12 +272,14 @@ def signal_labels() -> SignalLabels:
 # ---- GET /api/sites --------------------------------------------------------------------------------------
 
 
-def sites_overview() -> SitesOut:
+def sites_overview(session: Session) -> SitesOut:
     """`GET /api/sites`: run metadata with the thresholds from thresholds.json, labels, funnel and one row per
     site. Computed sites first by `rank`, then not-computed sites by `site_id`."""
+    from app.services import site_queries  # imports this module
+
     study = committed_study()
     labels = signal_labels()
-    open_queries: dict[str, int] = {}  # sent or answered site queries per site: the SiteQuery table lands in B18
+    open_queries = site_queries.open_counts(session)  # sent or answered site queries per site
     rows = list(study.rows.values())
     computed = sorted((r for r in rows if r.tier != NOT_COMPUTED), key=lambda r: (r.rank, r.site_id))
     not_computed = sorted((r for r in rows if r.tier == NOT_COMPUTED), key=lambda r: r.site_id)
@@ -324,7 +326,7 @@ def site_detail(
     session: Session, site_id: str, *, run_id: str = COMMITTED_RUN_ID, statuses: frozenset[str] | None = None
 ) -> SiteDetailOut:
     """`GET /api/sites/{site_id}`: card, signal row, episodes (MEASURED live episodes first), strata, paged
-    stratum and queries. `statuses` filters the listed episodes only; strata and the paged stratum always describe
+    stratum and the site's queries (every status, newest first). `statuses` filters the listed episodes only; strata and the paged stratum always describe
     the site's simulated episodes."""
     if run_id != COMMITTED_RUN_ID:  # blind runs (SignalRun rows) land in B19
         raise ApiError(HTTPStatus.NOT_FOUND, "signal_run_not_found", f"signal run {run_id} not found")
@@ -337,8 +339,10 @@ def site_detail(
     card = SiteCard.model_validate({**site.model_dump(), "data_origin": MIXED if live else site.data_origin})
     listed = [ep for ep in (*live, *simulated) if statuses is None or ep.status in statuses]
     paged = episodes.paged_stratum(ep.model_dump() for ep in simulated)
+    from app.services import site_queries  # imports this module
+
     return SiteDetailOut(site=card, signal=study.rows[site_id], episodes=listed, strata=_strata(simulated),
-                         paged_stratum=PagedStratum(**paged), queries=[])
+                         paged_stratum=PagedStratum(**paged), queries=site_queries.for_site(session, site_id))
 
 
 # ---- site 101 live bridge (MEASURED) ---------------------------------------------------------------------

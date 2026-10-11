@@ -851,16 +851,88 @@ class PagedStratum(BaseModel):
     matched: int
 
 
+# ---- site queries (B18, docs/03 §5.4; table SiteQuery in app/models.py) ---------------------------------------
+
+SiteQueryStatus = Literal["draft", "sent", "answered", "closed"]
+
+
+class SiteQueryCreateIn(BaseModel):
+    site_id: str
+    episode_ids: list[str] = Field(min_length=1)
+    template_id: str
+    signal_run_id: str = COMMITTED_RUN_ID
+
+
+class SiteQueryPatchIn(BaseModel):
+    body_en: str
+    note: str | None = None
+
+
+class SiteQueryApproveIn(BaseModel):
+    """Request `{}`: approval and delivery to the mock site inbox happen at the same instant."""
+
+
+class SiteQueryRespondIn(BaseModel):
+    response_code: str  # one of data/site_queries.json `response_codes` (else 422 invalid_response_code)
+    note: str | None = None
+
+
+class SiteQueryCloseIn(BaseModel):
+    note: str | None = None
+
+
+class SiteQueryOut(BaseModel):
+    """`SiteQueryOut` (docs/03 §5.4). `title_en` and `response_label_en` come from data/site_queries.json;
+    `data_origin` from the cited episodes (all simulated SIMULATED, all live MEASURED, a mix MIXED)."""
+
+    id: str
+    site_id: str
+    signal_run_id: str
+    template_id: str
+    title_en: str
+    body_en: str
+    edited: bool
+    episode_ids: list[str]
+    subject_ids: list[str]
+    status: SiteQueryStatus
+    created_by: str
+    created_at: datetime
+    approved_by: str | None
+    approved_at: datetime | None
+    response_code: str | None
+    response_label_en: str | None
+    response_note: str | None
+    responded_by: str | None
+    responded_at: datetime | None
+    closed_by: str | None
+    closed_at: datetime | None
+    closure_note: str | None
+    data_origin: DataOrigin
+
+
+class SiteQueryEpisode(SiteEpisode):
+    """A cited episode. `evidence` is null for the coordinator: the site reviews its own source documents."""
+
+    evidence: EpisodeEvidence | None  # type: ignore[assignment]
+
+
+class SiteQueryDetailOut(SiteQueryOut):
+    """`GET /api/site-queries/{query_id}`: the query, its cited episodes and its audit rows (oldest first)."""
+
+    episodes: list[SiteQueryEpisode]
+    audit: list[AuditOut]
+
+
 class SiteDetailOut(BaseModel):
     """`GET /api/sites/{site_id}`. MEASURED live episodes come first and never enter `signal`, `strata` or
-    `paged_stratum`. `queries` stays empty until the site query flow (B18)."""
+    `paged_stratum`. `queries` lists the site's queries in every status, newest first."""
 
     site: SiteCard
     signal: SiteSignalRow
     episodes: list[SiteEpisode]
     strata: SiteStrata | None
     paged_stratum: PagedStratum | None
-    queries: list[dict[str, Any]]
+    queries: list[SiteQueryOut]
 
 
 class AnswerKeyEntry(_SignalShape):

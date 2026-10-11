@@ -1,8 +1,8 @@
 """B12 (docs/03 §6.1): role-restricted routes answer any other role with 403 `wrong_role`; the `cra` role.
 
 ROLE_TABLE is the (method, path, role) -> status table for REQ-018. B17-B19 append the Site Signal rows
-(cra/sponsor views, CRA-only and coordinator-only query actions) as those routes land; the Site Signal reads run
-against the B16b fixtures (`site_signal_fixtures`).
+(cra/sponsor views, CRA-only and coordinator-only query actions) as those routes land; the Site Signal reads and
+the site queries (`site_query_state`) run against the B16b fixtures (`site_signal_fixtures`).
 """
 
 import pytest
@@ -19,6 +19,12 @@ pytestmark = pytest.mark.req("REQ-018")
 BODIES: dict[tuple[str, str], dict] = {
     ("POST", "/api/drafts/{draft_id}/investigator"): {"is_serious": False, "relatedness": "unlikely_related"},
     ("PATCH", "/api/sae/{sae_id}"): {"narrative_final": "Narrative edited by the investigator."},
+    ("POST", "/api/site-queries"): {"site_id": "112", "episode_ids": ["ep_112_17"],
+                                    "template_id": "SQ_UNMATCHED_EPISODES"},
+    ("PATCH", "/api/site-queries/{draft_query_id}"): {"body_en": "Site 112: please review 112-014.", "note": "role"},
+    ("POST", "/api/site-queries/{draft_query_id}/approve"): {},
+    ("POST", "/api/site-queries/{sent_query_id}/respond"): {"response_code": "entered_now", "note": "role"},
+    ("POST", "/api/site-queries/{answered_query_id}/close"): {"note": "role"},
 }
 
 # (method, path template, X-BV-Role header or None for no header, expected status)
@@ -59,6 +65,24 @@ ROLE_TABLE: list[tuple[str, str, str | None, int]] = [
     ("GET", "/api/sites", "admin", 403),
     *[("GET", "/api/site-signal/validation", role, 200)
       for role in ("cra", "sponsor", "coordinator", "investigator", None)],
+    # site queries (B18): the CRA drafts, edits, approves and closes; the coordinator (mock site inbox) responds;
+    # cra, sponsor and coordinator read, and a draft is 404 for the coordinator
+    *[("POST", "/api/site-queries", role, 201 if role == "cra" else 403)
+      for role in ("cra", "sponsor", "coordinator", "investigator", None)],
+    *[(method, path, role, 200 if role == "cra" else 403)
+      for method, path in (("PATCH", "/api/site-queries/{draft_query_id}"),
+                           ("POST", "/api/site-queries/{draft_query_id}/approve"),
+                           ("POST", "/api/site-queries/{answered_query_id}/close"))
+      for role in ("cra", "sponsor", "coordinator", "investigator", None)],
+    *[("POST", "/api/site-queries/{sent_query_id}/respond", role, 200 if role in ("coordinator", None) else 403)
+      for role in ("cra", "sponsor", "coordinator", "investigator", None)],
+    *[("GET", path, role, 403 if role == "investigator" else 200)
+      for path in ("/api/site-queries", "/api/site-queries/{sent_query_id}")
+      for role in ("cra", "sponsor", "coordinator", "investigator", None)],
+    *[("GET", "/api/site-queries/{draft_query_id}", role, status)
+      for role, status in (("cra", 200), ("sponsor", 200), ("coordinator", 404), ("investigator", 403), (None, 404))],
+    ("POST", "/api/site-queries", "CRA", 201),
+    ("POST", "/api/site-queries/{sent_query_id}/respond", "admin", 200),
 ]
 
 
@@ -85,10 +109,29 @@ def review_state(client, session, fake_pager) -> dict[str, str]:
     return {"checkin_id": cid, "draft_id": ae["Dizziness"], "sae_id": r.json()["sae_report"]["id"]}
 
 
+@pytest.fixture
+def site_query_state(session, site_signal_fixtures) -> dict[str, str]:
+    """Three site queries at site 112 (B18): one in draft, one sent, one answered."""
+    from app.services import site_queries
+
+    def make(*steps: str) -> str:
+        q = site_queries.create(session, site_id="112", episode_ids=["ep_112_17"], template_id="SQ_UNMATCHED_EPISODES",
+                                signal_run_id=None, user="Sam Rivera", role="cra")
+        if "approve" in steps:
+            site_queries.approve(session, q, "Sam Rivera", "cra")
+        if "respond" in steps:
+            site_queries.respond(session, q, "other", None, "Jess Kim", "coordinator")
+        session.commit()
+        return q.id
+
+    return {"draft_query_id": make(), "sent_query_id": make("approve"),
+            "answered_query_id": make("approve", "respond")}
+
+
 @pytest.mark.parametrize(("method", "path", "role", "status"), ROLE_TABLE)
-def test_role_table(client, review_state, site_signal_fixtures, method, path, role, status):
+def test_role_table(client, review_state, site_signal_fixtures, site_query_state, method, path, role, status):
     body = BODIES.get((method, path))
-    r = client.request(method, path.format(**review_state), headers=_headers(role), json=body)
+    r = client.request(method, path.format(**review_state, **site_query_state), headers=_headers(role), json=body)
     assert r.status_code == status, r.text
     if status == 403:
         err = r.json()["error"]
