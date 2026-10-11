@@ -60,6 +60,25 @@ jobs:
       - name: Tests + requirement traceability
         run: uv run --project backend python validation/build_traceability.py --check
 
+  # WS5 Site Signal statistics (monitoring/, its own uv project). Full history and tags: test_sap_order.py
+  # (REQ-022) checks the sap-v1 tag, its ancestry and the evaluation seed and is never skipped in CI.
+  monitoring:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: cd monitoring && uv sync
+      - name: Lint
+        run: cd monitoring && uv run ruff check .
+      - name: Tests
+        run: cd monitoring && uv run pytest -q
+
   frontend:
     runs-on: ubuntu-latest
     steps:
@@ -89,6 +108,9 @@ jobs:
       BV_WAIT_SECONDS: "120"
     steps:
       - uses: actions/checkout@v4
+        with:  # make test includes the monitoring suite, whose REQ-022 test needs the history and the sap-v1 tag
+          fetch-depth: 0
+          fetch-tags: true
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"

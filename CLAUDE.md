@@ -36,9 +36,11 @@ Only edit your workstream's folders unless your task says otherwise.
 
 ```bash
 make setup        # uv sync (backend, Python 3.12 from .python-version) + npm ci (frontend; never rewrites package-lock.json)
+                  # + uv sync (monitoring/, the Site Signal statistics project)
 make dev          # backend :8000 (reload) + frontend :3000
 make seed         # reset DB and load data/*.json (+ data/patients.local.json)
-make test         # pytest + data validation + frontend typecheck/lint
+make test         # pytest + data validation + frontend typecheck/lint + the monitoring suite (make test-monitoring)
+make test-monitoring # cd monitoring && uv run ruff check . && uv run pytest -q
 make tunnel       # ngrok http 8000 --url https://$NGROK_DOMAIN  (= PUBLIC_BASE_URL)
 make sync-agent   # create/update the 4 ElevenLabs agent variants + tools, writes agent/agents.lock.json
                   # ARGS="--setup-webhook" (post-call webhook) · ARGS="--inbound es-extra_time" (call-in fallback)
@@ -53,18 +55,17 @@ make up           # production images (docker-compose.prod.yml), DEMO_MODE=1 by 
                   # no Next dev badge; host ports API_PORT/WEB_PORT (default 8000/3000); health `commit` from GIT_COMMIT
 make secret-scan  # gitleaks (pinned 8.30.1) over the full history of every ref + real-number grep (validation/secret-scan.md)
 make planning-grid # S1: pre-tag planning grid (dev seed, docs/11 §11.5); picks the design and the gross planted capture loss
+make site-signal  # S6: regenerate monitoring/out/* + validation/site_signal/report.md from the sap-v1 seed (< 60 s, logged,
+                  # refuses a dirty tree); development: ARGS="--seed dev --out <scratch dir>" (never monitoring/out/)
 ```
 
 Planned (Sun Oct 11, `docs/09`); not in the Makefile until the named task lands, then move each line into the block above:
 
 ```bash
-make site-signal           # S6: regenerate monitoring/out/* + validation/site_signal/report.md from the sap-v1 seed (< 60 s)
 make site-signal-validate  # S7: operating characteristics (background, <= 45 min); ARGS="--quick --check" in CI
 make blind-run SEED=...    # S8: command-line blind run; ARGS=--precompute writes the fallback seeds
 make cohort                # S10 (optional): Synthea roster, language/age mix only
 ```
-
-Planned changes to existing targets: `make setup` also syncs `monitoring/` (S1); `make test` adds the monitoring suite (S6).
 
 ## Conventions
 
@@ -75,6 +76,8 @@ Planned changes to existing targets: `make setup` also syncs `monitoring/` (S1);
 **External services** (ElevenLabs, Gemini, Twilio) are wrapped in `app/services/{elevenlabs,gemini,pager}.py`. Each has a deterministic fake used by tests and by `DEMO_MODE=1`. Tests never call real APIs.
 
 **Frontend (TypeScript strict):** TanStack Query for all server state, `apiFetch()` for every request (adds `X-BV-User`/`X-BV-Role`), shadcn/ui components, Tailwind tokens from `docs/06-frontend.md`. No `any`. Every AI-produced string shows an `AiLabel`. Grades always say "provisional".
+
+**Monitoring (Site Signal, `monitoring/`):** numpy/scipy only in `monitoring/`; the backend reads `monitoring/out/*.json` and shells out only for the blind run; evaluation seed from `sap-v1`; no edit to `params.yaml` or `data/signal_rules.json` after the tag without a Deviations entry (`docs/11` §17); every output object carries `data_origin`.
 
 **Tests:** pytest in `backend/tests/`. Tag tests that prove a requirement: `@pytest.mark.req("REQ-005")` (list in `validation/requirements.yaml`). Rules and interview engine get table-driven tests.
 

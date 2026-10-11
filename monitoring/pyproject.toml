@@ -36,3 +36,5 @@ ignore = ["E501", "B008"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# -rs: every skip prints its reason (test_sap_order.py skips only outside a git checkout, never in CI)
+addopts = "-rs"

@@ -7,13 +7,15 @@ ENV_GET = $$(grep -E "^$(1)=" .env 2>/dev/null | head -1 | cut -d= -f2- | sed -E
 # Pinned gitleaks release (WS0 R1); the CI job `gitleaks` downloads and checksum-verifies exactly this version.
 GITLEAKS_VERSION := 8.30.1
 
-.PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo secret-scan up planning-grid
+.PHONY: setup dev backend frontend seed test test-backend test-frontend test-monitoring lint tunnel sync-agent types eval validate demo secret-scan up planning-grid site-signal
 
 # Clean setup (WS0 R2): Python 3.12 from .python-version; `npm ci` installs exactly frontend/package-lock.json
 # and never rewrites it, so the tree stays clean. Add or upgrade frontend deps with `npm install` in frontend/.
+# monitoring/ (Site Signal statistics) is its own uv project with its own lock.
 setup:
 	cd backend && uv sync
 	cd frontend && npm ci
+	cd monitoring && uv sync
 
 dev:
 	@trap 'kill 0' EXIT; \
@@ -30,7 +32,7 @@ frontend:
 seed:
 	cd backend && uv run python -m app.seed
 
-test: test-backend test-frontend
+test: test-backend test-frontend test-monitoring
 
 test-backend:
 	cd backend && uv run ruff check app tests && uv run pytest -q
@@ -41,6 +43,10 @@ test-backend:
 
 test-frontend:
 	cd frontend && npm run typecheck && npm run lint
+
+# Site Signal statistics suite (WS5): ruff + pytest in the separate monitoring/ uv project
+test-monitoring:
+	cd monitoring && uv run ruff check . && uv run pytest -q
 
 lint:
 	cd backend && uv run ruff check app tests --fix
@@ -78,6 +84,12 @@ endif
 # S1: pre-tag planning grid (docs/11 §11.5), dev seed only; planning only, not a result
 planning-grid:
 	uv run --project monitoring python monitoring/planning/plan_power.py --seed dev --out monitoring/planning/planning_grid.json
+
+# S6: the committed study from the sap-v1 evaluation seed (stream 0) -> monitoring/out/*.json and
+# validation/site_signal/{report.md,funnel.svg}; logged in validation/site_signal/run_log.jsonl; < 60 s.
+# Refuses a dirty tree. Development: ARGS="--seed dev --out <scratch dir>" (never monitoring/out/).
+site-signal:
+	uv run --project monitoring python -m bvsignal.run $(ARGS)
 
 demo:
 	@trap 'kill 0' EXIT; \
