@@ -204,6 +204,10 @@ regexes = ['''^[0-9a-f]{64}$''']
 78de1f2282a10cdd895a18df049c31145ef5963a:PROGRESS.md:generic-api-key:62
 ```
 
+Applied by the final review fix (§ Re-run after the final review): the run-log allowlist as above, and, instead of
+the `.gitleaksignore` fingerprint, an allowlist for the record-ID shape of `backend/app/ids.py`, so a later document
+that quotes a demo ID does not turn the scan red again. No `.gitleaksignore` file is committed.
+
 ### Walkthrough screenshots (step 11)
 
 The screenshots are in `$TMPDIR/r12-shots/`, outside the repository, and are not committed. Each is a full page at
