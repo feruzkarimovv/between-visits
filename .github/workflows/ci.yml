@@ -201,3 +201,78 @@ jobs:
           if [ -f "$RUNNER_TEMP/demo.pgid" ]; then
             kill -TERM -- "-$(cat "$RUNNER_TEMP/demo.pgid")" 2>/dev/null || true
           fi
+
+  # WS0 R10: Playwright smoke (e2e/, its own package.json and lockfile) against `make demo` on a fresh runner.
+  # Journey 1: replay -> review confirm -> investigator -> SAE sign -> send -> sponsor inbox.
+  # Journey 2: CRA drafts, edits and approves a site query at a Look/Watch site -> coordinator answers -> CRA closes
+  # -> /audit shows the five site_query.* rows. DEMO_PROD=1 serves the production frontend build (no dev badge).
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      BV_API: http://localhost:8000   # make demo's backend port
+      BASE_URL: http://localhost:3000 # make demo's dashboard port; e2e/playwright.config.ts reads BASE_URL
+      BV_WAIT_SECONDS: "300"          # next build + next start, then the seed and the API
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - name: cp .env.example .env
+        run: cp .env.example .env
+      - name: make setup
+        run: make setup
+      - name: Install the e2e suite and Chromium
+        run: |
+          cd e2e
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: make demo DEMO_PROD=1 (background)
+        run: |
+          # Own session and process group, as in the quickstart job: the stop step below ends the whole group.
+          setsid make demo DEMO_PROD=1 > "$RUNNER_TEMP/demo.log" 2>&1 < /dev/null &
+          echo "$!" > "$RUNNER_TEMP/demo.pgid"
+          echo "make demo DEMO_PROD=1 started (process group $!)"
+      - name: Wait for /api/health (demo mode) and the dashboard
+        run: |
+          set -euo pipefail
+          deadline=$((SECONDS + BV_WAIT_SECONDS))
+          until body=$(curl -fsS --max-time 3 "$BV_API/api/health" 2>/dev/null) && curl -fsS --max-time 10 -o /dev/null "$BASE_URL/"; do
+            if (( SECONDS >= deadline )); then
+              echo "::error::$BV_API/api/health or $BASE_URL/ did not answer within ${BV_WAIT_SECONDS} s"
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "health: $body"
+          python3 -c 'import json, sys; sys.exit(0 if json.loads(sys.argv[1]).get("demo_mode") is True else "health: demo_mode is not true")' "$body"
+      - name: Playwright smoke (both journeys)
+        run: cd e2e && npx playwright test
+      - name: Playwright report and traces (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-playwright
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: make demo log (on failure)
+        if: failure()
+        run: tail -n 200 "$RUNNER_TEMP/demo.log" || true
+      - name: Stop make demo
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/demo.pgid" ]; then
+            kill -TERM -- "-$(cat "$RUNNER_TEMP/demo.pgid")" 2>/dev/null || true
+          fi
