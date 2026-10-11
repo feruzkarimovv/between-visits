@@ -189,7 +189,7 @@ Payloads:
 | checkin_id | str? | convenience filter. Already in the model; documented here because the hash covers it. |
 | before / after | JSON? | |
 | note | str? | |
-| seq | int | *Planned (B13):* unique, contiguous from 1, assigned as max + 1 inside `write_audit` under a process-wide lock |
+| seq | int | *Planned (B13):* unique, contiguous from 1, assigned as max + 1 under a process-wide lock when the event staged by `write_audit` is written (flushed); `docs/03` §6.6 |
 | prev_hash | str | *Planned (B13):* the previous event's `hash`; 64 zeros for `seq` 1 |
 | hash | str | *Planned (B13):* lowercase hex `sha256(prev_hash + canonical JSON)` of `id, seq, ts, actor, role, action, entity_type, entity_id, checkin_id, before, after, note`. The exact canonical form is in `docs/03` §6.6. |
 

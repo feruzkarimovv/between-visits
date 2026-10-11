@@ -761,11 +761,12 @@ canonical = json.dumps(
 # ts_utc_str = ts.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 ```
 
-`write_audit` assigns `seq` (max + 1), `prev_hash` and `hash`.
+`write_audit` stages the event in the caller's session; `seq` (max + 1), `prev_hash` and `hash` are assigned when that session flushes the event, which is the moment the row is written (`backend/app/audit.py`). The event commits or rolls back with the caller's change.
 
 **Safety constraint.** Chain assignment must never fail or delay a safety-path write (rule 5).
-- Assignment happens under one process-wide lock.
+- Assignment happens under one process-wide lock. Before reading the head, the writing connection takes the SQLite write lock (`BEGIN IMMEDIATE`, the lock the flush takes a moment later anyway), so nothing is locked earlier than without the chain, and the process-wide lock is never held while waiting for the database.
 - A `seq` collision is retried, never raised to the caller.
+- Any other chain error is logged at ERROR with the full event (`audit_chain_failed`) and is not raised; the caller's write still commits.
 - The backend runs as a single process (SQLite, single instance).
 
 Rows stay append-only. The database is reseeded, so there is no migration.
