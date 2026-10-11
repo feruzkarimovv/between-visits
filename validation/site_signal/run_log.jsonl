@@ -1,0 +1,1 @@
+{"code_commit": "9204a1e025443d19150cc4bb7c41c02d485fb620", "command": "python -m bvsignal.calibrate", "git_dirty": false, "output_sha256": {"monitoring/out/null_pool.json": "edd941e66c80341084619fcd6cc4bb66d14f1b768bed0e24ade26b1a81b429df", "monitoring/out/thresholds.json": "2f3b8c4dc13c123c8a125d8bfa77114a2314103d262824dd78acfa3f61b666a0"}, "utc_time": "2026-10-11T12:32:55Z"}

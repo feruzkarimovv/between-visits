@@ -1,0 +1,157 @@
+{
+ "_about": "Look and Watch thresholds calibrated once from the pre-registered null (docs/11-site-signal-sap.md §9.2-9.3); every number is SIMULATED; a tier marks capture discordance, a reason to look, not a finding",
+ "data_origin": "SIMULATED",
+ "sap_tag_commit": "68838978bb305e0f730d30e5cbf3c00bceca5a25",
+ "eval_seed": 92794863,
+ "beacon_round": 6542582,
+ "seed_label": "eval",
+ "seed": 92794863,
+ "code_commit": "9204a1e025443d19150cc4bb7c41c02d485fb620",
+ "generated_at": "2026-10-11T08:18:52-04:00",
+ "numpy_version": "2.5.4",
+ "scipy_version": "1.18.1",
+ "r_null": 2000,
+ "keys": {
+  "stream": 1,
+  "cell_index": 0,
+  "role": 0,
+  "replicates": [
+   0,
+   1999
+  ]
+ },
+ "design": {
+  "n_sites": 20,
+  "patients_per_site": [
+   40,
+   80
+  ],
+  "mu": 1.5
+ },
+ "alpha": {
+  "look": 0.05,
+  "watch": 0.1
+ },
+ "discordance": {
+  "look": -1.7329400110284978,
+  "watch": -2.4672159681302848,
+  "never_assigned": {
+   "look": false,
+   "watch": false
+  },
+  "statistic": "z_adj",
+  "flag_when": "<=",
+  "watch_capped_at_look": false
+ },
+ "rate_kri": {
+  "look": -1.6856073651955399,
+  "watch": -2.4435375610874623,
+  "never_assigned": {
+   "look": false,
+   "watch": false
+  },
+  "statistic": "z_adj",
+  "flag_when": "<=",
+  "watch_capped_at_look": false
+ },
+ "simaerep_classic": {
+  "look": 0.9942914228628514,
+  "watch": 0.996003996003996,
+  "never_assigned": {
+   "look": false,
+   "watch": false
+  },
+  "statistic": "prob",
+  "flag_when": ">=",
+  "watch_capped_at_look": false,
+  "calibration": "calibrated on the SAP statistic prob = -(1 - BH-adjusted prob_low) (docs/11 §10.2, lower is more extreme); served as simaerep's prob = 1 - BH-adjusted prob_low, flagged at >= the negated threshold (docs/03 §5.1), which gives every site the same tier"
+ },
+ "ae_report_ratio": {
+  "look": -1.8701229701798285,
+  "watch": -2.769710389565622,
+  "never_assigned": {
+   "look": false,
+   "watch": false
+  },
+  "statistic": "z_adj",
+  "flag_when": "<=",
+  "watch_capped_at_look": false
+ },
+ "achieved": {
+  "discordance": {
+   "look": {
+    "rate": 0.04998543170708019,
+    "mc_se": 0.0010000062105683183
+   },
+   "watch": {
+    "rate": 0.1,
+    "mc_se": 0.00670820393249937
+   },
+   "expected_false_look_flags_per_study": {
+    "mean": 0.772,
+    "mc_se": 0.0156726135474497
+   },
+   "n_pooled": 30889,
+   "mean_computed_sites": 15.4445,
+   "studies_without_computed_site": 4
+  },
+  "rate_kri": {
+   "look": {
+    "rate": 0.05,
+    "mc_se": 0.0009581017584211737
+   },
+   "watch": {
+    "rate": 0.1,
+    "mc_se": 0.00670820393249937
+   },
+   "expected_false_look_flags_per_study": {
+    "mean": 1.0,
+    "mc_se": 0.01916203516842347
+   },
+   "n_pooled": 40000,
+   "mean_computed_sites": 20.0,
+   "studies_without_computed_site": 0
+  },
+  "simaerep_classic": {
+   "look": {
+    "rate": 0.0231,
+    "mc_se": 0.0014943431770397934
+   },
+   "watch": {
+    "rate": 0.0235,
+    "mc_se": 0.0033873108803297047
+   },
+   "expected_false_look_flags_per_study": {
+    "mean": 0.462,
+    "mc_se": 0.029886863540795866
+   },
+   "n_pooled": 40000,
+   "mean_computed_sites": 20.0,
+   "studies_without_computed_site": 0
+  },
+  "ae_report_ratio": {
+   "look": {
+    "rate": 0.04998543170708019,
+    "mc_se": 0.0009803592347026702
+   },
+   "watch": {
+    "rate": 0.1,
+    "mc_se": 0.00670820393249937
+   },
+   "expected_false_look_flags_per_study": {
+    "mean": 0.772,
+    "mc_se": 0.015235618203112583
+   },
+   "n_pooled": 30889,
+   "mean_computed_sites": 15.4445,
+   "studies_without_computed_site": 4
+  }
+ },
+ "expected_false_look_flags_per_study": 0.772,
+ "null_pool": {
+  "file": "null_pool.json",
+  "indicator": "discordance",
+  "M": 30889,
+  "sha256": "edd941e66c80341084619fcd6cc4bb66d14f1b768bed0e24ade26b1a81b429df"
+ }
+}
