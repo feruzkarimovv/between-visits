@@ -27,7 +27,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | A | R4 safe startup, demo-only routes | done (human step pending) | cb467ff | placeholder secret with DEMO_MODE=0: refusal line, exit=1; APP_ENV=dev DEMO_MODE=0 + generated secret: /api/demo/scenarios 404 demo_disabled; DEMO_MODE=1: 200; test_security_guards.py 17 passed; make validate --check 17/17 REQs, REQ-017 PASS (17/17); make test exit 0 (111 pytest, ruff, data, agent-sync, tsc+eslint) | Any machine running with DEMO_MODE=0 needs a TOOL_SHARED_SECRET of 24+ characters in .env (HUMAN_TODO 2); this checkout's .env already passes |
 | A | R5 production Dockerfiles and compose | todo | | | |
 | A | R6 Render blueprint and deploy doc | todo | | | |
-| A | R7 SECURITY.md and privacy-security | todo | | | |
+| A | R7 SECURITY.md and privacy-security | done | 18dc7ac | grep -c UNVERIFIED docs/privacy-security.md = 8; README "Security and privacy" links SECURITY.md (l.132) and docs/privacy-security.md (l.133); validate_data exit 0 (self-test 13/13); make secret-scan exit=0 (40 commits, no leaks; numbers: 0 hits, 12 fictional 555 ignored, 151 allowlisted); make test exit 0 (179 pytest, ruff, data, agent-sync, tsc+eslint); diff has no keys, phone numbers or drug names | |
 | A | R8 README pass 1 | todo | | | |
 | A | R9 quickstart CI job | todo | | | |
 | A | V9 pin the agent LLM | todo | | | |
