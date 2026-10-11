@@ -134,6 +134,7 @@ Never allowed: re-seeding, re-tagging, or choosing among several evaluation runs
 | draft | 2026-10-11 (planning round) | First full draft. |
 | draft | 2026-10-11 (SAP review round 1, before the tag) | §4.1–§4.2: exact mapping from a call's answers to *g_k* (absent = 0, ungraded or not asked = null); §11.2 step 5: follow-ups after a gate mapping error. §1.2 step 7, §1.3: beacon fallback deadlines relative to the round time, attempt log in `seed_beacon.json`. §11.2 step 6, §11.3, §15 rule 7: active red flags from `data/plan.json`; `frozen_inputs` also pins red-flag ids, the plan's red-flag list and the primary-term item logic. §15 rule 6, §12.1, §12.9: rounding is for display only; gates use unrounded values. §11.2 steps 4, 7, 8, §11.3: secondary items per call, other-AE entry date, `aeseq`, entry-date formula. |
 | draft | 2026-10-11 (SAP review round 2, before the tag) | §12.3, §12.9, §14, §11.3, §1.3: equity validation fixed before the tag. Language-interval coverage uses the first `equity_validation.r` = 500 null studies of §12.1, where no language gap is planted, with not-computed studies reported separately; pace-interval exclusion uses those null studies and the §12.3 full-mix studies; inside a validation replicate the §14 bootstrap uses *B* = `equity_validation.b` = 1000 resamples from `role` 2 keys. §12.5, §12.2, §12 fallback 1, §11.3: replicate counts fixed for the failure case (`failure_case.r_null` 1000 and `reps` 300 per grid *f* for (a), `r_null_b` 1000 for (b)) and for the `sap-v1` design row (`grid.reps` per grid *f*, cell 25, `role` 1); fallback 1 also covers failure-case reps. |
+| draft | 2026-10-11 (SAP review round 3, before the tag) | §12.6 SE16: correlated reporting propensity fixed as a Gaussian copula that keeps the §11.2 marginals (normal-scale correlations 0.5 between *z_v* and each of *z_π*, *z_ε*, and 0.25 between *z_π* and *z_ε*). §12.6 SE15: capture boost fixed per simulated study (sites ranked by the share of completed calls at an urgent or emergency level, ties to the lower site id; latent episodes whose start day is within 7 days of such a call of the same subject, paged or not). §6.2, §11.2 step 7: wording aligned. `params.yaml` `sensitivity.scenarios` SE15, SE16 mirror both. |
 | `sap-v1` | at the tag | §11.5 values filled from the planning grid (or the §11.5 fallback); `frozen_inputs` filled; reviewed by the team lead, or "tagged without human review" (§1.2 step 4); frozen. |
 
 ---
@@ -314,7 +315,7 @@ An episode is **paged** if any call folded into it raised an `urgent` or `emerge
 - are matched (§5) and reported per site as `paged_stratum {n, matched}`, descriptive only;
 - keep status `paged`, whether evaluable or not.
 
-A page also starts nurse contact with the patient, which may raise the site's capture of the same subject's other, non-paged episodes nearby. The primary rule does not exclude those. Sensitivity SE14 uses a page-proximal rule (an episode is paged if any urgent or emergency page for the same subject falls within `paged.proximity_days` = 7 days of the episode date), and SE15 simulates a capture boost for such episodes (§12.6).
+A page also starts nurse contact with the patient, which may raise the site's capture of the same subject's other, non-paged episodes nearby. The primary rule does not exclude those. Sensitivity SE14 uses a page-proximal rule (an episode is paged if any urgent or emergency page for the same subject falls within `paged.proximity_days` = 7 days of the episode date), and SE15 simulates a capture boost for the latent episodes of a subject that start within 7 days of an urgent or emergency call, at the 5 sites with the highest share of such calls (§12.6).
 
 ### 6.3 Incomplete and missed calls
 
@@ -575,7 +576,7 @@ The design follows the ADEMP structure (aims, data-generating mechanisms, estima
    - `entered_on` = (first dose visit on or after AESTDTC) + ⌈lag⌉, lag ~ Gamma(shape 2, mean 8 days) (entry lag anchored to [20]). The first dose visit is the enrollment day when AESTDTC falls before it.
    - `aeseq` numbers each subject's site rows (symptomatic and other, step 8) 1, 2, … by AESTDTC, then `entered_on`, then symptomatic before other, then latent start day, then generation order. It is the §5 tie-break.
 
-   Paged episodes get no capture boost (ASSUMPTION; they are descriptive only).
+   Paged episodes get no capture boost (ASSUMPTION; they are descriptive only). This holds for the primary analysis and every scenario except SE15 (§12.6).
 8. **Other AEs.** For each patient, Poisson(1.5 · *m_s* · *F_i* · *x_i*) non-symptomatic site rows, with AESTDTC uniform over time on study. Each other-AE row has `origin = site`, `symptomatic = false` and `entered_on` by the step 7 rule. At planted sites each is dropped with probability *f_s*. The comparators use these rows.
 9. **Evidence.** Each simulated episode takes a quote from `monitoring/quote_bank.json` by term, band and language, with `source = synthetic`. The bank's phrasings and its English translations of Spanish quotes are AI-assisted, so `translation_is_ai` is true and the UI shows an `AiLabel`.
 10. **Output.** A `Study` object, the answer key, and the episode, site-AE and site JSON, with `data_origin = SIMULATED` on every object.
@@ -773,8 +774,8 @@ Each scenario reports four things:
 | SE9–SE11 | Misspecified null: data generated with between-site SD 0.2, 0.5 or 0.6 while the thresholds stay at `sap-v1` |
 | SE12, SE13 | Misspecified null: patient random-effect SD 0.0 or 1.0 |
 | SE14 | Page-proximal paged stratum: an episode is paged if any urgent or emergency page for the same subject falls within `paged.proximity_days` = 7 days of its date (§6.2) |
-| SE15 | Capture boost: logit +1.0 for episodes of a subject paged within 7 days, at the 5 sites with the highest paging rates; achieved null rates at the `sap-v1` thresholds |
-| SE16 | Reporting propensity correlated across streams: corr(*v_i*, logit *π_i*) = 0.5 and corr(*v_i*, −logit *ε_i*) = 0.5, bivariate normal |
+| SE15 | Capture boost: in each simulated study, rank sites by the share of their completed calls at an urgent or emergency level (§11.2 step 6; a site with no completed calls has share 0; ties: lower site id); at the 5 highest, every latent episode whose start day lies within 7 days (inclusive, either side) of the date of an urgent or emergency call of the same subject gets +1.0 on the capture logit of §11.2 step 7, whether or not its episode is paged; achieved null rates at the `sap-v1` thresholds |
+| SE16 | Reporting propensity correlated across streams (Gaussian copula, marginals unchanged): per patient draw (*z_v*, *z_π*, *z_ε*) ~ N(0, Σ) with unit variances, corr(*z_v*, *z_π*) = corr(*z_v*, *z_ε*) = 0.5 and corr(*z_π*, *z_ε*) = 0.25; *v_i* = 0.5·*z_v*; *π_i* = F⁻¹ of the patient's completion Beta (§11.2 step 2; Beta(10, 10) at the `low_coverage` site) at Φ(*z_π*); *ε_i* = F⁻¹ of Beta(2, 38) at 1 − Φ(*z_ε*). The correlations are on the normal scale. |
 | SE17 | One honest site with entry-lag mean 25 days |
 | SE18 | Site-level mapping error Beta(2, 18) at 3 random sites |
 | SE19 | Case-mix SD 0.6 |

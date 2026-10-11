@@ -128,8 +128,8 @@ sensitivity:                      # docs/11 §11.3, §12.6
     SE12: {patient_re_sd_logit: 0.0, thresholds: sap-v1}
     SE13: {patient_re_sd_logit: 1.0, thresholds: sap-v1}
     SE14: {paged_rule: page_proximal}                         # proximity from data/signal_rules.json paged.proximity_days (7)
-    SE15: {capture_boost_logit: 1.0, within_days: 7, n_sites_highest_paging: 5}
-    SE16: {corr_v_logit_pi: 0.5, corr_v_neg_logit_eps: 0.5}   # bivariate normal reporting propensity
+    SE15: {capture_boost_logit: 1.0, within_days: 7, n_sites_highest_paging: 5, paging_rate: share_completed_calls_urgent_or_emergency, anchor: latent_start_day, boost_paged: true}   # docs/11 §12.6: sites ranked per simulated study (no completed calls = share 0; ties: lower site id); boost when |latent start day - day of an urgent or emergency call of the same subject| <= within_days
+    SE16: {copula: gaussian, corr_v_pi: 0.5, corr_v_neg_eps: 0.5, corr_pi_neg_eps: 0.25}   # docs/11 §12.6: (z_v, z_pi, z_eps) ~ N(0, Sigma), normal-scale correlations; v = patient_re_sd_logit * z_v, pi = completion Beta inverse CDF at Phi(z_pi), eps = Beta(2, 38) inverse CDF at 1 - Phi(z_eps); marginals unchanged
     SE17: {entry_lag_mean_days: 25, n_honest_sites: 1}
     SE18: {site_mapping_error: {dist: beta, a: 2, b: 18}, n_random_sites: 3}
     SE19: {casemix_sd_log: 0.6}
