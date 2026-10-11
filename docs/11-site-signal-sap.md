@@ -82,7 +82,7 @@ REQ-022 (`monitoring/tests/test_sap_order.py`) checks from git history and the r
 
 - the tag exists;
 - the tag commit is an ancestor of every commit that adds files under `monitoring/out/` or `validation/site_signal/`;
-- the evaluation seed equals the derivation in §1.3 from the tag commit and `monitoring/seed_beacon.json`, and the beacon round is the one the rule selects;
+- the evaluation seed equals the derivation in §1.3 from the tag commit and `monitoring/seed_beacon.json`, and the beacon round is the one the rule selects; a NIST `B` is backed by failed drand `attempts` at or after round time + 30 min, and an empty `B` by failed drand and NIST `attempts` at or after round time + 60 min;
 - every committed evaluation output's sha256 appears in `run_log.jsonl`, and no log line predates the tag.
 
 The tag and beacon fix the seed; the external timestamp shows when the tag existed; the run log shows every evaluation run. Git timestamps alone are set by the author and are not treated as evidence.
