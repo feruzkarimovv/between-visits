@@ -6,7 +6,6 @@ import hashlib
 import importlib.util
 import json
 import sys
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -212,4 +211,6 @@ def test_committed_planning_grid_matches_params_and_script() -> None:
 def test_planning_grid_path_is_not_an_evaluation_output() -> None:
     rel = (MONITORING_DIR / "planning" / "planning_grid.json").relative_to(REPO_ROOT).as_posix()
     assert not rel.startswith(("monitoring/out/", "validation/site_signal/"))
-    assert not Path(REPO_ROOT / "monitoring" / "out").exists()
+    # monitoring/out/ holds the logged evaluation-seed outputs since the sap-v1 tag; the planning grid is
+    # never one of them (docs/11 §11.5: planning only, not a result).
+    assert not (REPO_ROOT / "monitoring" / "out" / "planning_grid.json").exists()
