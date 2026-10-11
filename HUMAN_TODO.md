@@ -44,3 +44,19 @@ Steps that need a person. Everything around them is done; each item says exactly
    curl -s localhost:8000/api/audit/verify    # expect {"ok":true,...}
    ```
    For a deployed instance, run the same seed command in its shell (`cd backend && uv run python -m app.seed`, with `DEMO_MODE=1` for a demo deploy) and restart the service.
+
+5. **Optional: make `make up` (R5 production images) run from this laptop's docker CLI.** The host `docker` has no working `compose` or `buildx` plugin: `~/.docker/cli-plugins/docker-compose` and `docker-buildx` are symlinks into `/Applications/Docker.app`, which is not installed (colima is the engine). Install Compose and point both symlinks at the Homebrew binaries (`docker-buildx` is already installed by Homebrew):
+   ```bash
+   brew install docker-compose
+   ln -sfn /opt/homebrew/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+   ln -sfn /opt/homebrew/opt/docker-buildx/bin/docker-buildx ~/.docker/cli-plugins/docker-buildx
+   docker compose version && docker buildx version     # both print a version
+   cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
+   make up                                             # foreground; API :8000, dashboard :3000 (API_PORT/WEB_PORT to change)
+   # in another terminal:
+   curl -fsS localhost:8000/api/health | jq -e '.ok and .demo_mode'   # expect: true
+   curl -fsS localhost:3000 | grep -q 'Between Visits' && echo web-ok  # expect: web-ok
+   # Ctrl-C, then:
+   docker compose -f docker-compose.prod.yml down
+   ```
+   Without this, the same stack runs through the compose inside the colima VM: `colima ssh -- env GIT_COMMIT=$(git rev-parse --short HEAD) docker compose --project-directory "$PWD" -f "$PWD/docker-compose.prod.yml" up --build -d` (stop with the same command and `down`).
