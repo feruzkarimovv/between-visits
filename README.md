@@ -127,6 +127,11 @@ See `docs/04-voice-agent.md` for the Twilio, ElevenLabs and paging setup, includ
 - No authentication (a visible demo role switch), no EDC/EHR integration, SQLite.
 - ntfy.sh delivery is best effort; the dashboard acknowledgment and re-page loop are the backstop.
 
+## Security and privacy
+
+- [`SECURITY.md`](SECURITY.md): how to report a problem, what is in scope, and how secrets are handled (`.env` and host environment variables only; `make secret-scan`).
+- [`docs/privacy-security.md`](docs/privacy-security.md): where call data goes (ElevenLabs, Anthropic, ntfy, sponsor views), the controls in place, known gaps, the compliance gap table (HIPAA, 21 CFR Part 11: not assessed) and open regulatory questions.
+
 ## Team
 
 <!-- names, roles -->
