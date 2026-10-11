@@ -5,7 +5,9 @@ table row this script extracts the numbers written in the SAP cell (section refe
 spans with letters and digits glued to words such as "G2" are ignored) and compares them, in order,
 with the numbers params.yaml gives for the same key; text-only rows are checked for the key words.
 The planted-truth rows (§11.4) are compared on count and mechanism numbers, and the §11.5 "Value
-filled at tag time" table against params.yaml and planning_grid.json `.chosen`.
+filled at tag time" table against params.yaml and planning_grid.json `.chosen`. Inline statements
+anywhere in the SAP of the form `params.path` = number, for a path under a params.yaml top-level key
+(for example the §12.5 replicate counts), are compared with that params.yaml value.
 
     uv run --project monitoring python monitoring/planning/check_params_sap.py   # prints the comparison, exit 1 on a mismatch
 """
@@ -28,6 +30,7 @@ SAP = "docs/11-site-signal-sap.md"
 PARAMS = "monitoring/params.yaml"
 GRID = "monitoring/planning/planning_grid.json"
 _NUM = re.compile(r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w])")
+_INLINE = re.compile(r"`([a-z_][a-z_0-9]*(?:\.[a-z_0-9]+)+)` = (-?\d+(?:\.\d+)?)(?!\d)")
 
 
 @dataclass
@@ -129,9 +132,18 @@ def checks_11_3(p: dict[str, Any]) -> list[tuple[str, Callable[[], list[float]],
                                                         ps["mapping_error_step"]["temperature_c"]],
          lambda _: ps["mapping_error_step"]["yes_no"] == "flip"),
         ("`calibration`", lambda: [p["calibration"]["r_null"], p["calibration"]["r_validation"], p["calibration"]["r_quick"]], None),
+        # §12.2: the sap-v1 design row runs every grid f, so the headline gross-f row exists only if gross f is a grid value
         ("`grid`", lambda: [*p["grid"]["n_sites"], *p["grid"]["patients_per_site"], *p["grid"]["f"], *p["grid"]["mu"],
-                            p["grid"]["reps"], p["grid"]["reps_quick"]], None),
-        ("`failure_case`", lambda: [p["failure_case"]["between_site_sd_logit"], p["failure_case"]["casemix_sd_log"]], None),
+                            p["grid"]["reps"], p["grid"]["reps_quick"]],
+         lambda _: any(math.isclose(p["planted"]["gross"]["f"], f) for f in p["grid"]["f"])),
+        # §12.5 (a) and (b) replicate counts; §12 fallback 1 never takes reps below 200
+        ("`failure_case`", lambda: [p["failure_case"]["between_site_sd_logit"], p["failure_case"]["casemix_sd_log"],
+                                    p["failure_case"]["r_null"], p["failure_case"]["reps"], p["failure_case"]["r_null_b"]],
+         lambda _: all(isinstance(p["failure_case"][k], int) for k in ("r_null", "reps", "r_null_b")) and p["failure_case"]["reps"] >= 200),
+        # §12.3: the first r null studies of §12.1, so r <= r_validation; b bootstrap resamples per validation replicate
+        ("`equity_validation`", lambda: [p["equity_validation"]["r"], p["equity_validation"]["b"]],
+         lambda _: isinstance(p["equity_validation"]["r"], int) and isinstance(p["equity_validation"]["b"], int)
+         and 0 < p["equity_validation"]["r"] <= p["calibration"]["r_validation"] and p["equity_validation"]["b"] > 0),
         ("`sensitivity`", lambda: [], lambda _: list(p["sensitivity"]["scenarios"]) == [f"SE{k}" for k in range(1, 22)]),
         ("`comparators`", lambda: [p["comparators"]["rate_kri"]["min_days"], p["comparators"]["simaerep_classic"]["r"]],
          lambda _: p["comparators"]["rate_kri"]["exposure"] == "patient_days" and p["comparators"]["simaerep_classic"]["visit_med75"] is True
@@ -166,6 +178,23 @@ def checks_11_4(p: dict[str, Any]) -> dict[str, tuple[str, list[float]]]:
     }
 
 
+def inline_values(text: str, p: dict[str, Any]) -> list[Row]:
+    """`a.b.c` = number statements in the SAP whose path starts at a params.yaml top-level key."""
+    out: list[Row] = []
+    for m in _INLINE.finditer(text):
+        path = m.group(1).split(".")
+        if path[0] not in p:
+            continue  # e.g. data/signal_rules.json keys such as `paged.proximity_days`
+        node: Any = p
+        for k in path:
+            node = node.get(k) if isinstance(node, dict) else None
+        line = text.count("\n", 0, m.start()) + 1
+        ok = (isinstance(node, int | float) and not isinstance(node, bool)
+              and math.isclose(float(node), float(m.group(2)), rel_tol=0, abs_tol=1e-9))
+        out.append(Row("text", f"`{m.group(1)}` (line {line})", m.group(2), str(node), ok))
+    return out
+
+
 def compare(root: Path = ROOT) -> list[Row]:
     text = (root / SAP).read_text(encoding="utf-8")
     p = yaml.safe_load((root / PARAMS).read_text(encoding="utf-8"))
@@ -192,6 +221,8 @@ def compare(root: Path = ROOT) -> list[Row]:
     out.append(Row("11.3", "signal_rules_sha256 value", "sha256(data/signal_rules.json)", str(p["signal_rules_sha256"])[:16] + "...", sig_ok))
     fz_ok, report = bvseed.check_frozen(root)
     out.append(Row("11.3", "frozen_inputs values", "recomputed", "; ".join(r.split()[1] for r in report if r.split()[1] in bvseed.FROZEN_KEYS), fz_ok))
+    # inline `params.path` = number statements (e.g. §12.5 replicate counts)
+    out.extend(inline_values(text, p))
     # §11.4 planted truth
     t114 = table_rows(section(text, "11.4"))
     for label, (pkey, nums) in checks_11_4(p).items():
@@ -231,9 +262,10 @@ def compare(root: Path = ROOT) -> list[Row]:
 def main() -> int:
     rows = compare(ROOT)
     w = max(len(r.key) for r in rows)
-    print(f"params.yaml vs {SAP} (§11.3 parameter table, §11.4 planted truth, §11.5 tag-time values)")
+    print(f"params.yaml vs {SAP} (§11.3 parameter table, §11.4 planted truth, §11.5 tag-time values, inline `params.path` = n text)")
     for r in rows:
-        print(f"{'ok ' if r.ok else 'BAD'}  §{r.section:<4} {r.key:<{w}}  SAP {r.sap}  |  params {r.params}")
+        sec = f"§{r.section}" if r.section[0].isdigit() else r.section
+        print(f"{'ok ' if r.ok else 'BAD'}  {sec:<6} {r.key:<{w}}  SAP {r.sap}  |  params {r.params}")
     bad = [r for r in rows if not r.ok]
     print(f"{len(rows) - len(bad)}/{len(rows)} rows agree" + ("" if not bad else f"; {len(bad)} disagree"))
     return 1 if bad else 0

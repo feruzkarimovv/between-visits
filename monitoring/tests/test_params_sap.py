@@ -25,5 +25,17 @@ def test_params_yaml_agrees_with_the_sap_tables() -> None:
     bad = [f"§{r.section} {r.key}: SAP {r.sap} | params {r.params}" for r in rows if not r.ok]
     assert not bad, "\n".join(bad)
     sections = {r.section for r in rows}
-    assert sections == {"11.3", "11.4", "11.5"}
+    assert sections == {"11.3", "11.4", "11.5", "text"}
     assert sum(r.section == "11.4" for r in rows) == 10
+    # §12.3 equity validation and §12.5 failure-case replicate counts are fixed in the SAP and in params.yaml
+    keys = {r.key for r in rows}
+    assert {"`failure_case`", "`equity_validation`"} <= keys
+    inline = {r.key.split()[0] for r in rows if r.section == "text"}
+    assert {"`failure_case.r_null`", "`failure_case.reps`", "`failure_case.r_null_b`"} <= inline
+
+
+def test_inline_values_compare_params_paths_only() -> None:
+    p = {"failure_case": {"reps": 300}, "grid": {"reps": 300}}
+    text = "uses `failure_case.reps` = 300 studies; `grid.reps` = 200. `paged.proximity_days` = 7 is a signal_rules key."
+    rows = chk.inline_values(text, p)
+    assert [(r.key.split()[0], r.ok) for r in rows] == [("`failure_case.reps`", True), ("`grid.reps`", False)]

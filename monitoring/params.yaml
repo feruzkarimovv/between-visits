@@ -99,7 +99,16 @@ grid:                             # docs/11 §11.3, §12.2
   reps_quick: 40
   null_reps_per_design: 1000      # docs/11 §12.2 step 1: design-specific calibration, reused across f
 
-failure_case: {between_site_sd_logit: 0.6, casemix_sd_log: 0.2}   # docs/11 §11.3, §12.5 (diligence-dominated heterogeneity)
+failure_case:                     # docs/11 §11.3, §12.5 (diligence-dominated heterogeneity), stream 4
+  between_site_sd_logit: 0.6
+  casemix_sd_log: 0.2
+  r_null: 1000                    # (a) failure-case null studies that re-calibrate the thresholds by §9.2-9.3 (cell_index.failure_case_a, role 0)
+  reps: 300                       # (a) studies per grid f with one planted site, common random numbers across f (cell_index.failure_case_a, role 1); §12 fallback 1: >= 200
+  r_null_b: 1000                  # (b) failure-case null studies at the sap-v1 thresholds (cell_index.failure_case_b, role 0)
+
+equity_validation:                # docs/11 §11.3, §12.3 (precision, fixed before the tag)
+  r: 500                          # language-interval coverage and pace-interval exclusion on the first r null studies of §12.1 (stream 2, cell 0, role 0, i < r); pace also on every §12.3 full-mix study
+  b: 1000                         # §14 patient-cluster bootstrap resamples inside a validation replicate, from SeedSequence(eval_seed, spawn_key=(stream, cell_index, 2, i)); same b under --quick
 
 sensitivity:                      # docs/11 §11.3, §12.6
   r_null: 300                     # docs/11 §12.6 (ii)
@@ -251,7 +260,7 @@ cell_index:                       # docs/11 §1.3: fixed enumeration; adding, cu
     - {cell: 22, n_sites: 20, patients_per_site: 60, mu: 1.5}
     - {cell: 23, n_sites: 20, patients_per_site: 80, mu: 0.5}
     - {cell: 24, n_sites: 20, patients_per_site: 80, mu: 1.5}
-  sap_v1_design: 25               # stream 3: power at the sap-v1 design with the committed thresholds (docs/11 §12.2)
+  sap_v1_design: 25               # stream 3: power at the sap-v1 design with the committed thresholds, grid.reps per grid f, role 1 (docs/11 §12.2)
   full_mix: 26                    # stream 3: complete §11.4 mix (docs/11 §12.3)
   failure_case_a: 27              # stream 4: re-calibrated failure-case null and power (docs/11 §12.5 (a))
   failure_case_b: 28              # stream 4: failure-case null at the sap-v1 thresholds (docs/11 §12.5 (b))

@@ -107,8 +107,8 @@ numpy.random.SeedSequence(eval_seed, spawn_key=(stream, cell_index, role, i))
 |---|---|---|
 | 0 | Committed evaluation study (`role` 0); equity bootstrap (`role` 2) | `run.py` → `monitoring/out/*.json` |
 | 1 | Null calibration | `calibrate.py` → `thresholds.json` |
-| 2 | Null validation (fresh null studies) | `validate.py` → `null_rate.json` |
-| 3 | Power grid, per-design null calibration, and full-mix power | `validate.py` → `power_grid.json` |
+| 2 | Null validation (fresh null studies); equity bootstrap inside a replicate (`role` 2, §12.3) | `validate.py` → `null_rate.json` |
+| 3 | Power grid, per-design null calibration, and full-mix power; equity bootstrap inside a replicate (`role` 2, §12.3) | `validate.py` → `power_grid.json` |
 | 4 | Failure case and sensitivity | `validate.py` → `failure_case.json`, `sensitivity.json` |
 
 - `cell_index` comes from a fixed enumeration of grid cells and scenarios in `params.yaml` (0 where there is no cell). `role` is 0 for a null or committed study, 1 for a power (planted) replicate, 2 for resampling inside one analysis. `i` is the replicate number.
@@ -133,6 +133,7 @@ Never allowed: re-seeding, re-tagging, or choosing among several evaluation runs
 |---|---|---|
 | draft | 2026-10-11 (planning round) | First full draft. |
 | draft | 2026-10-11 (SAP review round 1, before the tag) | §4.1–§4.2: exact mapping from a call's answers to *g_k* (absent = 0, ungraded or not asked = null); §11.2 step 5: follow-ups after a gate mapping error. §1.2 step 7, §1.3: beacon fallback deadlines relative to the round time, attempt log in `seed_beacon.json`. §11.2 step 6, §11.3, §15 rule 7: active red flags from `data/plan.json`; `frozen_inputs` also pins red-flag ids, the plan's red-flag list and the primary-term item logic. §15 rule 6, §12.1, §12.9: rounding is for display only; gates use unrounded values. §11.2 steps 4, 7, 8, §11.3: secondary items per call, other-AE entry date, `aeseq`, entry-date formula. |
+| draft | 2026-10-11 (SAP review round 2, before the tag) | §12.3, §12.9, §14, §11.3, §1.3: equity validation fixed before the tag. Language-interval coverage uses the first `equity_validation.r` = 500 null studies of §12.1, where no language gap is planted, with not-computed studies reported separately; pace-interval exclusion uses those null studies and the §12.3 full-mix studies; inside a validation replicate the §14 bootstrap uses *B* = `equity_validation.b` = 1000 resamples from `role` 2 keys. §12.5, §12.2, §12 fallback 1, §11.3: replicate counts fixed for the failure case (`failure_case.r_null` 1000 and `reps` 300 per grid *f* for (a), `r_null_b` 1000 for (b)) and for the `sap-v1` design row (`grid.reps` per grid *f*, cell 25, `role` 1); fallback 1 also covers failure-case reps. |
 | `sap-v1` | at the tag | §11.5 values filled from the planning grid (or the §11.5 fallback); `frozen_inputs` filled; reviewed by the team lead, or "tagged without human review" (§1.2 step 4); frozen. |
 
 ---
@@ -617,7 +618,8 @@ Calendar dates: study day 0 = 2026-01-05 (`design.study_start_date`), so the dat
 | `patient_stream.mapping_error_step` | Ordinal ±1 option; yes/no flip; stools ±1; temperature ±0.5 °C | ASSUMPTION |
 | `calibration` | `r_null` 2000, `r_validation` 2000, `r_quick` 200 | Precision (§12.8) |
 | `grid` | `n_sites` [12, 20]; `patients_per_site` [10, 20, 30, 40, 60, 80]; `f` [0.25, 0.50, 0.75, 0.85, 0.90]; `mu` [0.5, 1.5]; `reps` 300; `reps_quick` 40 | §12.2 |
-| `failure_case` | `between_site_sd_logit` 0.6, `casemix_sd_log` 0.2 | §12.5 |
+| `failure_case` | `between_site_sd_logit` 0.6, `casemix_sd_log` 0.2; `r_null` 1000 null studies and `reps` 300 planted studies per grid *f* for (a); `r_null_b` 1000 null studies for (b) | §12.5; precision (§12.8) |
+| `equity_validation` | `r` 500 null studies; `b` 1000 bootstrap resamples per validation replicate | §12.3; precision (§12.8) |
 | `sensitivity` | §12.6 | — |
 | `comparators` | `rate_kri` {patient-days, `min_days` 30}; `simaerep_classic` {r 1000, `visit_med75` true, BH true}; `ae_report_ratio` (ablation, §10.3) | [9, 10, 11] |
 | `blind_run` | `planted_count` uniform integer 0–3; `f` = `planted.gross.f`; 10 `precomputed_labels` (short words such as `aurora`; the example label `demo-42` used in acceptance checks is deliberately not one of them) | §13 |
@@ -689,7 +691,7 @@ The same design and gross *f* are used for the committed study and the blind run
 
 `monitoring/bvsignal/validate.py` writes `validation/site_signal/{summary.json, null_rate.json, power_grid.json, failure_case.json, sensitivity.json}`. The full run goes in the background (≤ 45 min). Two fallbacks apply, in order, if the runtime budget is exceeded, and each is logged in §17:
 
-1. Grid `reps` drop, to no fewer than 200. The MC SE is reported either way.
+1. Grid and failure-case reps (`grid.reps`, `failure_case.reps`) drop, to no fewer than 200. The MC SE is reported either way.
 2. simaerep classic is computed only for the `sap-v1` design row and the full mix.
 
 CI runs `--quick --check` on the same replicate keys with fewer replicates. Quick replicates are an exact subset of the full run (§1.3), so `validate.py` writes the sha256 of the per-replicate results for the first `r_quick` replicates of each stream into `summary.json` (`quick_hashes`), and the check requires exact equality. Any difference means nondeterminism or a code change and fails CI. Agreement of the quick rates with the committed rates is reported as a secondary line, not a gate.
@@ -724,7 +726,7 @@ For each design (`n_sites` × `patients_per_site` (exact) × *μ*):
 3. **Power** = P(planted site at tier ≥ Look) and P(planted site at Watch), with MC SE.
 4. Also reported: P(planted site computed), and each design's achieved null Look and Watch rates on its own calibration sample. A not-computed planted site is a miss.
 
-A separate row reports power at the `sap-v1` design using the committed `thresholds.json`. Its gross-*f* row is shown next to the planning value from `planning_grid.json`, labeled "planning (simplified) vs final". Rows for *f* = 0.25 and 0.50 are always reported (never cut).
+A separate row reports power at the `sap-v1` design using the committed `thresholds.json`. The `sap-v1` design row uses `grid.reps` planted studies for each grid *f* (stream 3, cell 25, `role` 1; the grid *f* values include the gross *f*), with common random numbers across *f*. Its gross-*f* row is shown next to the planning value from `planning_grid.json`, labeled "planning (simplified) vs final". Rows for *f* = 0.25 and 0.50 are always reported (never cut).
 
 ### 12.3 Full planted mix (stream 3, *R* = `r_validation`)
 
@@ -735,7 +737,7 @@ Studies at the `sap-v1` design with the complete §11.4 mix, with roles re-assig
 - false-flag rate for plain honest sites;
 - how often `low_coverage` and `small_site` are correctly not computed;
 - per tier and indicator: mean number of flags per study, mean number of true-positive flags, and the empirical false discovery rate E[false flags / max(flags, 1)], each with MC SE;
-- equity (§14): coverage of the language interval in studies without a language gap, and the rate at which the pace control's interval excludes 1, each with MC SE.
+- equity (§14), each with MC SE: (a) language-interval coverage = the share of the first `equity_validation.r` null studies of §12.1 (stream 2, cell 0, `role` 0, *i* < *r*), where no language gap is planted, whose primary 95% interval for the language *OR_MH* contains 1; studies with no included site are reported separately as not computed and are left out of the share; (b) the share of those null studies, and of the §12.3 full-mix studies, whose pace interval excludes 1, again among the studies where it is computed. Inside a validation replicate the §14 patient-cluster bootstrap uses *B* = `equity_validation.b` resamples drawn from `SeedSequence(eval_seed, spawn_key=(stream, cell_index, 2, i))`, the same *B* under `--quick`, so quick replicates stay an exact subset (§1.3).
 
 This answers how the method behaves when several abnormal sites inflate *τ̂²*.
 
@@ -749,8 +751,8 @@ Full-mix comparator rows (§12.3) are labeled "includes two scenarios constructe
 
 The failure case is diligence-dominated heterogeneity: honest between-site capture SD 0.6 and case-mix SD 0.2. Two analyses:
 
-- **(a)** Thresholds re-calibrated under the failure-case null; power of discordance vs rate KRI at the `sap-v1` design for every grid *f*. This shows whether the advantage disappears even with a correct null.
-- **(b)** `sap-v1` thresholds kept; achieved null false-flag rates. This shows the cost of a wrong null.
+- **(a)** Thresholds re-calibrated under the failure-case null; power of discordance vs rate KRI at the `sap-v1` design for every grid *f*. This shows whether the advantage disappears even with a correct null. Thresholds are re-calibrated by §9.2–9.3 from `failure_case.r_null` = 1000 failure-case null studies (stream 4, cell 27, `role` 0); power uses `failure_case.reps` = 300 studies per grid *f* with one planted site and common random numbers across *f* (cell 27, `role` 1).
+- **(b)** `sap-v1` thresholds kept; achieved null false-flag rates on `failure_case.r_null_b` = 1000 failure-case null studies (stream 4, cell 28, `role` 0). This shows the cost of a wrong null.
 
 Both are shown in the UI ("How well it works") and in `WHAT_IT_GETS_WRONG.md`.
 
@@ -827,7 +829,7 @@ This gives 29 for *p* = 0.90, 59 for 0.95 and 299 for 0.99.
 - `design` (the chosen design, gross *f*, planning gate outcome);
 - `null` (`look_per_site`, `look_per_study`, `watch_fwer`, each with `rate`, `mc_se` and `ci95` where applicable; `look_per_site_by_e_tertile`; `by_k_bin`; `r`; `computability`);
 - `power` (rows: `indicator`, `tier`, `n_sites`, `patients_per_site`, `mu`, `f`, `power`, `mc_se`, `p_computed`, `null_rate_achieved`; the design row adds `planning_power`);
-- `full_mix` (detection by label, false flags, FDR, equity coverage), `head_to_head` (grid and full mix, with the ablation), `failure_case`, `sensitivity`;
+- `full_mix` (detection by label, false flags, FDR, and `equity`: the §12.3 language-interval coverage on null studies and pace-interval exclusion rates on null and full-mix studies, each with MC SE, the number of studies used and not computed, and *B*), `head_to_head` (grid and full mix, with the ablation), `failure_case`, `sensitivity`;
 - `eval_study` (`confusion`, `caught`, `missed`, `not_computed`);
 - `simaerep_fixture` (`rows`, `max_rel_diff`);
 - `quick_hashes` (§12 CI check).
@@ -862,7 +864,7 @@ Question: **within the same site**, are Spanish-speaking patients' episodes (or 
 | Data | Evaluable non-paged episodes (*A_s*), *Y_e* matched or not, by patient language (`es` vs `en`) and pace (`extra_time` vs `standard`) |
 | Sites used | Sites with ≥ 5 evaluable episodes in **each** group, computed or not. `n_sites_used` is reported. With none, the block reads "not computed: insufficient data". |
 | Pooled estimate | Mantel-Haenszel odds ratio across sites [15]. An odds ratio below 1 means lower capture for Spanish-speaking (or extra-time) patients within the same site. |
-| Interval (primary) | Patient-cluster bootstrap: resample patients with replacement within each included site, *B* = 2000 (stream 0, `role` 2 keys), percentile 95% CI of ln *OR_MH*. Language and pace are patient-level and episodes cluster within patients, so episode-level intervals are too narrow. |
+| Interval (primary) | Patient-cluster bootstrap: resample patients with replacement within each included site, *B* = 2000 in the committed study (stream 0, `role` 2 keys; inside a validation replicate, *B* and keys follow §12.3), percentile 95% CI of ln *OR_MH*. Language and pace are patient-level and episodes cluster within patients, so episode-level intervals are too narrow. |
 | Interval (secondary) | Robins-Breslow-Greenland variance [16] |
 | Heterogeneity | Breslow-Day test [27] and the per-site odds ratios on one plot. A gap planted at one site is diluted in a pooled common OR. |
 | Per-site estimate | Odds ratio with the same within-site patient bootstrap interval, for sites meeting the inclusion rule; point estimate only when the site has < 10 evaluable episodes in either group. Zero cells: 0.5 added to every cell [23]. |
