@@ -1,0 +1,53 @@
+{
+  "captured_at": "2026-10-11T06:11:55Z",
+  "variants": {
+    "en-standard": {
+      "agent_id_suffix": "0z41",
+      "llm": "claude-sonnet-5-5",
+      "backup_llms": [
+        "claude-sonnet-5",
+        "claude-haiku-4-5"
+      ],
+      "tts_model": "eleven_flash_v2",
+      "prompt_sha256": "db63e4bc374481111174d394063ca29d4e3af2ddd30439d1914aa24cd1e4d530",
+      "tools_sha256": "7767aeb694e3d43cf45365de7c88d15dff8c1182dbf0132afc5aa597e7ce5b75",
+      "config_sha256": "fa1f3191f186b2fbebc0111597aa9a64d479ec8d23b67fed0fc9cbe13f2c0837"
+    },
+    "en-extra_time": {
+      "agent_id_suffix": "w8e6",
+      "llm": "claude-sonnet-5-5",
+      "backup_llms": [
+        "claude-sonnet-5",
+        "claude-haiku-4-5"
+      ],
+      "tts_model": "eleven_flash_v2",
+      "prompt_sha256": "db63e4bc374481111174d394063ca29d4e3af2ddd30439d1914aa24cd1e4d530",
+      "tools_sha256": "7767aeb694e3d43cf45365de7c88d15dff8c1182dbf0132afc5aa597e7ce5b75",
+      "config_sha256": "aa8c216cb705401b4a13b54f6aaf659c730ccbf37a48cc6a6f161e21ef8da300"
+    },
+    "es-standard": {
+      "agent_id_suffix": "25eq",
+      "llm": "claude-sonnet-5-5",
+      "backup_llms": [
+        "claude-sonnet-5",
+        "claude-haiku-4-5"
+      ],
+      "tts_model": "eleven_flash_v2_5",
+      "prompt_sha256": "db63e4bc374481111174d394063ca29d4e3af2ddd30439d1914aa24cd1e4d530",
+      "tools_sha256": "7767aeb694e3d43cf45365de7c88d15dff8c1182dbf0132afc5aa597e7ce5b75",
+      "config_sha256": "55b4479aa796e5e8e464bc802639a7c958386aa13b26a4ecc30061f7de8c4bbe"
+    },
+    "es-extra_time": {
+      "agent_id_suffix": "gsg8",
+      "llm": "claude-sonnet-5-5",
+      "backup_llms": [
+        "claude-sonnet-5",
+        "claude-haiku-4-5"
+      ],
+      "tts_model": "eleven_flash_v2_5",
+      "prompt_sha256": "db63e4bc374481111174d394063ca29d4e3af2ddd30439d1914aa24cd1e4d530",
+      "tools_sha256": "7767aeb694e3d43cf45365de7c88d15dff8c1182dbf0132afc5aa597e7ce5b75",
+      "config_sha256": "25fafe2c4636abae445248f0746666d138ae7d8ffe7137d58f72b6a025e4f40b"
+    }
+  }
+}
