@@ -108,3 +108,91 @@ clone with every branch fetched, and add the result here.
   look at each hit's context, then `python3 validation/scan_numbers.py --suggest-allow` prints one sha256 line per
   hit, labeled with its file, for `validation/scan_numbers_allow.txt`. Lockfiles never need an entry (§ Lines that are
   not checked), so a re-lock adds none; the digest lines of the allowlist itself are not scanned, its comments are.
+
+## Appendix: final fresh clone from GitHub (WS0 R12)
+
+The implementing session ran this on the build machine, not on a second machine. It used a fresh clone of the pushed
+branch, outside the repository. The key output line of each step is quoted verbatim.
+
+| Field | Value |
+|---|---|
+| Date and time | 2026-10-11 10:34 to 10:46 EDT (14:34 to 14:46 UTC) |
+| Clone | `gh repo clone feruzkarimovv/between-visits $TMPDIR/r12 -- --branch site-signal-build` (authenticated; the repository is private) |
+| Commit | `5767cd06ab51b8a91e2be008f20832fd4ee8353b` (`origin/site-signal-build`, "Build: progress F19") |
+| Tools | uv with CPython 3.12.12 (from `.python-version`), Node 24.18.0 (the README asks for Node 22), gitleaks 8.30.1, Playwright 1.63.0 (chromium) |
+| Result | **Every step passes except `make secret-scan`.** gitleaks reports 3 findings, and all 3 are false positives (§ gitleaks findings below). When the number scanner runs on its own, it reports 0 hits. |
+
+| # | Step (in the clone) | Time (EDT) | Result | Key line |
+|---|---|---|---|---|
+| 1 | `cp .env.example .env && make setup` | 10:34:57 | PASS | `Using CPython 3.12.12` (backend and monitoring); `added 402 packages, and audited 403 packages in 4s`; `git status --porcelain` empty afterwards |
+| 2 | `make seed` | 10:35:10 | PASS | `{"patients": 6, "checkins_due_today": 6, "local_overrides": 0}` |
+| 3 | `make test` | 10:35:10 to 10:36:49 | PASS (exit 0) | backend `661 passed in 40.13s`; `data OK: 25 items, 13 red flags, 11 grading rules, 20 personas`; agent scripts `Ran 29 tests`, `Ran 18 tests`, `Ran 27 tests`, each `OK`; frontend `tsc --noEmit` and `eslint` pass; monitoring `All checks passed!`, `391 passed, 1 skipped in 46.22s` |
+| 4 | `make validate ARGS=--check` | 10:36:55 to 10:38:46 | PASS (exit 0) | `validation: 29/29 requirements passing, 1052/1053 tests passing` (the one test that does not pass is the monitoring skip `sap-v1 exists in this checkout`). The step rewrites the stamps in `validation/summary.json` and `validation/traceability.md`; `git restore` put both back before step 6. |
+| 5 | `make secret-scan` | 10:39:02 | **FAIL** (gitleaks exit 1, make exit 2) | `155 commits scanned.` `leaks found: 3`, all `generic-api-key` false positives (below). `scan_numbers.py` did not run because the target chains with `&&`. Run on its own: `numbers: 0 hits (155 commits, 211172 added lines; 9887 lockfile lines not checked; 15 fictional 555 matches ignored; 5 allowlisted)` |
+| 6 | `make site-signal`, then `git diff --exit-code monitoring/out validation/site_signal/report.md` | 10:39:53 | PASS | `committed study (eval seed, stream 0): 14 computed sites; discordance tiers {'watch': 0, 'look': 2, 'none': 12, 'not_computed': 6}; 0.4 s; SIMULATED. A reason to look, not a finding.`; diff exit 0 |
+| 7 | Step 6 again | 10:40:05 | PASS | The same line; diff exit 0. Each run added one line to `validation/site_signal/run_log.jsonl` (`git_dirty: false`, code commit `9204a1e`). Neither line was committed, and the file was restored. |
+| 8 | `make site-signal-validate ARGS="--quick --check"` | 10:40:17 to 10:41:13 | PASS (exit 0) | `quick check passed: every quick_hashes entry equals summary.json` |
+| 9 | Demo: backend on port 8144, frontend on port 3144 (command below) | 10:41 | PASS | `/api/health`: `"ok":true,"demo_mode":true`, `"commit":"5767cd0"`, `site_signal.available: true`, `data_origin: "SIMULATED"`; the dashboard `/` returns 200 |
+| 10 | `cd e2e && npm ci && npx playwright install chromium && BASE_URL=http://localhost:3144 npx playwright test` | 10:42:06 to 10:42:54 | PASS | `✓ serious event: replay, review, investigator, sign and send, sponsor inbox (44.9s)`; `✓ site signal: CRA query from a Look or Watch site, coordinator answers, CRA closes, five audit rows (1.2s)`; `2 passed (46.9s)` |
+| 11 | Walkthrough screenshots | 10:43 to 10:45 | PASS | 16 full-page PNGs (below) |
+
+**Demo command.** `make demo` binds ports 8000 and 3000, which other sessions on the build machine were using. The same
+two processes ran on other ports instead, with the production frontend build (the `make demo DEMO_PROD=1` form, so no
+Next.js dev badge):
+
+```bash
+(cd backend && DEMO_MODE=1 CORS_ORIGINS=http://localhost:3144 uv run python -m app.seed \
+  && DEMO_MODE=1 CORS_ORIGINS=http://localhost:3144 uv run uvicorn app.main:app --port 8144)
+(cd frontend && NEXT_PUBLIC_API_BASE_URL=http://localhost:8144 npm run build && npx next start -p 3144)
+```
+
+### gitleaks findings (step 5)
+
+| Commit | File:line | What the flagged value is |
+|---|---|---|
+| `0c9dd432c57d` | `validation/site_signal/run_log.jsonl:2` | A sha256 hex digest (64 lowercase hex characters) under `output_sha256` for the key `monitoring/out/answer_key.json`. The word "key" in that file name sets off `generic-api-key`. |
+| `d70cb6e655db` | `validation/site_signal/run_log.jsonl:3` | The same digest, in the line of the determinism re-run |
+| `78de1f2282a1` | `PROGRESS.md:62` | A demo SiteQuery ID (`sq_` plus 10 characters) after the words "API after the run:" in the R10 smoke note |
+
+None of the three is a credential, so there is nothing to rotate. The findings first appeared with the committed study
+run (`0c9dd43`). Since then every scan of the full history fails on them, including the CI `gitleaks` job. Each future
+logged `make site-signal` run adds another run log line with the same key, so ignoring the current fingerprints alone
+would not hold.
+
+The lead can apply the fix below. R12 only records results, so the fix is not committed here. It was checked in the
+scratch clone: with the fix in place, `make secret-scan` prints `no leaks found` and
+`numbers: 0 hits (155 commits, ...)`, and exits 0.
+
+```toml
+# .gitleaks.toml, appended
+[[allowlists]]
+description = "Site Signal run log: output_sha256 values are sha256 file digests (the key monitoring/out/answer_key.json trips generic-api-key)"
+condition = "AND"
+paths = ['''^validation/site_signal/run_log\.jsonl$''']
+regexTarget = "secret"
+regexes = ['''^[0-9a-f]{64}$''']
+```
+
+```text
+# .gitleaksignore (new file)
+78de1f2282a10cdd895a18df049c31145ef5963a:PROGRESS.md:generic-api-key:62
+```
+
+### Walkthrough screenshots (step 11)
+
+The screenshots are in `$TMPDIR/r12-shots/`, outside the repository, and are not committed. Each is a full page at
+1280 px wide. A scratch spec in the clone captured them: it repeats the two smoke journeys and takes a screenshot after
+each step.
+
+- Replay to sponsor: `1-01-today-replay`, `1-02-checkin-live`, `1-03-checkin-ended-drafts`, `1-04-review-queue`,
+  `1-05-review-confirmed`, `1-06-investigator-assessment`, `1-07-sae-draft`, `1-08-sae-signed-sent`, `1-09-sponsor-inbox`.
+- Site query: `2-01-sites`, `2-02-site-105`, `2-03-query-draft`, `2-04-query-approved`, `2-05-query-answered`,
+  `2-06-query-closed`, `2-07-audit-rows`.
+
+`docs/screenshots/` already has a screenshot for each stage (`today`, `call`, `review`, `sae`, `sponsor`, `sites-funnel`,
+`site-drilldown`, `site-inbox`) except a closed query, so none was added. The scratch spec's first attempt failed on its
+own last assertion. It expected five audit rows, but it skips the edit step, so its query has four: drafted, approved,
+answered and closed. With the count set to 4 it passed. The R10 smoke does the edit step and checks all five rows (step 10).
+
+Not covered by this run: R12 asks for a second machine and a person who did not build the product. This run used the
+build machine, with uv and npm caches already filled.
