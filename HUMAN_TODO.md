@@ -258,3 +258,26 @@ Steps that need a person. Everything around them is done; each item says exactly
    git add docs/pitch/deck.pdf && git commit -m "WS4-D14: re-export deck PDF with screenshots" && git push origin site-signal-build
    ```
    The script exits 1 if the deck still has a token or the page count differs from the slide count; this replaces item 12 step 3 (Chrome Print).
+
+15. **Check that the new CI job `e2e` is green on GitHub (R10; first run on GitHub runners).** R10 is integrated on `site-signal-build` and passed locally (2 passed, dev and production frontend builds). The `e2e` job in `.github/workflows/ci.yml` installs Chromium with `npx playwright install --with-deps chromium`, starts `make demo DEMO_PROD=1` in the background, waits up to 300 s for `/api/health` (`demo_mode: true`) and the dashboard, then runs both journeys; it has never run on a GitHub runner. From the main checkout root:
+   ```bash
+   gh run list --repo feruzkarimovv/between-visits --workflow CI --branch site-signal-build --limit 3
+   gh run watch <run id from the first row> --repo feruzkarimovv/between-visits
+   gh run view <run id> --repo feruzkarimovv/between-visits --json jobs --jq '.jobs[] | select(.name=="e2e") | .conclusion'   # "success"
+   ```
+   Or on GitHub: **Actions → CI →** the newest run on `site-signal-build` **→ e2e**; the step "Playwright smoke (both journeys)" ends with `2 passed`. If it is red, download the traces and the demo log, and open the report locally:
+   ```bash
+   gh run view <run id> --repo feruzkarimovv/between-visits --log-failed | tail -n 80   # includes "make demo log (on failure)"
+   gh run download <run id> --repo feruzkarimovv/between-visits --name e2e-playwright --dir /tmp/e2e-playwright
+   cd e2e && npm ci && npx playwright show-report /tmp/e2e-playwright/playwright-report
+   ```
+   CI retries a failed test once (`retries: 1` in `e2e/playwright.config.ts`), so a red job is a real failure, not a single flaky step.
+
+16. **Second R10 acceptance run against the public demo (R10; after item 5).** The suite drives only the dashboard, so it runs unchanged against the deployed `bv-demo-web` (which calls `bv-demo-api`). Each run adds a check-in, a serious-event report and a closed site query to the demo instance (they disappear on the next deploy); do not run it against the live instance. From the main checkout root, with the real URL from item 5, sub-step 5:
+   ```bash
+   git checkout site-signal-build && git pull --ff-only
+   DEMO_WEB=https://bv-demo-web.onrender.com   # the real bv-demo-web URL
+   cd e2e && npm ci && npx playwright install chromium && BASE_URL=$DEMO_WEB npx playwright test
+   # expected: "2 passed" (serious event: replay ... sponsor inbox; site signal: ... five audit rows)
+   ```
+   A free Render instance can take a minute to wake up; if the first test times out on "the Replay control shows only when /api/health says demo_mode", open `$DEMO_WEB` in a browser once and run the command again. Then record the result on the R10 row of `PROGRESS.md` (Status `done`, empty Blocker once item 15 is green too).
