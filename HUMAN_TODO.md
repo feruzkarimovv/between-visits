@@ -247,3 +247,27 @@ Steps that need a person. Everything around them is done; each item says exactly
       git commit -m "SAP v1: beacon round and external timestamp (docs/11 §17)" && git push origin site-signal-build
       ```
    Only after this may S6/S7/S8 produce evaluation output.
+
+12. **Post the `sap-v1` tag sha outside the team's control and log the link in docs/11 §17 (S1 follow-up; docs/11 §1.2 step 6).** Done on `site-signal-build` in commit 5e1849e ("WS5-S1: beacon round and evaluation seed"): tag `sap-v1` on commit `68838978bb305e0f730d30e5cbf3c00bceca5a25` (tag object `e5b4a7983c4a3f3b3bd5f46d8b6cdc65d9d4b1e6`, same on origin), GitHub Release https://github.com/feruzkarimovv/between-visits/releases/tag/sap-v1 published 2026-10-11T08:38:10Z, beacon drand round 6542582 (round time 08:48:00Z, no failed attempts) in `monitoring/seed_beacon.json`, evaluation seed 92794863, docs/11 §17 rows C1 (Release timestamp) and C2 (beacon and seed). This finishes item 6 sub-steps 3-6 and item 11 sub-steps 3-7, except the Devpost/organizer post. Do not rerun `--fetch-beacon` and never edit or delete `monitoring/seed_beacon.json`. The tag exists now, so do not edit the docs/11 §1.5 `sap-v1` row (item 11 sub-step 2 no longer applies); a later team lead sign-off goes in its own §17 clarification row.
+   1. Post this text in the Devpost draft (project description or an update) or in the event's organizer channel, then copy the post's link (Devpost URL or message permalink) and note the post time in UTC:
+      ```
+      Between Visits Site Signal SAP v1 is frozen: sap-v1 = 68838978bb305e0f730d30e5cbf3c00bceca5a25
+      https://github.com/feruzkarimovv/between-visits/releases/tag/sap-v1
+      ```
+   2. In `docs/11-site-signal-sap.md` §17, add row C3 directly below C2 and above the empty placeholder row `| | | | | | | | | |` (keep the placeholder last: `monitoring/tests/test_seed.py` replaces it in a test). Fill in `<HH:MM>`, `<post link>` and `<UTC time>`. The post is later than both the 10-minute window and the beacon round time, and §1.2 step 6 requires §17 to say so:
+      ```
+      | C3 | 2026-10-11 <HH:MM> ET | Commit `SAP v1: organizer timestamp link (docs/11 §17)` | §1.2 step 6 | clarification | Tag sha `68838978bb305e0f730d30e5cbf3c00bceca5a25` and the Release link posted at <post link> at <UTC time>. This post is later than the 10-minute window after the tag push and later than the beacon round time 2026-10-11T08:48:00Z (row C2); the GitHub Release in row C1 (`publishedAt` 08:38:10Z) is the external timestamp that is earlier than the round. | §1.2 step 6 puts both external-timestamp links in a §17 clarification and requires §17 to say when one is not earlier than the beacon round. | No | None on any result. |
+      ```
+   3. Check, commit and push:
+      ```bash
+      cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
+      grep -c '^| C[123] |' docs/11-site-signal-sap.md                      # expect: 3
+      uv run --project monitoring python -m bvsignal.seed --check-frozen     # expect: frozen inputs: OK
+      uv run --project monitoring python -m bvsignal.seed --show             # expect: sap_tag_commit=68838978bb305e0f730d30e5cbf3c00bceca5a25 beacon_round=6542582 eval_seed=92794863
+      make test
+      git add docs/11-site-signal-sap.md && git commit -m "SAP v1: organizer timestamp link (docs/11 §17)" && git push origin site-signal-build
+      ```
+   4. Optional (docs/workstreams/WS5-site-signal.md, S1 step 7): post the seed line in the team chat:
+      ```
+      sap_tag_commit=68838978bb305e0f730d30e5cbf3c00bceca5a25 beacon_round=6542582 eval_seed=92794863
+      ```
