@@ -335,3 +335,10 @@ Steps that need a person. Everything around them is done; each item says exactly
    ```bash
    git add validation/secret-scan.md PROGRESS.md && git commit -m "R12: second-laptop clean clone" && git push origin site-signal-build
    ```
+19. **Record the first uncancelled run of the `Site Signal quick check` workflow (S7 final review fix; after the push that brings `.github/workflows/site-signal-quick-check.yml`).** The quick check of the committed validation now runs on `macos-latest` (arm64), the platform of the committed evaluation runs, in its own workflow with `cancel-in-progress: false`, so a later push queues behind it instead of cancelling it (`docs/11` §17 C8). It runs on pushes that touch `monitoring/`, `validation/site_signal/`, `data/`, `backend/app/`, the `Makefile`, `.python-version` or the workflow itself, and on demand (`workflow_dispatch`, available once the file is on `main`). macOS minutes count 10x against a private repository's Actions quota.
+   ```bash
+   gh run list --repo feruzkarimovv/between-visits --workflow "Site Signal quick check" --branch site-signal-build --limit 3
+   gh run watch <run id> --repo feruzkarimovv/between-visits
+   gh run view <run id> --repo feruzkarimovv/between-visits --log | grep -E "MATCH|MISMATCH|quick check"   # expect "quick check passed: every quick_hashes entry equals summary.json"
+   ```
+   Then put the run ID and the result line in the WS5-S7 row of `PROGRESS.md` § Final review fixes. If the macOS runner also prints `MISMATCH power_grid` (a different macOS or Accelerate build than the build machine's), do not change `summary.json` or `validate.py`: add the run ID and the platform (`sw_vers`, printed by the job) to `WHAT_IT_GETS_WRONG.md` §16 and a `docs/11` §17 row, and tell the team lead.
