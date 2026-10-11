@@ -29,7 +29,9 @@ cd monitoring && uv run ruff check .
 | `planning/plan_power.py`, `planning/planning_grid.json` | Pre-tag planning grid (SAP §11.5 rules P1 and P2), dev seed, **planning only, not a result** | S1 |
 | `planning/check_params_sap.py` | Checks `params.yaml` against the SAP §11.3 and §11.4 tables and the §11.5 values | S1 |
 | `seed_beacon.json` | Beacon round and randomness, the selection times and every failed attempt, fetched once after the tag | after the tag |
-| `bvsignal/{match,indicators,calibrate,simaerep_classic,equity,run,validate,blind,report}.py`, `out/` | Analysis and committed outputs | after the `sap-v1` tag (S3–S10) |
+| `bvsignal/indicators.py` | Capture discordance on the `match.py` O, E and V (z, winsorized φ̂, additive τ̂², z\*; SAP §8), the gsm-style rate KRI (§10.1), simaerep classic (legacy) on the same study (§10.2), the AE-to-report ratio ablation (§10.3); tiers from `thresholds.json` (discordance, rate KRI and ablation flag at ≤, simaerep classic at `prob` ≥; Watch implies Look), `not_computed` reasons, rank by z\* ascending, calibrated empirical p-values with BH q-values (report.md only) | S4 |
+| `bvsignal/calibrate.py` | Look and Watch thresholds of all three indicators and the ablation from R = `calibration.r_null` null studies on stream 1 (SAP §9.2–9.3: pooled per-site 5%, 10% of per-study minima, discreteness rule, c_watch := min(c_watch, c_look), −∞ = never assigned) → `out/thresholds.json` (with achieved in-sample rates, MC SE and `expected_false_look_flags_per_study`) and `out/null_pool.json` (the discordance Look pool for the §8.3 p-values); worker processes, output independent of the worker count | S4 |
+| `bvsignal/{match,simaerep_classic,equity,run,validate,blind,report}.py`, `out/` | Analysis and committed outputs | after the `sap-v1` tag (S3, S5–S10) |
 
 ## Seeds and pre-registration order (SAP §1.2, §1.3)
 
@@ -47,6 +49,13 @@ uv run --project monitoring python monitoring/planning/check_params_sap.py   # p
 # after the sap-v1 tag is pushed:
 uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait   # retries drand from the round time; NIST from +30 min, empty B from +60 min
 uv run --project monitoring python -m bvsignal.seed --show              # sap_tag_commit=<sha> beacon_round=<n> eval_seed=<int>
+```
+
+Calibration (S4; SAP §9.2): the committed run uses the evaluation seed and is made once by the team lead; development runs use the dev seed and a scratch directory (never `monitoring/out/`):
+
+```bash
+uv run --project monitoring python -m bvsignal.calibrate                                   # evaluation seed -> monitoring/out/, run log
+uv run --project monitoring python -m bvsignal.calibrate --seed dev --out "$TMPDIR/cal"     # development only; --r N, --workers N
 ```
 
 `--show` exits non-zero with a clear message before the tag exists, before the beacon file exists, or outside a git checkout. Every evaluation-seed run of `calibrate`, `run`, `validate` and `blind --precompute` refuses a dirty working tree and appends `{utc_time, code_commit, git_dirty, command, output_sha256}` to `validation/site_signal/run_log.jsonl` (`bvsignal.seed.log_run`).
