@@ -9,7 +9,7 @@
     "transcript": [
       {
         "role": "agent",
-        "message": "Hola, esta es una llamada automática de el equipo de investigación de Hillside. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con Rosa?",
+        "message": "Hola, esta es una llamada automática del equipo de investigación de Hillside. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con Rosa?",
         "time_in_call_secs": 0,
         "interrupted": false
       },

@@ -4,7 +4,7 @@
   "lines": {
     "first_message": {
       "en": "Hello, this is an automated call from {study_team_name}. I'm an AI assistant, not a person, and you can ask to speak with a person at any time. May I speak with {patient_first_name}?",
-      "es": "Hola, esta es una llamada automática de {study_team_name}. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con {patient_first_name}?"
+      "es": "Hola, esta es una llamada automática del {study_team_name}. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con {patient_first_name}?"
     },
     "consent_question": {
       "en": "Thank you. I'm calling for your check-in about how you've been feeling since your last study visit. It takes about five minutes. Is now a good time?",
@@ -76,15 +76,15 @@
     },
     "voicemail": {
       "en": "Hello, this is an automated call from {study_team_name} for {patient_first_name}. We will call back later. Goodbye.",
-      "es": "Hola, esta es una llamada automática de {study_team_name} para {patient_first_name}. Le llamaremos más tarde. Adiós."
+      "es": "Hola, esta es una llamada automática del {study_team_name} para {patient_first_name}. Le llamaremos más tarde. Adiós."
     },
     "first_message_inbound": {
       "en": "Hello, you've reached the automated check-in line for {study_team_name}. I'm an AI assistant, not a person, and you can ask to speak with a person at any time. Am I speaking with {patient_first_name}?",
-      "es": "Hola, se ha comunicado con la línea automática de seguimiento de {study_team_name}. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Hablo con {patient_first_name}?"
+      "es": "Hola, se ha comunicado con la línea automática de seguimiento del {study_team_name}. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Hablo con {patient_first_name}?"
     },
     "first_message_inbound_unknown": {
       "en": "Hello, you've reached the automated check-in line for {study_team_name}. I'm an AI assistant, not a person. I couldn't match this phone number to a study participant, so someone from the research team will call you back. If this is an emergency, hang up and call 9-1-1. Goodbye.",
-      "es": "Hola, se ha comunicado con la línea automática de seguimiento de {study_team_name}. Soy un asistente de inteligencia artificial, no una persona. No pude encontrar este número entre los participantes del estudio, así que alguien del equipo de investigación le devolverá la llamada. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós."
+      "es": "Hola, se ha comunicado con la línea automática de seguimiento del {study_team_name}. Soy un asistente de inteligencia artificial, no una persona. No pude encontrar este número entre los participantes del estudio, así que alguien del equipo de investigación le devolverá la llamada. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós."
     }
   },
   "pace_instructions": {

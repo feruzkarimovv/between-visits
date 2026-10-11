@@ -12,21 +12,86 @@ synonyms lower-case, trimmed and unique across terms; every not_computed reason 
 has a label; query placeholders limited to {site_id} {episode_lines} {subject_id} {term} {episode_date}
 {grade}; no name placeholder, seeded name or banned phrase in any template or label.
 
+Product-name guard (D8, CLAUDE.md rule 8: the study drug is named by class only): every text file from
+`git ls-files -co --exclude-standard` (binaries and lockfiles skipped) is lower-cased and split into
+[a-z0-9]+ tokens; a token, or two tokens joined across one separator character (a hyphenated or spaced
+product code), whose sha256 is in PRODUCT_NAME_SHA256 fails with file:line. Only the hashes are in git, and
+the guard never prints the text that matched. It runs on the repo's own data/ only (not with --data-dir).
+
 Flags: --data-dir DIR validates a copy of data/ (agent/ and eval/ inputs still come from the repo);
 --no-self-test skips the self-test; --self-test runs only the self-test. By default a passing run on the
 repo's own data/ ends with the self-test: temp copies of data/ outside the repo, each with one planted
 defect (the first: a banned phrase inserted into the SQ_UNMATCHED_EPISODES body), must make the validator
-exit 1, and an unmodified copy must exit 0.
+exit 1, and an unmodified copy must exit 0; for the product-name guard, the denylist is swapped for the hash
+of a random dummy token and a temp file containing that token must fail (--guard-file/--guard-sha256 are
+for this self-test only).
 """
-import argparse, json, re, sys, pathlib
+import argparse, hashlib, json, re, subprocess, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 _ap = argparse.ArgumentParser(description="Cross-check the data files (exit 1 on failure).")
 _ap.add_argument("--data-dir", type=pathlib.Path, help="validate this copy of data/ instead (never runs the self-test)")
 _ap.add_argument("--self-test", action="store_true", help="run only the self-test")
 _ap.add_argument("--no-self-test", action="store_true", help="skip the self-test")
+_ap.add_argument("--guard-file", type=pathlib.Path, action="append",
+                 help="self-test only: run just the product-name guard over this file (repeatable)")
+_ap.add_argument("--guard-sha256", action="append",
+                 help="self-test only: with --guard-file, use this denylist hash instead (repeatable)")
 ARGS = _ap.parse_args()
 DATA = ARGS.data_dir.resolve() if ARGS.data_dir else ROOT / "data"
+
+# ---------------------------------------------------------------------------------------------------------
+# Product-name guard (D8). Hashes of lower-case [a-z0-9]+ tokens, computed locally; the names themselves are
+# never written to any file, commit message, test or log.
+# ---------------------------------------------------------------------------------------------------------
+PRODUCT_NAME_SHA256 = frozenset({
+    "fce00fa0a39a9ff866ef2f2e523f5767fd5695bba8680942a331b3ac067c6ccc",  # brand (former red_flags.json citations)
+    "153409d26150cce4333108ae3d3dec073cd24f6fd395eb4f5a8e11f7b3af0b50",  # product code (former study.json registry_title)
+    "21fb1ce50629fcd3119baf2fd723545f071b63af38b89610df8991378a485b1d",  # generic name (supplied by the team lead)
+})
+LOCKFILES = frozenset({"uv.lock", "poetry.lock", "Pipfile.lock", "package-lock.json", "npm-shrinkwrap.json",
+                       "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "Cargo.lock"})
+_TOKEN = re.compile(r"[a-z0-9]+")
+
+
+def _repo_files() -> list[pathlib.Path]:
+    """Every file git tracks or would track (tracked + untracked, minus ignored), relative to ROOT."""
+    out = subprocess.run(["git", "ls-files", "-co", "--exclude-standard", "-z"], cwd=ROOT, capture_output=True,
+                         check=True, timeout=60).stdout.decode("utf-8", "surrogateescape")
+    return [pathlib.Path(p) for p in sorted(set(out.split("\0"))) if p]
+
+
+def product_name_guard(files: list[pathlib.Path], denylist: frozenset, report) -> int:
+    """Report `file:line` for every line holding a denylisted token; returns the number of files scanned.
+    Skips lockfiles, symlinks, directories, missing files and binaries (a NUL byte). Prints no matched text."""
+    memo: dict[str, bool] = {}
+
+    def denied(tok: str) -> bool:
+        if tok not in memo: memo[tok] = hashlib.sha256(tok.encode()).hexdigest() in denylist
+        return memo[tok]
+
+    scanned = 0
+    for rel in files:
+        p = rel if rel.is_absolute() else ROOT / rel
+        if rel.name in LOCKFILES or p.is_symlink() or not p.is_file(): continue
+        raw = p.read_bytes()
+        if b"\0" in raw: continue
+        scanned += 1
+        for n, line in enumerate(raw.decode("utf-8", "replace").lower().splitlines(), 1):
+            toks = list(_TOKEN.finditer(line))
+            hit = any(denied(m.group()) for m in toks) or any(  # also two tokens split by one character
+                b.start() - a.end() == 1 and denied(a.group() + b.group()) for a, b in zip(toks, toks[1:]))
+            if hit: report(f"product-name guard: {rel}:{n}: a product brand name, product code or generic name "
+                           f"(sha256 denylist); name the drug by class only (CLAUDE.md rule 8)")
+    return scanned
+
+
+if ARGS.guard_file:  # self-test hook: the guard alone, over the given files
+    _hits: list[str] = []
+    _n = product_name_guard([f.resolve() for f in ARGS.guard_file],
+                            frozenset(ARGS.guard_sha256 or PRODUCT_NAME_SHA256), _hits.append)
+    print("\n".join("FAIL: " + h for h in _hits) or f"product names: 0 hits in {_n} files")
+    sys.exit(1 if _hits else 0)
 
 
 def _path(p: str) -> pathlib.Path:
@@ -421,8 +486,8 @@ if sq:
 def _self_test() -> int:
     """Validate temp copies of data/ (outside the repo), each with one planted defect, in subprocesses.
     Every defect must make the validator exit 1 with the expected message; an unmodified copy must exit 0."""
+    import secrets
     import shutil
-    import subprocess
     import tempfile
     from concurrent.futures import ThreadPoolExecutor
 
@@ -490,11 +555,24 @@ def _self_test() -> int:
         ("a primary term without a G3 rule in ctcae_rules.json", edit("ctcae_rules.json", drop_g3_rule), 1,
          "has no G3 rule"),
     ]
+    # Product-name guard: the denylist is swapped for the hash of a random dummy token (never a real name).
+    dummy = "zqx" + secrets.token_hex(5)
+    dummy_hash = hashlib.sha256(dummy.encode()).hexdigest()
+    filler = "Example study of an anti-PD-1 antibody.\nThe drug is named by class only.\n"
+    guard_cases = [  # (description, temp file text, expected exit code, expected text in the output)
+        ("product-name guard: temp file with the dummy token (upper case, line 3)",
+         filler + f"Dosed with {dummy.upper()} today.\n", 1, "guard.txt:3: a product brand name"),
+        ("product-name guard: dummy token split by a hyphen (line 3)",
+         filler + f"Code {dummy[:3].upper()}-{dummy[3:]} here.\n", 1, "guard.txt:3: a product brand name"),
+        ("product-name guard: same file without the dummy token", filler + "Dosed today.\n", 0,
+         "product names: 0 hits in 1 files"),
+    ]
     base = pathlib.Path(tempfile.mkdtemp(prefix="bv-validate-selftest-")).resolve()
     try:
         if base.is_relative_to(ROOT):
             print(f"self-test FAIL: temp dir {base} is inside the repo"); return 1
-        print(f"self-test: {len(cases)} temp copies of data/ under {base} (outside the repo)")
+        print(f"self-test: {len(cases)} temp copies of data/ and {len(guard_cases)} product-name guard files "
+              f"under {base} (outside the repo)")
 
         def run(i: int):
             desc, mutate, want_code, want_text = cases[i]
@@ -506,14 +584,27 @@ def _self_test() -> int:
             out = p.stdout + p.stderr
             return desc, p.returncode, want_code, want_text in out, out
 
+        def run_guard(i: int):
+            desc, text, want_code, want_text = guard_cases[i]
+            f = base / f"guard{i:02d}" / "guard.txt"
+            f.parent.mkdir(parents=True)
+            f.write_text(text, encoding="utf-8")
+            p = subprocess.run([sys.executable, str(pathlib.Path(__file__).resolve()), "--guard-file", str(f),
+                                "--guard-sha256", dummy_hash], capture_output=True, text=True, timeout=60, cwd=base)
+            out = p.stdout + p.stderr
+            # the guard must never echo the text that matched
+            return desc, p.returncode, want_code, want_text in out and dummy not in out.lower(), out
+
         bad = 0
+        total = len(cases) + len(guard_cases)
         with ThreadPoolExecutor(max_workers=4) as ex:
-            for desc, code, want_code, has_text, out in ex.map(run, range(len(cases))):
+            results = list(ex.map(run, range(len(cases)))) + list(ex.map(run_guard, range(len(guard_cases))))
+            for desc, code, want_code, has_text, out in results:
                 ok = code == want_code and has_text
                 bad += not ok
                 print(f"  {'ok  ' if ok else 'FAIL'} exit={code} (expected {want_code}): {desc}")
                 if not ok: print("       " + "\n       ".join(out.strip().splitlines()[-8:]))
-        print(f"self-test {'OK' if not bad else 'FAILED'}: {len(cases) - bad}/{len(cases)} cases behave as expected")
+        print(f"self-test {'OK' if not bad else 'FAILED'}: {total - bad}/{total} cases behave as expected")
         return 1 if bad else 0
     finally:
         shutil.rmtree(base, ignore_errors=True)
@@ -521,6 +612,12 @@ def _self_test() -> int:
 
 if ARGS.self_test:
     sys.exit(_self_test())
+n_guard_files = 0
+if ARGS.data_dir is None:  # the guard covers the repository, so it runs on the repo's own data/ only
+    try:
+        n_guard_files = product_name_guard(_repo_files(), PRODUCT_NAME_SHA256, fail)
+    except (OSError, subprocess.SubprocessError) as e:  # fail closed: no file list means no clean bill
+        fail(f"product-name guard: cannot list the repository files with git ls-files ({type(e).__name__})")
 if errors:
     print("\n".join("FAIL: " + e for e in errors)); sys.exit(1)
 print(f"data OK: {len(I)} items, {len(rf_ids)} red flags, {len(rules['rules'])} grading rules, {len(personas['personas'])} personas")
@@ -528,5 +625,7 @@ print(f"site signal OK: {len(sr.primary_terms)} primary terms with G2 and G3 rul
       f"{len(NOT_COMPUTED_REASONS)} not_computed reasons and {len(ANSWER_KEY_PLANTED + ANSWER_KEY_HONEST)} answer-key "
       f"keys labelled, {len(sq.templates)} query template(s), {len(sq.response_codes)} response codes, "
       f"{len(sq.banned_phrases_en)} banned phrases")
+if ARGS.data_dir is None:
+    print(f"product names: 0 hits in {n_guard_files} files")
 if ARGS.data_dir is None and not ARGS.no_self_test:
     sys.exit(_self_test())

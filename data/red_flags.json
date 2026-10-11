@@ -1,5 +1,5 @@
 {
-  "_about": "Red flags for the example study. `rule` conditions are evaluated by backend/app/services/rules.py after every answer (DSL: item/derived + eq | in | gte | gt | lte | lt, combined with any/all). Flags with rule null are only raised when the agent calls report_red_flag or the post-call safety net finds them. Any red flag escalates at its level; false alarms are acceptable, misses are not. Symptom lists are condensed (not quoted) from the public Libtayo Medication Guide and CDC fever guidance; lines marked 'Design decision' need clinical review before real use. `say_script` overrides the default urgent/emergency line. page_phrase_en is read to the nurse and must never contain names or other identifiers beyond the subject ID.",
+  "_about": "Red flags for the example study. `rule` conditions are evaluated by backend/app/services/rules.py after every answer (DSL: item/derived + eq | in | gte | gt | lte | lt, combined with any/all). Flags with rule null are only raised when the agent calls report_red_flag or the post-call safety net finds them. Any red flag escalates at its level; false alarms are acceptable, misses are not. Symptom lists are condensed (not quoted) from the public US Medication Guide of an approved anti-PD-1 antibody (class only) and CDC fever guidance; lines marked 'Design decision' need clinical review before real use. `say_script` overrides the default urgent/emergency line. page_phrase_en is read to the nurse and must never contain names or other identifiers beyond the subject ID.",
   "version": "1.0.0",
   "levels": {
     "urgent": {
@@ -36,7 +36,7 @@
       },
       "sources": [
         "CDC, Watch Out for Fever (fever of 100.4 F / 38 C or higher during cancer treatment)",
-        "Libtayo Medication Guide (fever or flu-like symptoms)"
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on fever or flu-like symptoms"
       ]
     },
     {
@@ -66,7 +66,7 @@
         ]
       },
       "sources": [
-        "Libtayo Medication Guide (intestinal problems)",
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on intestinal problems",
         "Study NCT02760498 protocol, colitis/diarrhea management (p.154-155)",
         "CTCAE v5.0 Diarrhea Grade 3"
       ]
@@ -149,7 +149,7 @@
         ]
       },
       "sources": [
-        "Libtayo Medication Guide (lung problems)",
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on lung problems",
         "CTCAE v5.0 Dyspnea Grade 3"
       ]
     },
@@ -185,7 +185,7 @@
       "page_phrase_en": "Reports chest pain or pressure.",
       "rule": null,
       "sources": [
-        "Libtayo Medication Guide (lung and heart problems)"
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on lung and heart problems"
       ]
     },
     {
@@ -205,7 +205,7 @@
         "eq": "yes"
       },
       "sources": [
-        "Libtayo Medication Guide (nervous system problems)"
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on nervous system problems"
       ]
     },
     {
@@ -242,7 +242,7 @@
         "eq": "yes"
       },
       "sources": [
-        "Libtayo Medication Guide (skin problems)"
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on skin problems"
       ]
     },
     {
@@ -260,7 +260,7 @@
       "page_phrase_en": "Reports yellow skin or eyes, dark urine, or decreased urine.",
       "rule": null,
       "sources": [
-        "Libtayo Medication Guide (liver and kidney problems)"
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on liver and kidney problems"
       ]
     },
     {
@@ -277,7 +277,7 @@
       "page_phrase_en": "Reports a new fast or irregular heartbeat.",
       "rule": null,
       "sources": [
-        "Libtayo Medication Guide (heart problems)"
+        "US Medication Guide of an approved anti-PD-1 antibody (class only), section on heart problems"
       ]
     },
     {

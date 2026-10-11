@@ -27,6 +27,32 @@ def test_first_turn_scripts(key, lang):
     assert text.find(DISCLOSE[lang][1]) < text.find("?")
 
 
+SPANISH_TEAM_SCRIPTS = ["first_message", "first_message_inbound", "first_message_inbound_unknown", "voicemail"]
+
+
+@pytest.mark.req("REQ-001")
+@pytest.mark.parametrize("key", SPANISH_TEAM_SCRIPTS)
+def test_spanish_first_turn_says_del_equipo(key):
+    """D8: the Spanish templates say `del {study_team_name}` and study_team_name.es has no leading article,
+    so the first turn reads "del equipo", never "de el equipo"."""
+    assert "{study_team_name}" in content.scripts_doc()["lines"][key]["es"]
+    team = content.study_doc()["study_team_name"]["es"]
+    text = content.script(key, "es", study_team_name=team, patient_first_name="Rosa")
+    assert "del equipo" in text
+    assert "de el " not in text and "del el " not in text
+
+
+def test_rosa_replay_first_message_is_the_current_script():
+    """The recorded Rosa replay and its post-call fixture carry the first message rendered from data/."""
+    expected = content.script("first_message", "es", study_team_name=content.study_doc()["study_team_name"]["es"],
+                              patient_first_name="Rosa")
+    sc = json.loads((ROOT / "scenarios" / "rosa_es_urgent.json").read_text(encoding="utf-8"))
+    post_call = next(e for e in sc["events"] if e["type"] == "post_call")
+    assert post_call["transcript"][0]["text"] == expected
+    fx = json.loads((ROOT / "scenarios" / "fixtures" / "post_call_rosa.json").read_text(encoding="utf-8"))
+    assert fx["data"]["transcript"][0]["message"] == expected
+
+
 @pytest.mark.req("REQ-001")
 @pytest.mark.req("REQ-002")
 def test_agent_variants_use_the_disclosure_first_message():
