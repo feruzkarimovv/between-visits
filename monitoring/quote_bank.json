@@ -1,0 +1,99 @@
+{
+  "_about": "synthetic patient phrasings, AI-assisted, not clinical wording; English translations are AI-assisted. Our own words, written for the Site Signal simulation (docs/11-site-signal-sap.md §11.2 step 9): one bank per primary term x grade band x language. Never PRO-CTCAE item text, never spoken by the agent, never used for grading (grades come only from rules.py). Every quote drawn from this bank is labeled source synthetic and data_origin SIMULATED; a Spanish quote carries its English translation with translation_is_ai true, so the UI shows an AiLabel. No names, no medical advice.",
+  "data_origin": "SIMULATED",
+  "source": "synthetic",
+  "version": 1,
+  "quotes": {
+    "Diarrhea": {
+      "2": {
+        "en": [
+          {"quote": "My stomach's been off and I'm going to the bathroom several more times a day than I usually do."},
+          {"quote": "It's been runny and I keep having to go, a good handful of extra trips every day."},
+          {"quote": "I can still get through my day, but I'm in the bathroom way more often than normal."},
+          {"quote": "Since the weekend my bowels have been acting up and I'm going a lot more than my usual."},
+          {"quote": "It's not all day long, but I'm going noticeably more each day and it comes on fast."}
+        ],
+        "es": [
+          {"quote": "Tengo el estómago revuelto y voy al baño varias veces más al día de lo normal.", "translation_en": "My stomach is upset and I go to the bathroom several more times a day than usual."},
+          {"quote": "Hago del baño muy aguado y tengo que ir bastante más seguido que antes.", "translation_en": "My stools are very watery and I have to go quite a bit more often than before."},
+          {"quote": "Puedo hacer mis cosas, pero paso mucho más tiempo en el baño que de costumbre.", "translation_en": "I can do my things, but I spend a lot more time in the bathroom than usual."},
+          {"quote": "Desde el fin de semana estoy yendo al baño mucho más de lo que acostumbro.", "translation_en": "Since the weekend I have been going to the bathroom much more than I usually do."}
+        ]
+      },
+      "3": {
+        "en": [
+          {"quote": "It's nonstop. I've lost count of how many times I've gone today."},
+          {"quote": "I can barely leave the bathroom, it's been going all day and all night."},
+          {"quote": "I couldn't go to my grandson's game because I can't be away from a toilet."},
+          {"quote": "It's way past anything normal for me, I'm going over and over, about every hour."}
+        ],
+        "es": [
+          {"quote": "No para. Ya perdí la cuenta de cuántas veces he ido hoy.", "translation_en": "It doesn't stop. I have already lost count of how many times I have gone today."},
+          {"quote": "Casi no puedo salir del baño, ha sido todo el día y toda la noche.", "translation_en": "I can hardly leave the bathroom; it has been all day and all night."},
+          {"quote": "No pude ir a misa porque no me puedo alejar del baño.", "translation_en": "I couldn't go to Mass because I can't get away from the bathroom."},
+          {"quote": "Voy y voy, más o menos cada hora, nunca me había pasado así.", "translation_en": "I go and go, about every hour; it has never happened to me like this."}
+        ]
+      }
+    },
+    "Fever": {
+      "2": {
+        "en": [
+          {"quote": "I've been burning up, the thermometer read about 103."},
+          {"quote": "Chills since yesterday, and it got up to around 39 and a half."},
+          {"quote": "I was shivering under two blankets and my temperature was high, around 103."},
+          {"quote": "Last night my temperature was really high and I felt awful, sweating and then freezing."}
+        ],
+        "es": [
+          {"quote": "Anoche tuve escalofríos y el termómetro marcó más de 39.", "translation_en": "Last night I had chills and the thermometer showed over 39."},
+          {"quote": "Tengo calentura desde ayer, llegó a 39 y medio.", "translation_en": "I have had a fever since yesterday; it reached 39 and a half."},
+          {"quote": "Estaba temblando con dos cobijas encima y la fiebre en casi 40.", "translation_en": "I was shaking under two blankets with the fever at almost 40."},
+          {"quote": "Me sentí muy mal, sudaba y luego me daba frío, la temperatura bien alta.", "translation_en": "I felt very sick, sweating and then getting cold, the temperature very high."}
+        ]
+      },
+      "3": {
+        "en": [
+          {"quote": "The thermometer went over 104 and I was really scared."},
+          {"quote": "My temperature hit 40 and a half, I've never had one that high."},
+          {"quote": "It went above 104 last night and it just wouldn't come down."},
+          {"quote": "I was soaked and shaking and the reading was over 104."}
+        ],
+        "es": [
+          {"quote": "El termómetro pasó de 40 y me asusté mucho.", "translation_en": "The thermometer went past 40 and I got very scared."},
+          {"quote": "La fiebre llegó a 40 y medio, nunca la había tenido tan alta.", "translation_en": "The fever reached 40 and a half; I had never had it that high."},
+          {"quote": "Anoche subió a más de 40 y no bajaba.", "translation_en": "Last night it went up to over 40 and would not come down."},
+          {"quote": "Estaba empapado y temblando, y marcaba más de 40.", "translation_en": "I was soaked and shaking, and it read over 40."}
+        ]
+      }
+    },
+    "Dyspnea": {
+      "2": {
+        "en": [
+          {"quote": "I get winded just walking to the mailbox and have to stop to catch my breath."},
+          {"quote": "Carrying the laundry up the stairs leaves me huffing and puffing now."},
+          {"quote": "Making the bed wears me out, I'm breathing hard afterwards."},
+          {"quote": "I used to walk the dog around the block, now I have to rest halfway."}
+        ],
+        "es": [
+          {"quote": "Me falta el aire nada más con caminar al buzón y tengo que pararme.", "translation_en": "I run out of air just walking to the mailbox and I have to stop."},
+          {"quote": "Subir la ropa por las escaleras me deja jadeando.", "translation_en": "Carrying the laundry up the stairs leaves me panting."},
+          {"quote": "Tender la cama me cansa y quedo respirando fuerte.", "translation_en": "Making the bed tires me out and I am left breathing hard."},
+          {"quote": "Antes daba la vuelta a la cuadra con el perro, ahora tengo que descansar a medio camino.", "translation_en": "I used to walk around the block with the dog; now I have to rest halfway."}
+        ]
+      },
+      "3": {
+        "en": [
+          {"quote": "Even sitting in my chair I feel like I can't get enough air."},
+          {"quote": "I get out of breath just talking to you right now."},
+          {"quote": "Lying down is hard, I have to prop myself up on pillows to breathe."},
+          {"quote": "I'm breathless even when I'm not doing anything at all."}
+        ],
+        "es": [
+          {"quote": "Aun sentada en mi sillón siento que no me alcanza el aire.", "translation_en": "Even sitting in my armchair I feel I can't get enough air."},
+          {"quote": "Me falta el aire nada más de estar hablando con usted.", "translation_en": "I run out of air just from talking with you."},
+          {"quote": "Acostado me cuesta respirar, tengo que ponerme almohadas para poder respirar.", "translation_en": "Lying down it is hard to breathe; I have to put pillows behind me to be able to breathe."},
+          {"quote": "Me falta el aire aunque esté quieto, sin hacer nada.", "translation_en": "I am short of air even when I am still, doing nothing."}
+        ]
+      }
+    }
+  }
+}

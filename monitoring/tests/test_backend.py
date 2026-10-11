@@ -25,6 +25,8 @@ g = b.grade("Dyspnea", {"SOB_SEV": A("mild"), "SOB_EXERTION": A("light_activity"
 assert (g.provisional_grade, g.grade_basis) == (2, "rule"), g
 assert b.level_for(b.red_flags({"TEMP_HIGHEST": A(numeric_value=39.5, unit="celsius")}, None)) == "urgent"
 assert b.level_for(b.red_flags({"FEVER_CHILLS": A("no")}, None)) == "none"
+assert not b.term_present("Fever", {"FEVER_CHILLS": A("no")})
+assert b.episodes.STATUSES[0] == "paged" and callable(b.episodes.analyze)
 print("ok")
 """
 
@@ -36,12 +38,13 @@ def test_backend_bridge_imports_without_env_db_or_llm(tmp_path: Path) -> None:
     assert proc.returncode == 0 and proc.stdout.strip() == "ok", proc.stderr
 
 
-def test_backend_bridge_imports_only_content_and_rules() -> None:
+def test_backend_bridge_imports_only_content_rules_and_episodes() -> None:
     tree = ast.parse((MONITORING_DIR / "bvsignal" / "_backend.py").read_text())
     app_imports = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("app"):
-            app_imports.add(node.module + ":" + ",".join(sorted(a.name for a in node.names if node.module == "app")))
+            modules = ("app", "app.services")
+            app_imports.add(node.module + ":" + ",".join(sorted(a.name for a in node.names if node.module in modules)))
         elif isinstance(node, ast.Import):
             assert all(not a.name.startswith("app") for a in node.names)
-    assert app_imports == {"app:content", "app.services.rules:"}
+    assert app_imports == {"app:content", "app.services:episodes", "app.services.rules:"}

@@ -22,11 +22,14 @@ cd monitoring && uv run ruff check .
 |---|---|---|
 | `params.yaml` | Every pre-registered parameter (SAP §11.3, §11.4), each number with a citation or `ASSUMPTION`; `signal_rules_sha256` and `frozen_inputs` | S1 |
 | `bvsignal/seed.py` | Evaluation-seed derivation, replicate keys, beacon fetch, run log, frozen-input hashes | S1 |
-| `bvsignal/_backend.py` | Puts `backend/` on `sys.path` and re-exports the rules engine (`grade`, `red_flags`, `level_for`); no `.env`, database or LLM | S1 |
+| `bvsignal/_backend.py` | Puts `backend/` on `sys.path` and re-exports the rules engine (`grade`, `term_present`, `red_flags`, `level_for`) and `app.services.episodes` (B16); no `.env`, database or LLM | S1, S2 |
+| `bvsignal/roster.py` | Parametric roster (SAP §11.2 step 1): sites 101–120 with fictional names (101 = Hillside Cancer Center, fictional, always honest), patients per site, Spanish share, age and pace, enrollment day | S2 |
+| `bvsignal/simulate.py` | One simulated study per replicate key (SAP §11.2, §11.4): latent episodes, q3w schedule, answers graded by the real `rules.py`, mapping error, red flags, site AE log, answer key; the `Study` object every indicator reads. `python -m bvsignal.simulate --seed dev --studies N [--with-episodes] [--out SCRATCH]` times studies (dev seed only, never into `out/`) | S2 |
+| `quote_bank.json` | Synthetic EN/ES patient phrasings per term × grade band (our own words, AI-assisted; Spanish entries with AI-assisted English translations); never PRO-CTCAE wording, never spoken by the agent | S2 |
 | `planning/plan_power.py`, `planning/planning_grid.json` | Pre-tag planning grid (SAP §11.5 rules P1 and P2), dev seed, **planning only, not a result** | S1 |
 | `planning/check_params_sap.py` | Checks `params.yaml` against the SAP §11.3 and §11.4 tables and the §11.5 values | S1 |
 | `seed_beacon.json` | Beacon round and randomness, the selection times and every failed attempt, fetched once after the tag | after the tag |
-| `bvsignal/{roster,simulate,match,indicators,calibrate,simaerep_classic,equity,run,validate,blind,report}.py`, `out/` | Simulation, analysis and committed outputs | after the `sap-v1` tag (S2–S10) |
+| `bvsignal/{match,indicators,calibrate,simaerep_classic,equity,run,validate,blind,report}.py`, `out/` | Analysis and committed outputs | after the `sap-v1` tag (S3–S10) |
 
 ## Seeds and pre-registration order (SAP §1.2, §1.3)
 
