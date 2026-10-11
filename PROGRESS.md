@@ -48,7 +48,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | B | S7 validate | todo | | | |
 | B | S8 blind run CLI | todo | | | |
 | B | S9 equity | todo | | | |
-| B | B16b Site Signal fixtures | todo | | | |
+| B | B16b Site Signal fixtures | done | c8112ff | 7 JSON files under backend/tests/fixtures/site_signal/ all load ('ok'); grep -L 'fixture, not a result' prints nothing; 20 fictional sites 101-120 with the §11.4 answer-key mix, data_origin SIMULATED, placeholders only (commit 0000000, seed 0, rates 0.0); make test exit 0 (ruff, 446 pytest, data + self-test 19/19, product names 0 hits, agent 29 + 18 OK, tsc+eslint); monitoring ruff clean, 64 passed 1 skipped; product-name guard 0 hits over the 7 fixtures; gitleaks no leaks, scan_numbers 0 hits; no frozen inputs, monitoring/out or validation/site_signal files touched. Open for WS5/B17: list files carry `_about` per element (no top-level provenance), simaerep prob direction follows docs/03 §5.1 not SAP §10.2, proposed thresholds/summary/equity shapes need review | |
 | B | B17 Site Signal read API | todo | | | |
 | B | B18 site query flow | todo | | | |
 | B | B19 blind run endpoints | todo | | | |
