@@ -269,6 +269,7 @@ Backward-compatible additions; `GET /openapi.json` is the exact schema (`make ty
 | GET | `/api/site-signal/equity` | cra, sponsor | no | none | B17 (UI at C) |
 | POST | `/api/site-queries` | cra | no | `site_query.drafted` | B18 |
 | GET | `/api/site-queries` | cra, sponsor, coordinator | no | none | B18 |
+| GET | `/api/site-queries/response-codes` | cra, sponsor, coordinator | no | none | F14 |
 | GET | `/api/site-queries/{query_id}` | cra, sponsor, coordinator | no | none | B18 |
 | PATCH | `/api/site-queries/{query_id}` | cra | no | `site_query.edited` | B18 |
 | POST | `/api/site-queries/{query_id}/approve` | cra | no | `site_query.approved` | B18 |
@@ -479,6 +480,19 @@ Returns `[SiteQueryOut]`, newest first.
 - `coordinator` sees only `sent`, `answered` and `closed` queries. Drafts never appear, even with `status=draft`, which returns `[]`. The mock inbox stands in for the coordinator of whichever site was queried, so it covers all sites unless `site_id` is given.
 - Errors: 403 `wrong_role` (investigator).
 
+#### `GET /api/site-queries/response-codes` (cra, sponsor, coordinator)
+
+Returns the coded responses a site can give, in file order, from `data/site_queries.json` `response_codes`:
+
+```json
+[{"code":"entered_now","label_en":"<label_en from data/site_queries.json>"},
+ {"code":"recorded_as_medical_history","label_en":"..."}]
+```
+
+- The mock site inbox (`/site-inbox`, WS3 F14) builds its respond form from this list, so no response code or label is typed in the frontend. `POST .../respond` accepts exactly these codes.
+- A read of a committed file: not audited. The route is declared before `/api/site-queries/{query_id}`, and query IDs always start with `sq_`, so the two never collide.
+- Errors: 403 `wrong_role` (investigator).
+
 #### `GET /api/site-queries/{query_id}` (cra, sponsor, coordinator)
 
 Returns `SiteQueryOut` plus `episodes` (the cited `Episode` objects) and `audit` (`AuditOut` rows for this query, oldest first).
@@ -671,7 +685,7 @@ A role-restricted action called with any other role now returns **403** `wrong_r
 | `GET /api/sites`, `GET /api/sites/{site_id}`, `GET /api/site-signal/answer-key`, `GET /api/site-signal/equity` | cra, sponsor |
 | `POST /api/site-queries`, `PATCH /api/site-queries/{id}`, `.../approve`, `.../close` | cra |
 | `POST /api/site-queries/{id}/respond` | coordinator |
-| `GET /api/site-queries`, `GET /api/site-queries/{id}` | cra, sponsor, coordinator |
+| `GET /api/site-queries`, `GET /api/site-queries/response-codes`, `GET /api/site-queries/{id}` | cra, sponsor, coordinator |
 | `/api/site-signal/blind-run*` (demo only, §5.5): not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)) | cra, sponsor |
 | Every other `/api/*` route | any role (unchanged) |
 
