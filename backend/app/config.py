@@ -14,6 +14,8 @@ ROOT = BACKEND_DIR.parent
 DATA_DIR = ROOT / "data"
 SCENARIOS_DIR = ROOT / "scenarios"
 AGENT_DIR = ROOT / "agent"
+# Written by `make sync-agent` (gitignored). Cloud hosts get the same JSON through AGENTS_LOCK_JSON (docs/03 §6.9).
+AGENTS_LOCK_PATH = AGENT_DIR / "agents.lock.json"
 # Committed Site Signal outputs (docs/03 §6.9, MONITORING_OUT); written by `make site-signal`.
 DEFAULT_MONITORING_OUT = ROOT / "monitoring" / "out"
 
@@ -38,6 +40,9 @@ class Settings(BaseSettings):
     tool_shared_secret: str = TOOL_SECRET_PLACEHOLDER
     display_tz: str = "America/New_York"
     ack_timeout_seconds: int = 90
+    # Optional dashboard token (docs/03 §6.8): when set, every /api/* request except GET /api/health needs
+    # X-BV-Token with this value. Set only on the private live instance; it is not authentication.
+    bv_dashboard_token: str = ""
 
     # ElevenLabs
     elevenlabs_api_key: str = ""
@@ -46,6 +51,9 @@ class Settings(BaseSettings):
     elevenlabs_llm: str = "claude-sonnet-5-5"  # pinned to the evaluated model (agent/variants.json, V9)
     elevenlabs_voice_id_en: str = ""
     elevenlabs_voice_id_es: str = ""
+    # Variant → agent_id map as a JSON string, used only when agent/agents.lock.json is absent (cloud deploys,
+    # docs/03 §6.9): the lock file is gitignored and never enters an image.
+    agents_lock_json: str = ""
 
     # Gemini
     gemini_api_key: str = ""
@@ -85,6 +93,7 @@ class Settings(BaseSettings):
     # frontend (read so config is complete; unused by the backend)
     next_public_api_base_url: str = "http://localhost:8000"
     next_public_use_fixtures: str = "0"
+    next_public_bv_dashboard_token: str = ""
 
     @field_validator("replay_speed", mode="before")
     @classmethod
@@ -124,6 +133,11 @@ class Settings(BaseSettings):
             path.parent.mkdir(parents=True, exist_ok=True)
             return prefix + str(path)
         return url
+
+    @property
+    def dashboard_token(self) -> str | None:
+        """BV_DASHBOARD_TOKEN without surrounding whitespace, or None when unset: no token check (docs/03 §6.8)."""
+        return self.bv_dashboard_token.strip() or None
 
     @property
     def effective_pager_channel(self) -> str:

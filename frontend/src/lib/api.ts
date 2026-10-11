@@ -8,6 +8,12 @@ export const API_BASE_URL = (
 
 export const USE_FIXTURES = process.env.NEXT_PUBLIC_USE_FIXTURES === "1";
 
+/**
+ * Optional dashboard token for the private live instance (docs/03 §6.8). Inlined into the browser bundle,
+ * so it keeps casual traffic off that instance; it is not authentication. Unset by default and in demo mode.
+ */
+const DASHBOARD_TOKEN = process.env.NEXT_PUBLIC_BV_DASHBOARD_TOKEN || "";
+
 export const NETWORK_ERROR_MESSAGE =
   "Can't reach the backend. Check that `make dev` is running.";
 
@@ -59,7 +65,8 @@ function parseError(status: number, json: unknown): ApiError {
 
 /**
  * The one way the dashboard talks to the backend. Adds the demo identity
- * headers, parses JSON and throws `ApiError` for `{"error":{code,message}}`.
+ * headers (and X-BV-Token when NEXT_PUBLIC_BV_DASHBOARD_TOKEN is set), parses
+ * JSON and throws `ApiError` for `{"error":{code,message}}`.
  * With NEXT_PUBLIC_USE_FIXTURES=1 every call is served from src/fixtures.
  */
 export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> {
@@ -79,6 +86,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
     "X-BV-User": identity.user,
     "X-BV-Role": identity.role,
   };
+  if (DASHBOARD_TOKEN) headers["X-BV-Token"] = DASHBOARD_TOKEN;
   let body: string | undefined;
   if (init.body !== undefined) {
     headers["Content-Type"] = "application/json";

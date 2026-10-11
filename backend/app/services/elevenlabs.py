@@ -1,7 +1,8 @@
 """ElevenLabs Agents: outbound phone calls (native Twilio) and browser session tokens.
 
 Exact request shapes: docs/04-voice-agent.md. The variant → agent_id map is written by
-agent/sync_agent.py to agent/agents.lock.json. Tests install a fake with set_client().
+agent/sync_agent.py to agent/agents.lock.json; a cloud host without that (gitignored) file reads the same JSON
+from AGENTS_LOCK_JSON (docs/03 §6.9). Tests install a fake with set_client().
 """
 
 import json
@@ -12,7 +13,7 @@ from typing import Protocol
 import httpx
 
 from app import content
-from app.config import AGENT_DIR, get_settings
+from app.config import AGENTS_LOCK_PATH, get_settings
 from app.models import CheckIn, Patient, Study
 
 log = logging.getLogger("bv.elevenlabs")
@@ -41,10 +42,26 @@ class Client(Protocol):
 
 
 def load_lock() -> dict[str, str]:
-    p = AGENT_DIR / "agents.lock.json"
-    if not p.exists():
+    """Variant → agent_id: agent/agents.lock.json, else AGENTS_LOCK_JSON (cloud deploys, docs/03 §6.9).
+
+    A missing or unreadable map means "not synced" ({}): calls stay off and the dashboard says why. The raw
+    value is never logged.
+    """
+    if AGENTS_LOCK_PATH.exists():
+        origin, raw = "agent/agents.lock.json", AGENTS_LOCK_PATH.read_text(encoding="utf-8")
+    else:
+        origin, raw = "AGENTS_LOCK_JSON", get_settings().agents_lock_json
+        if not raw.strip():
+            return {}
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        log.error("agents_lock_invalid source=%s reason=not_json", origin)
         return {}
-    return json.loads(p.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        log.error("agents_lock_invalid source=%s reason=not_an_object", origin)
+        return {}
+    return {str(variant): agent_id for variant, agent_id in data.items() if isinstance(agent_id, str) and agent_id}
 
 
 def agent_id_for(variant: str) -> str:
@@ -64,7 +81,7 @@ def readiness() -> dict[str, str | None]:
     elif not s.elevenlabs_api_key:
         base = "ElevenLabs isn't configured (ELEVENLABS_API_KEY)."
     elif len(lock) < 4:
-        base = "ElevenLabs agents aren't synced yet (make sync-agent)."
+        base = "ElevenLabs agents aren't synced yet (make sync-agent; on a cloud host, set AGENTS_LOCK_JSON)."
     phone = base or (None if s.elevenlabs_phone_number_id else
                      "Phone calls aren't set up yet: import the Twilio number into ElevenLabs "
                      "(ELEVENLABS_PHONE_NUMBER_ID). Use Call in browser.")

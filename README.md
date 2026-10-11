@@ -8,6 +8,8 @@ Between Visits is a voice agent that phones cancer-trial patients in the days af
 
 **Demo video:** _TODO_ · **Deck:** _TODO_
 
+**Live demo:** not deployed yet: see [`docs/deploy.md`](docs/deploy.md).
+
 ## Why
 
 - **Regeneron's own feedback (mentor conversation, Oct 10):** the patients trials struggle to reach and keep are the ones who don't speak English and the ones who move slowly. English-only staff, apps and fast voice bots fail exactly these people.
@@ -109,6 +111,8 @@ make seed && make dev
 ```
 
 See `docs/04-voice-agent.md` for the Twilio, ElevenLabs and paging setup, including the inbound call-in fallback (`make sync-agent ARGS="--inbound es-extra_time"`).
+
+**Deploy:** `render.yaml` defines a public demo pair (`bv-demo-api`, `bv-demo-web`; replay only) and a private live API (`bv-live-api`; real calls, `X-BV-Token` on every `/api/*` request except health). [`docs/deploy.md`](docs/deploy.md) has the Render steps, the environment variables per service, `AGENTS_LOCK_JSON`, the SQLite single-instance caveat and a Cloud Run alternative. So far it is verified locally only.
 
 | Command | What it does |
 |---|---|

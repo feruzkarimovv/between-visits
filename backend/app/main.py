@@ -1,7 +1,8 @@
-"""FastAPI app factory: CORS, error envelope, lifespan (create tables, re-page loop), routers."""
+"""FastAPI app factory: CORS, dashboard token, error envelope, lifespan (tables, re-page loop), routers."""
 
 import asyncio
 import contextlib
+import hmac
 import logging
 import os
 import subprocess
@@ -12,6 +13,8 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.datastructures import Headers
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.config import ROOT, assert_safe_startup, get_settings
 from app.db import create_all
@@ -41,6 +44,49 @@ def git_commit() -> str:
         return "unknown"
 
 
+# Optional dashboard token (docs/03 §6.8, R6). Only the dashboard API is gated: /agent/tools/* and /webhooks/* keep
+# their own checks (tool secret, HMAC, ack tokens), and the platform health check needs GET /api/health.
+DASHBOARD_TOKEN_HEADER = "X-BV-Token"
+TOKEN_EXEMPT = {("GET", "/api/health")}
+
+
+def needs_dashboard_token(method: str, path: str) -> bool:
+    """True for every /api/* request except GET /api/health."""
+    if not (path == "/api" or path.startswith("/api/")):
+        return False
+    return (method.upper(), path) not in TOKEN_EXEMPT
+
+
+class DashboardTokenMiddleware:
+    """401 `invalid_token` for a gated request without the right X-BV-Token; everything else passes untouched.
+
+    Added inside CORSMiddleware, so CORS preflights are answered before this check (a browser never sends custom
+    headers on a preflight) and a 401 still carries the CORS headers the dashboard needs to read the error code.
+    The token keeps casual traffic off a private instance; it is not authentication.
+    """
+
+    def __init__(self, app: ASGIApp, token: str) -> None:
+        self.app = app
+        self.token = token.encode()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or not needs_dashboard_token(scope["method"], scope["path"]):
+            await self.app(scope, receive, send)
+            return
+        sent = Headers(scope=scope).get(DASHBOARD_TOKEN_HEADER, "").strip().encode()
+        if hmac.compare_digest(sent, self.token):
+            await self.app(scope, receive, send)
+            return
+        log.warning("dashboard_token_rejected method=%s path=%s header_present=%s",
+                    scope["method"], scope["path"], bool(sent))
+        response = JSONResponse(
+            status_code=401,
+            content={"error": {"code": "invalid_token",
+                               "message": f"This instance needs the dashboard token in the {DASHBOARD_TOKEN_HEADER} header."}},
+        )
+        await response(scope, receive, send)
+
+
 def create_app(start_background: bool = True) -> FastAPI:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     settings = get_settings()
@@ -54,7 +100,8 @@ def create_app(start_background: bool = True) -> FastAPI:
             from app.services.escalation import repage_loop
 
             task = asyncio.create_task(repage_loop())
-        log.info("startup demo_mode=%s pager=%s", settings.demo_mode, settings.effective_pager_channel)
+        log.info("startup demo_mode=%s pager=%s dashboard_token=%s", settings.demo_mode,
+                 settings.effective_pager_channel, "on" if settings.dashboard_token else "off")
         yield
         if task:
             task.cancel()
@@ -63,6 +110,9 @@ def create_app(start_background: bool = True) -> FastAPI:
 
     app = FastAPI(title="Between Visits API", version=VERSION, lifespan=lifespan)
     app.state.commit = git_commit()
+    if settings.dashboard_token:
+        # Added first, so it runs inside CORSMiddleware (the middleware added last is the outermost).
+        app.add_middleware(DashboardTokenMiddleware, token=settings.dashboard_token)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,

@@ -21,6 +21,9 @@ os.environ.update(
         "PUBLIC_BASE_URL": "https://bv-test.example",
         "TWILIO_AUTH_TOKEN": "twilio-test-token",
         "TWILIO_FROM_NUMBER": "+15555550100",
+        # Off unless a test turns it on (test_dashboard_token.py), whatever a local .env says (docs/03 §6.8, §6.9).
+        "BV_DASHBOARD_TOKEN": "",
+        "AGENTS_LOCK_JSON": "",
     }
 )
 
