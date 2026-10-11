@@ -23,6 +23,7 @@ import {
   Th,
   cn,
   inputClass,
+  selectClass,
 } from "@/components/ui/primitives";
 import { DataOriginBadge } from "@/components/DataOriginBadge";
 import { RelativeTime } from "@/components/RelativeTime";
@@ -58,6 +59,7 @@ export default function SiteInboxPage() {
   return (
     <>
       <PageHeader
+        eyebrow="Mock site side"
         title="Site inbox"
         subtitle="Data-completeness queries a CRA approved and sent to a site. Drafts never appear here."
       />
@@ -74,14 +76,14 @@ export default function SiteInboxPage() {
         )
       ) : (
         <>
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <label htmlFor="site-filter" className="mb-1 block text-sm font-medium text-ink-muted">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div className="w-52 max-w-full">
+              <label htmlFor="site-filter" className="mb-1.5 block text-sm font-medium text-ink-muted">
                 Site
               </label>
               <select
                 id="site-filter"
-                className={cn(inputClass, "w-48")}
+                className={cn(selectClass, "h-10")}
                 value={siteFilter}
                 onChange={(e) => setSiteFilter(e.target.value)}
               >
@@ -130,16 +132,18 @@ function MockBanner({ role, user }: { role: Role; user: string }) {
   return (
     <div
       role="note"
-      className="mb-4 flex items-start gap-3 rounded-lg border border-dashed border-slate-400 bg-slate-50 px-4 py-3"
+      className="bv-grid-light mb-5 flex items-start gap-3.5 rounded-2xl border border-dashed border-slate-400 bg-slate-50 px-5 py-4"
     >
-      <Mailbox className="mt-0.5 size-5 shrink-0 text-slate-600" aria-hidden />
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-600 shadow-card ring-1 ring-slate-200" aria-hidden>
+        <Mailbox className="size-5" />
+      </span>
       <div className="min-w-0 space-y-1">
         <p className="font-semibold text-ink">Mock site inbox (synthetic data)</p>
-        <p className="text-sm text-ink-muted">
+        <p className="text-sm leading-6 text-ink-muted">
           Stands in for the coordinator of whichever site was queried, so it lists approved queries for every site. It is
           not an EDC or e-mail integration. Subject IDs only; patient quotes stay on the sponsor side.
         </p>
-        <p className="text-sm text-ink-muted">{roleLine}</p>
+        <p className="text-sm leading-6 font-medium text-ink">{roleLine}</p>
       </div>
     </div>
   );
@@ -147,9 +151,20 @@ function MockBanner({ role, user }: { role: Role; user: string }) {
 
 function StatusCounts({ queries }: { queries: SiteQuery[] }) {
   const n = (s: SiteQueryStatus) => queries.filter((x) => x.status === s).length;
+  const pill = "inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-0.5 shadow-card";
   return (
-    <p className="text-sm text-ink-muted tabular" aria-live="polite">
-      {n("sent")} sent · {n("answered")} answered · {n("closed")} closed
+    <p className="flex flex-wrap items-center gap-1.5 text-sm text-ink-muted tabular" aria-live="polite">
+      <span className={pill}>
+        <span className="font-semibold text-ink">{n("sent")}</span> sent
+      </span>
+      <span className="sr-only"> · </span>
+      <span className={pill}>
+        <span className="font-semibold text-ink">{n("answered")}</span> answered
+      </span>
+      <span className="sr-only"> · </span>
+      <span className={pill}>
+        <span className="font-semibold text-ink">{n("closed")}</span> closed
+      </span>
     </p>
   );
 }
@@ -186,18 +201,23 @@ function QueryCard({ query: q, role }: { query: SiteQuery; role: Role }) {
   const detail = useSiteQuery(q.id);
   return (
     <Card as="article" className="overflow-hidden">
-      <div className="border-b border-line px-4 py-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-ink">Site {q.site_id}</span>
-          <QueryStatusChip status={q.status} />
-          <DataOriginBadge origin={q.data_origin} />
-          <code className="font-mono text-sm text-ink-subtle">{q.id}</code>
+      <div className="flex items-start gap-3.5 border-b border-line px-5 py-4">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-ink-muted ring-1 ring-line" aria-hidden>
+          <Mailbox className="size-5" />
+        </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-ink">Site {q.site_id}</span>
+            <QueryStatusChip status={q.status} />
+            <DataOriginBadge origin={q.data_origin} />
+            <code className="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-ink-muted ring-1 ring-line ring-inset">{q.id}</code>
+          </div>
+          <h2 className="mt-1.5 text-lg leading-7 font-semibold text-ink">{q.title_en}</h2>
         </div>
-        <h2 className="mt-1 text-base font-semibold text-ink">{q.title_en}</h2>
       </div>
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_17rem]">
         <div className="min-w-0 space-y-4">
-          <div className="rounded-md border border-line bg-gray-50 px-3 py-2.5 text-sm leading-6 whitespace-pre-line text-ink">
+          <div className="rounded-xl border border-line bg-gray-50/70 px-4 py-3 text-[15px] leading-6 whitespace-pre-line text-ink">
             {q.body_en}
           </div>
           <CitedEpisodes query={q} detail={detail.data} pending={detail.isPending} error={detail.isError ? detail.error : null} />
@@ -205,7 +225,7 @@ function QueryCard({ query: q, role }: { query: SiteQuery; role: Role }) {
           {role === "coordinator" && q.status === "sent" ? <RespondForm query={q} /> : null}
           {role === "cra" && q.status === "answered" ? <CloseQueryControl query={q} /> : null}
         </div>
-        <div className="space-y-3">
+        <div className="space-y-4 lg:border-l lg:border-line lg:pl-5">
           <StatusTimeline query={q} />
           {role === "cra" || role === "sponsor" ? (
             <Link
@@ -249,9 +269,9 @@ function CitedEpisodes({
     (a, b) => a.episode_date.localeCompare(b.episode_date) || a.episode_id.localeCompare(b.episode_id),
   );
   return (
-    <div className="rounded-md border border-line">
+    <div className="overflow-hidden rounded-xl border border-line">
       <Table>
-        <caption className="px-4 pt-2.5 pb-1 text-left text-sm font-semibold text-ink">
+        <caption className="px-5 pt-3 pb-2 text-left text-sm font-semibold text-ink">
           Cited episodes ({episodes.length})
         </caption>
         <thead>
@@ -264,7 +284,7 @@ function CitedEpisodes({
         <tbody>
           {episodes.map((e) => (
             <tr key={e.episode_id}>
-              <Td className="font-mono whitespace-nowrap">{e.subject_id}</Td>
+              <Td className="font-mono font-medium whitespace-nowrap text-ink">{e.subject_id}</Td>
               <Td>{e.term}</Td>
               <Td className="tabular whitespace-nowrap">{formatDay(e.episode_date)}</Td>
             </tr>
@@ -280,7 +300,7 @@ function SiteResponse({ query: q }: { query: SiteQuery }) {
   return (
     <div className="space-y-2">
       {q.response_label_en ? (
-        <div className="rounded-md border border-line px-3 py-2.5">
+        <div className="rounded-xl border border-slate-300 bg-white px-4 py-3 shadow-card">
           <p className="text-sm text-ink-subtle">Site response</p>
           <p className="font-medium text-ink">{q.response_label_en}</p>
           {q.response_note ? (
@@ -289,7 +309,7 @@ function SiteResponse({ query: q }: { query: SiteQuery }) {
         </div>
       ) : null}
       {q.closure_note ? (
-        <div className="rounded-md border border-line px-3 py-2.5">
+        <div className="rounded-xl border border-line bg-gray-50/70 px-4 py-3">
           <p className="text-sm text-ink-subtle">CRA closure note</p>
           <p className="text-sm whitespace-pre-line text-ink">{q.closure_note}</p>
         </div>
@@ -306,20 +326,28 @@ function StatusTimeline({ query: q }: { query: SiteQuery }) {
   ];
   return (
     <div>
-      <h3 className="mb-2 text-sm font-semibold text-ink">Status timeline</h3>
-      <ol className="space-y-3">
+      <h3 className="mb-3 text-sm font-semibold text-ink">Status timeline</h3>
+      <ol>
         {steps.map((s, i) => {
           const done = Boolean(s.at);
           const prevDone = i === 0 || Boolean(steps[i - 1].at);
           return (
-            <li key={s.key} className="flex gap-2.5" data-step={s.key} data-done={done || undefined}>
+            <li key={s.key} className="relative flex gap-3 pb-4 last:pb-0" data-step={s.key} data-done={done || undefined}>
+              {i < steps.length - 1 ? (
+                <span
+                  aria-hidden
+                  className={cn("absolute top-5 bottom-0 left-[0.6875rem] w-px", done ? "bg-slate-400" : "bg-line")}
+                />
+              ) : null}
               <span
                 aria-hidden
                 className={cn(
-                  "mt-1.5 size-2.5 shrink-0 rounded-full border",
-                  done ? "border-slate-700 bg-slate-700" : "border-slate-300 bg-white",
+                  "relative mt-0.5 flex size-[1.375rem] shrink-0 items-center justify-center rounded-full border-2 bg-white",
+                  done ? "border-slate-700" : prevDone ? "border-dashed border-slate-400" : "border-slate-200",
                 )}
-              />
+              >
+                {done ? <span className="size-2 rounded-full bg-slate-700" /> : null}
+              </span>
               <div className="min-w-0 text-sm">
                 <p className={cn("font-medium", done ? "text-ink" : "text-ink-subtle")}>{s.label}</p>
                 {done ? (
@@ -357,7 +385,7 @@ function RespondForm({ query: q }: { query: SiteQuery }) {
 
   return (
     <form
-      className="space-y-3 rounded-md border border-slate-300 p-3"
+      className="space-y-4 rounded-xl border border-line bg-gray-50/70 p-4"
       onSubmit={(e) => {
         e.preventDefault();
         if (code) respond.mutate();
@@ -373,9 +401,12 @@ function RespondForm({ query: q }: { query: SiteQuery }) {
             Couldn&apos;t load the response codes: {errorMessage(codes.error)}
           </p>
         ) : (
-          <div className="mt-2 space-y-1.5">
+          <div className="mt-2.5 grid gap-2">
             {codes.data.map((c) => (
-              <label key={c.code} className="flex cursor-pointer items-start gap-2 text-sm text-ink">
+              <label
+                key={c.code}
+                className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink shadow-card transition-colors hover:border-line-strong has-[:checked]:border-accent-600 has-[:checked]:bg-accent-50/60 has-[:checked]:ring-1 has-[:checked]:ring-accent-600"
+              >
                 <input
                   type="radio"
                   name={`${uid}-code`}
@@ -383,7 +414,7 @@ function RespondForm({ query: q }: { query: SiteQuery }) {
                   checked={code === c.code}
                   onChange={() => setCode(c.code)}
                   disabled={respond.isPending}
-                  className="mt-1"
+                  className="mt-1 accent-accent-700"
                 />
                 <span>{c.label_en}</span>
               </label>
@@ -392,12 +423,12 @@ function RespondForm({ query: q }: { query: SiteQuery }) {
         )}
       </fieldset>
       <div>
-        <label htmlFor={`${uid}-note`} className="mb-1 block text-sm font-medium text-ink-muted">
+        <label htmlFor={`${uid}-note`} className="mb-1.5 block text-sm font-medium text-ink-muted">
           Note to the CRA (optional)
         </label>
         <textarea
           id={`${uid}-note`}
-          className={cn(inputClass, "min-h-20")}
+          className={cn(inputClass, "min-h-20 bg-white")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           disabled={respond.isPending}

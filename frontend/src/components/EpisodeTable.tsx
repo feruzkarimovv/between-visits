@@ -134,7 +134,11 @@ export function EpisodeTable({
 
   return (
     <div>
-      <div role="group" aria-label="Filter episodes by status" className="flex flex-wrap gap-1.5 border-b border-line px-4 py-2.5">
+      <div
+        role="group"
+        aria-label="Filter episodes by status"
+        className="flex flex-wrap gap-1 border-b border-line bg-gray-50/70 px-5 py-3"
+      >
         {FILTERS.map((f) => {
           const n = counts.get(f) ?? 0;
           if (f !== "all" && n === 0) return null;
@@ -145,11 +149,21 @@ export function EpisodeTable({
               aria-pressed={filter === f}
               onClick={() => setFilter(f)}
               className={cn(
-                "rounded-full border px-2.5 py-0.5 text-sm whitespace-nowrap",
-                filter === f ? "border-slate-800 bg-slate-800 text-white" : "border-line bg-white text-ink-muted hover:text-ink",
+                "inline-flex h-8 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium whitespace-nowrap transition-colors",
+                filter === f
+                  ? "border-line bg-white text-ink shadow-card"
+                  : "border-transparent text-ink-muted hover:bg-white/70 hover:text-ink",
               )}
             >
-              {f === "all" ? "All" : STATUS[f].label} <span className="tabular">{n}</span>
+              {f === "all" ? "All" : STATUS[f].label}{" "}
+              <span
+                className={cn(
+                  "rounded-full px-1.5 text-sm tabular",
+                  filter === f ? "bg-slate-800 text-white" : "bg-gray-200/80 text-ink-muted",
+                )}
+              >
+                {n}
+              </span>
             </button>
           );
         })}
@@ -162,7 +176,7 @@ export function EpisodeTable({
               <Th className="w-10">
                 <input
                   type="checkbox"
-                  className="size-4 align-middle"
+                  className="size-4 cursor-pointer align-middle accent-accent-700 disabled:cursor-not-allowed"
                   aria-label="Select every unmatched episode shown"
                   checked={allInViewSelected}
                   disabled={eligibleInView.length === 0}
@@ -182,7 +196,7 @@ export function EpisodeTable({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <Td colSpan={canSelect ? 8 : 7} className="py-6 text-center text-ink-muted">
+              <Td colSpan={canSelect ? 8 : 7} className="py-10 text-center text-ink-muted">
                 No episodes with this status.
               </Td>
             </tr>
@@ -197,16 +211,16 @@ export function EpisodeTable({
                   data-episode={e.episode_id}
                   data-status={e.status}
                   className={cn(
-                    "align-top",
-                    greyed && "bg-slate-50 text-slate-500 *:opacity-60",
-                    isSelected && "bg-slate-100",
+                    "align-top transition-colors",
+                    greyed ? "bg-slate-50/80 text-slate-500 *:opacity-60" : "hover:bg-gray-50/70",
+                    isSelected && "bg-accent-50/60 hover:bg-accent-50/80",
                   )}
                 >
                   {canSelect ? (
                     <Td className="align-top">
                       <input
                         type="checkbox"
-                        className="mt-1 size-4"
+                        className="mt-1 size-4 cursor-pointer accent-accent-700 disabled:cursor-not-allowed"
                         checked={isSelected}
                         disabled={!eligible}
                         onChange={() => toggle(e.episode_id)}
@@ -219,9 +233,9 @@ export function EpisodeTable({
                       />
                     </Td>
                   ) : null}
-                  <Td className="align-top font-mono text-sm whitespace-nowrap">{e.subject_id}</Td>
+                  <Td className="align-top font-mono text-sm font-medium whitespace-nowrap text-ink">{e.subject_id}</Td>
                   <Td className="align-top">
-                    <div className="font-medium whitespace-nowrap">{e.term}</div>
+                    <div className="font-semibold whitespace-nowrap text-ink">{e.term}</div>
                     <div className="text-sm text-ink-subtle">{e.kind === "worsened" ? "Worsened" : "New"}</div>
                   </Td>
                   <Td className="align-top">

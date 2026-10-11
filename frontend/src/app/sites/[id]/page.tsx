@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import { useSiteDetail, useSites } from "@/lib/queries";
 import { DEMO_IDENTITIES, setRole, useIdentity } from "@/lib/role";
 import { errorMessage, hasErrorCode } from "@/lib/api";
 import { roundHalfUp } from "@/lib/round";
-import { Button, ButtonLink, Card, CardHeader, EmptyState, ErrorState, Field, LoadingRows, PageHeader, Table, Td, Th } from "@/components/ui/primitives";
+import { Button, ButtonLink, Card, CardHeader, EmptyState, ErrorState, LoadingRows, PageHeader, Table, Td, Th, cn } from "@/components/ui/primitives";
 import { DataOriginBadge } from "@/components/DataOriginBadge";
 import { TierBadge } from "@/components/TierBadge";
 import { EpisodeTable } from "@/components/EpisodeTable";
@@ -49,15 +49,18 @@ export default function SiteDetailPage() {
 
   return (
     <>
-      <div className="mb-3">
-        <Link href="/sites" className="inline-flex items-center gap-1 text-sm font-medium text-accent-700 hover:underline">
+      <div className="mb-4">
+        <Link
+          href="/sites"
+          className="-ml-2 inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-ink-muted transition-colors hover:bg-gray-100 hover:text-ink"
+        >
           <ArrowLeft className="size-4" aria-hidden />
           All sites
         </Link>
       </div>
       {!canView ? (
         <>
-          <PageHeader title={`Site ${siteId}`} />
+          <PageHeader eyebrow="Site drill-down" title={`Site ${siteId}`} />
           <RoleNotice />
         </>
       ) : q.isPending ? (
@@ -66,12 +69,12 @@ export default function SiteDetailPage() {
         </Card>
       ) : q.isError ? (
         <>
-          <PageHeader title={`Site ${siteId}`} />
+          <PageHeader eyebrow="Site drill-down" title={`Site ${siteId}`} />
           {hasErrorCode(q.error, "wrong_role") ? (
             <RoleNotice />
           ) : hasErrorCode(q.error, "site_signal_unavailable") ? (
             <Card>
-              <div className="p-4">
+              <div className="p-5">
                 <TierBadge tier="not_computed" labels={null} unavailableText={errorMessage(q.error)} className="whitespace-normal" />
               </div>
             </Card>
@@ -143,55 +146,71 @@ function SiteView({
   const nMeasured = episodes.filter((e) => e.data_origin === "MEASURED").length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
+        eyebrow="Site drill-down"
         title={`Site ${site.site_id}`}
         subtitle={
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <DataOriginBadge origin={site.data_origin} />
             <span className="font-medium text-ink">{site.name}</span>
+            <span className="text-ink-subtle" aria-hidden>
+              ·
+            </span>
             <span>{site.region}</span>
           </div>
         }
       />
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader
           title="Site"
-          icon={<Building2 className="size-4 text-ink-subtle" aria-hidden />}
+          icon={<Building2 className="size-4" aria-hidden />}
           actions={<DataOriginBadge origin={signal.data_origin} />}
           className="flex-wrap"
         />
-        <div className="space-y-4 p-4">
-          <div>
-            <p className="mb-1 text-sm text-ink-subtle">Capture discordance tier</p>
-            {labels ? (
-              <TierBadge tier={signal.tier} reason={signal.not_computed_reason} labels={labels} />
-            ) : (
-              <TierBadge tier="not_computed" labels={null} unavailableText={labelsError ?? "Loading tier labels…"} />
-            )}
-            {labels ? <p className="mt-1.5 text-sm font-medium text-ink">{labels.footer}</p> : null}
+        <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)]">
+          <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-gray-50/70 p-4">
+            <p className="text-sm font-medium text-ink-subtle">Capture discordance tier</p>
+            <div>
+              {labels ? (
+                <TierBadge tier={signal.tier} reason={signal.not_computed_reason} labels={labels} />
+              ) : (
+                <TierBadge tier="not_computed" labels={null} unavailableText={labelsError ?? "Loading tier labels…"} />
+              )}
+            </div>
+            <div>
+              <p className="text-sm text-ink-subtle">Observed / expected (O/E)</p>
+              <p className="mt-0.5 text-[1.75rem] leading-tight font-semibold tracking-tight text-ink tabular">
+                {num(signal.oe_ratio, 2)}
+              </p>
+              <p className="text-sm text-ink-muted tabular">
+                O {num(signal.O, 0)} / E {num(signal.E, 1)}
+              </p>
+            </div>
+            {labels ? <p className="border-t border-line pt-3 text-sm leading-6 font-medium text-ink">{labels.footer}</p> : null}
           </div>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-            <Field label="Patients">{site.n_patients}</Field>
-            <Field label="Spanish share">{pct(site.spanish_share)}</Field>
-            <Field label="Extra-time share">{pct(site.extra_time_share)}</Field>
-            <Field label="Call completion">{pct(site.call_completion)}</Field>
-            <Field label="Evaluable episodes">{signal.n_episodes_evaluable}</Field>
-            <Field label="Pending">{signal.n_pending}</Field>
-            <Field label="Paged">{signal.n_paged}</Field>
-            <Field label="Observed / expected (O/E)">
-              {num(signal.O, 0)} / {num(signal.E, 1)} ({num(signal.oe_ratio, 2)})
-            </Field>
-            <Field label="Rate KRI" className="col-span-2 sm:col-span-1">
-              {labels ? <TierBadge tier={signal.comparators.rate_kri.tier} labels={labels} reasonDisplay="tooltip" /> : "—"}
-            </Field>
-            <Field label="simaerep classic (legacy)" className="col-span-2 sm:col-span-1">
-              {labels ? <TierBadge tier={signal.comparators.simaerep_classic.tier} labels={labels} reasonDisplay="tooltip" /> : "—"}
-            </Field>
-          </dl>
+          <div className="min-w-0 space-y-3">
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              <Stat label="Patients">{site.n_patients}</Stat>
+              <Stat label="Spanish share">{pct(site.spanish_share)}</Stat>
+              <Stat label="Extra-time share">{pct(site.extra_time_share)}</Stat>
+              <Stat label="Call completion">{pct(site.call_completion)}</Stat>
+              <Stat label="Evaluable episodes">{signal.n_episodes_evaluable}</Stat>
+              <Stat label="Pending">{signal.n_pending}</Stat>
+              <Stat label="Paged">{signal.n_paged}</Stat>
+            </dl>
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label="Comparator indicators">
+              <Stat label="Rate KRI">
+                {labels ? <TierBadge tier={signal.comparators.rate_kri.tier} labels={labels} reasonDisplay="tooltip" /> : "—"}
+              </Stat>
+              <Stat label="simaerep classic (legacy)">
+                {labels ? <TierBadge tier={signal.comparators.simaerep_classic.tier} labels={labels} reasonDisplay="tooltip" /> : "—"}
+              </Stat>
+            </dl>
+          </div>
           {site.is_live_site ? (
-            <p className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700 lg:col-span-2">
               Live bridge site: episodes from calls processed by the app ({nMeasured} now) are listed first with a MEASURED
               badge. They are never pooled into this site&apos;s simulated O/E.
             </p>
@@ -201,17 +220,17 @@ function SiteView({
 
       {strata || paged_stratum ? <StrataCard strata={strata} paged={paged_stratum} /> : null}
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader
           title="Site queries"
-          icon={<MailCheck className="size-4 text-ink-subtle" aria-hidden />}
+          icon={<MailCheck className="size-4" aria-hidden />}
           subtitle="Templated data-completeness requests. A CRA approves every query before it reaches the site."
           className="flex-wrap"
         />
         {isCra ? (
           <div className="border-b border-line">
-            <h3 className="flex items-center gap-2 px-4 pt-3 text-sm font-semibold text-ink">
-              <FilePenLine className="size-4 text-ink-subtle" aria-hidden />
+            <h3 className="flex items-center gap-2 px-5 pt-4 text-sm font-semibold text-ink">
+              <FilePenLine className="size-4 text-accent-700" aria-hidden />
               {activeDraft ? "Draft" : "New query"}
             </h3>
             <SiteQueryComposer
@@ -224,15 +243,15 @@ function SiteView({
             />
           </div>
         ) : (
-          <p className="border-b border-line px-4 py-3 text-sm text-ink-muted">Only the CRA drafts, edits and approves site queries.</p>
+          <p className="border-b border-line bg-gray-50/70 px-5 py-3 text-sm text-ink-muted">Only the CRA drafts, edits and approves site queries.</p>
         )}
         <SiteQueryList queries={queries} canEdit={isCra} onEdit={(x) => setDraft(x)} />
       </Card>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader
           title="Episodes"
-          icon={<ListChecks className="size-4 text-ink-subtle" aria-hidden />}
+          icon={<ListChecks className="size-4" aria-hidden />}
           subtitle="Each episode with its verbatim quote in the original language. Pending episodes are greyed and never counted as missed; paged episodes are a separate stratum."
           className="flex-wrap"
         />
@@ -250,17 +269,17 @@ function StrataCard({ strata, paged }: { strata: SiteStrata | null; paged: Paged
       ]
     : [];
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader
         title="Strata"
-        icon={<Layers className="size-4 text-ink-subtle" aria-hidden />}
+        icon={<Layers className="size-4" aria-hidden />}
         subtitle="Episodes in the O/E set (evaluable, not paged) by language and pace, and the paged stratum, which is never in O or E."
         actions={<DataOriginBadge origin="SIMULATED" />}
         className="flex-wrap"
       />
-      <div className="grid gap-4 p-4 md:grid-cols-3">
+      <div className="grid gap-4 p-5 md:grid-cols-3">
         {groups.map((g) => (
-          <Table key={g.title} className="rounded-md border border-line">
+          <Table key={g.title} className="rounded-xl border border-line">
             <caption className="sr-only">{g.title} strata</caption>
             <thead>
               <tr>
@@ -281,7 +300,7 @@ function StrataCard({ strata, paged }: { strata: SiteStrata | null; paged: Paged
           </Table>
         ))}
         {paged ? (
-          <Table className="rounded-md border border-line">
+          <Table className="rounded-xl border border-line">
             <caption className="sr-only">Paged stratum</caption>
             <thead>
               <tr>
@@ -301,5 +320,15 @@ function StrataCard({ strata, paged }: { strata: SiteStrata | null; paged: Paged
         ) : null}
       </div>
     </Card>
+  );
+}
+
+/** One site figure as a small tile; every value is passed in from `GET /api/sites/{site_id}`. */
+function Stat({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={cn("min-w-0 rounded-xl border border-line bg-white px-3.5 py-3", className)}>
+      <dt className="text-sm leading-5 text-ink-subtle">{label}</dt>
+      <dd className="mt-1 text-base leading-6 font-semibold break-words text-ink tabular">{children}</dd>
+    </div>
   );
 }

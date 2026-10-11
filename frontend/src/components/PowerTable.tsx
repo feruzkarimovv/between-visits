@@ -76,7 +76,7 @@ function BlockCard({
   id?: string;
 }) {
   return (
-    <Card id={id}>
+    <Card id={id} className="overflow-hidden">
       <CardHeader title={title} icon={icon} subtitle={subtitle} actions={<DataOriginBadge origin={origin} />} className="flex-wrap" />
       {children}
     </Card>
@@ -84,7 +84,7 @@ function BlockCard({
 }
 
 function Missing({ what }: { what: string }) {
-  return <p className="px-4 py-3 text-sm text-ink-muted">{what} is not in this validation summary.</p>;
+  return <p className="px-5 py-4 text-sm text-ink-muted">{what} is not in this validation summary.</p>;
 }
 
 // ------------------------------------------------------------------ power rows
@@ -186,7 +186,7 @@ function PowerLinesTable({ lines, grossF, caption }: { lines: PowerLine[]; gross
         {lines.map((l, i) => {
           const firstOfIndicator = i === 0 || lines[i - 1].indicator !== l.indicator || lines[i - 1].cell !== l.cell;
           return (
-            <tr key={l.key} data-indicator={l.indicator} className={cn(firstOfIndicator && i > 0 && "border-t-2 border-line")}>
+            <tr key={l.key} data-indicator={l.indicator} className={cn(firstOfIndicator && i > 0 && "border-t-2 border-line-strong")}>
               {multiCell ? <Td className="min-w-56 text-ink-muted">{l.cell}</Td> : null}
               <Td className="min-w-44 font-medium text-ink">{firstOfIndicator ? indicatorName(l.indicator) : ""}</Td>
               <Td className="tabular text-right whitespace-nowrap">
@@ -219,7 +219,7 @@ export function PowerTable({ v }: { v: SiteSignalValidation }) {
     <BlockCard
       id="power"
       title="Power: one planted site per study"
-      icon={<Target className="size-4 text-ink-subtle" aria-hidden />}
+      icon={<Target className="size-4" aria-hidden />}
       origin={originOf(v)}
       subtitle={
         isDesign && design ? (
@@ -232,7 +232,7 @@ export function PowerTable({ v }: { v: SiteSignalValidation }) {
         )
       }
     >
-      <p className="px-4 pt-3 text-sm text-ink-muted">
+      <p className="border-b border-line bg-gray-50/70 px-5 py-3 text-sm leading-6 text-ink-muted">
         Share of simulated studies in which the one planted site with capture loss <i>f</i> was flagged, with the frozen sap-v1
         thresholds. Watch is nested in Look, so &ldquo;Look or Watch&rdquo; counts a flag at either tier. A planted site that is
         not computed counts as missed; &ldquo;Planted site computed&rdquo; is how often it was computed at all, which caps power.
@@ -276,8 +276,8 @@ function NullByKBin({ v }: { v: SiteSignalValidation }) {
   if (!bins.length) return null;
   return (
     <>
-      <h3 className="px-4 pt-3 text-sm font-semibold text-ink">Capture discordance by number of computed sites K</h3>
-      <p className="px-4 pt-1 pb-2 text-sm text-ink-muted">
+      <h3 className="border-t border-line px-5 pt-4 pb-1 text-sm font-semibold text-ink">Capture discordance by number of computed sites K</h3>
+      <p className="px-5 pb-2 text-sm leading-6 text-ink-muted">
         The Watch target holds on average over the null studies. The Watch threshold is one study-wide cut-off, so a study
         with more computed sites has more chances of a false Watch flag.
       </p>
@@ -332,7 +332,7 @@ export function NullRatesTable({ v }: { v: SiteSignalValidation }) {
     <BlockCard
       id="null"
       title="False flags under the null"
-      icon={<ShieldAlert className="size-4 text-ink-subtle" aria-hidden />}
+      icon={<ShieldAlert className="size-4" aria-hidden />}
       origin={originOf(v)}
       subtitle={
         <>
@@ -416,7 +416,7 @@ export function NullRatesTable({ v }: { v: SiteSignalValidation }) {
             </tbody>
           </Table>
           <NullByKBin v={v} />
-          <div className="space-y-1 px-4 py-3 text-sm text-ink-muted">
+          <div className="space-y-1 bg-gray-50/70 px-5 py-3 text-sm leading-6 text-ink-muted">
             {computedMean !== null ? (
               <p>
                 Computed sites per null study (capture discordance): mean {fmtProp(computedMean)} (MC SE {fmtSe(computedSe)}).
@@ -455,7 +455,7 @@ export function FailureCaseTable({ v }: { v: SiteSignalValidation }) {
     <BlockCard
       id="failure-case"
       title="Failure case"
-      icon={<FlaskConical className="size-4 text-ink-subtle" aria-hidden />}
+      icon={<FlaskConical className="size-4" aria-hidden />}
       origin={originOf(v)}
       subtitle={
         fc ? (
@@ -468,7 +468,7 @@ export function FailureCaseTable({ v }: { v: SiteSignalValidation }) {
     >
       {fc ? (
         <>
-          <h3 className="px-4 pt-3 text-sm font-semibold text-ink">
+          <h3 className="px-5 pt-4 pb-2 text-sm font-semibold text-ink">
             (a) Thresholds re-calibrated on this null
             <span className="font-normal text-ink-subtle">{countsNote([[rNullA, "null studies"], [reps, "studies per row"]])}</span>
           </h3>
@@ -477,7 +477,7 @@ export function FailureCaseTable({ v }: { v: SiteSignalValidation }) {
           ) : (
             <Missing what="Failure-case power" />
           )}
-          <h3 className="px-4 pt-4 text-sm font-semibold text-ink">
+          <h3 className="border-t border-line px-5 pt-4 pb-2 text-sm font-semibold text-ink">
             (b) Frozen sap-v1 thresholds on this null
             <span className="font-normal text-ink-subtle">{countsNote([[rNullB, "null studies"]])}</span>
           </h3>
@@ -547,7 +547,7 @@ export function SensitivityTable({ v }: { v: SiteSignalValidation }) {
     <BlockCard
       id="sensitivity"
       title="Sensitivity analyses"
-      icon={<SlidersHorizontal className="size-4 text-ink-subtle" aria-hidden />}
+      icon={<SlidersHorizontal className="size-4" aria-hidden />}
       origin={originOf(v)}
       subtitle={
         <>
@@ -624,7 +624,7 @@ export function CommittedConfusionTable({ v }: { v: SiteSignalValidation }) {
           Committed study <span className="font-normal text-ink-muted">· illustration only</span>
         </>
       }
-      icon={<Gauge className="size-4 text-ink-subtle" aria-hidden />}
+      icon={<Gauge className="size-4" aria-hidden />}
       origin={originOf(v)}
       subtitle={
         note ??
@@ -649,7 +649,7 @@ export function CommittedConfusionTable({ v }: { v: SiteSignalValidation }) {
               CONFUSION_TIERS.map((t, i) => {
                 const c = pick(confusion, id, t.id);
                 return (
-                  <tr key={`${id}-${t.id}`} data-indicator={id} className={cn(i === 0 && id !== INDICATORS[0].id && "border-t-2 border-line")}>
+                  <tr key={`${id}-${t.id}`} data-indicator={id} className={cn(i === 0 && id !== INDICATORS[0].id && "border-t-2 border-line-strong")}>
                     <Td className="min-w-44 font-medium text-ink">{i === 0 ? name : ""}</Td>
                     <Td className="whitespace-nowrap">{t.label}</Td>
                     <Td className="tabular text-right">{fmtCount(asNum(pick(c, "tp")))}</Td>

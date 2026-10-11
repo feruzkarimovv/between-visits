@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { FunnelLimit, FunnelPoint, SignalTier, SiteSignalLabels } from "@/lib/types";
+import { ChevronDown } from "lucide-react";
 import { Table, Td, Th } from "./ui/primitives";
 
 /**
@@ -22,10 +23,12 @@ export interface NotComputedMarker {
   reason: string;
 }
 
+// Chart frame (axes, grid, tick text) uses the app's tinted neutrals (globals.css gray-*, ink-subtle); every tier
+// mark, limit curve and band stays in the tier-only slate scale.
 const INK = {
-  axis: "#94a3b8", // slate-400
-  grid: "#e2e8f0", // slate-200
-  text: "#475569", // slate-600
+  axis: "#9ba7a3", // gray-400
+  grid: "#e2e7e5", // gray-200 (line)
+  text: "#5f6d69", // ink-subtle
   strong: "#1e293b", // slate-800
   look: "#334155", // slate-700
   none: "#94a3b8", // slate-400
@@ -178,7 +181,7 @@ export function FunnelPlot({
           {yt.values.map((v) => (
             <g key={`y${v}`}>
               <line x1={m.left} x2={m.left + plotW} y1={y(v)} y2={y(v)} stroke={INK.grid} strokeWidth={1} />
-              <text x={m.left - 6} y={y(v)} dy="0.32em" textAnchor="end" fontSize={11} fill={INK.text} className="tabular">
+              <text x={m.left - 6} y={y(v)} dy="0.32em" textAnchor="end" fontSize={12} fill={INK.text} className="tabular">
                 {fmt(v, yt.step < 0.1 ? 2 : 1)}
               </text>
             </g>
@@ -186,7 +189,7 @@ export function FunnelPlot({
           {xt.values.map((v) => (
             <g key={`x${v}`}>
               <line x1={x(v)} x2={x(v)} y1={axisBottom} y2={axisBottom + 4} stroke={INK.axis} />
-              <text x={x(v)} y={axisBottom + 16} textAnchor="middle" fontSize={11} fill={INK.text} className="tabular">
+              <text x={x(v)} y={axisBottom + 16} textAnchor="middle" fontSize={12} fill={INK.text} className="tabular">
                 {fmt(v, xt.step < 1 ? 1 : 0)}
               </text>
             </g>
@@ -253,7 +256,7 @@ export function FunnelPlot({
                 x={x(p.E) + 9}
                 y={y(p.oe_ratio)}
                 dy="0.32em"
-                fontSize={11}
+                fontSize={12}
                 fontWeight={600}
                 fill={INK.strong}
                 stroke="#ffffff"
@@ -265,7 +268,7 @@ export function FunnelPlot({
               </text>
             ))}
           </g>
-          <text x={m.left + plotW - 4} y={y(1) - 5} textAnchor="end" fontSize={11} fill={INK.text}>
+          <text x={m.left + plotW - 4} y={y(1) - 5} textAnchor="end" fontSize={12} fill={INK.text}>
             O/E = 1
           </text>
 
@@ -299,7 +302,7 @@ export function FunnelPlot({
                     >
                       <title>{`Site ${s.site_id}: ${s.reason}`}</title>
                     </circle>
-                    <text x={cx} y={cy + 20} textAnchor="middle" fontSize={11} fill={INK.text} aria-hidden>
+                    <text x={cx} y={cy + 20} textAnchor="middle" fontSize={12} fill={INK.text} aria-hidden>
                       {s.site_id}
                     </text>
                   </g>
@@ -312,8 +315,11 @@ export function FunnelPlot({
 
       <FunnelLegend labels={labels} note={legendNote} />
 
-      <details className="mt-3 rounded-md border border-line bg-white">
-        <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-ink-muted">Funnel data as a table</summary>
+      <details className="group mt-4 overflow-hidden rounded-xl border border-line bg-white">
+        <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-gray-50 hover:text-ink [&::-webkit-details-marker]:hidden">
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+          Funnel data as a table
+        </summary>
         <Table className="relative">
           <caption className="sr-only">Funnel plot data: one row per site</caption>
           <thead>
@@ -388,7 +394,10 @@ function LineSwatch({ dashed, color }: { dashed: boolean; color: string }) {
 export function FunnelLegend({ labels, note }: { labels: SiteSignalLabels; note?: ReactNode }) {
   const item = "inline-flex items-center gap-1.5 whitespace-nowrap";
   return (
-    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-ink-muted" aria-label="Funnel legend">
+    <ul
+      className="mt-3 flex flex-wrap gap-x-5 gap-y-2 rounded-xl bg-gray-50/70 px-4 py-2.5 text-sm text-ink-muted ring-1 ring-line ring-inset"
+      aria-label="Funnel legend"
+    >
       {note ? <li className={item}>{note}</li> : null}
       {(["watch", "look", "none", "not_computed"] as const).map((t) => (
         <li key={t} className={item}>

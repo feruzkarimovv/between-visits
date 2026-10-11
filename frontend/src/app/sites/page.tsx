@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BookOpenCheck, Building2, ExternalLink, KeyRound, LineChart, Scale, UserRound } from "lucide-react";
+import { BookOpenCheck, Building2, ExternalLink, FlaskConical, KeyRound, LineChart, Scale, UserRound } from "lucide-react";
 import type { AnswerKeyResponse, SignalTier, SiteRow, SitesResponse, SiteSignalLabels, SiteSignalValidation } from "@/lib/types";
 import { useAnswerKey, useHealth, useSiteEquity, useSiteValidation, useSites } from "@/lib/queries";
 import { DEMO_IDENTITIES, setRole, useIdentity } from "@/lib/role";
@@ -72,21 +72,35 @@ export default function SitesPage() {
   return (
     <>
       <PageHeader
+        eyebrow="Sponsor-side monitoring"
         title="Site Signal"
-        subtitle={
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <DataOriginBadge origin={origin} />
-            <span>
-              <span className="font-medium text-ink">sap-v1</span>{" "}
-              {sapCommit ? <code className="font-mono text-sm">{sapCommit.slice(0, 7)}</code> : "tag unavailable"}
-              {generatedAt ? <> · run {formatDate(generatedAt)}</> : null}
-            </span>
-            <span>Thresholds fixed from the pre-registered null.</span>
-          </div>
-        }
+        subtitle="Episodes patients reported on calls, compared with each site's AE log: a reason to look, not a finding. Thresholds fixed from the pre-registered null."
       />
 
-      <div role="tablist" aria-label="Site Signal views" className="mb-4 flex max-w-full overflow-x-auto border-b border-line">
+      <Card className="mb-5 px-5 py-3.5">
+        <dl className="flex flex-wrap gap-x-10 gap-y-3 text-sm">
+          <Meta label="Analysis plan">
+            <span className="font-medium text-ink">sap-v1</span>{" "}
+            {sapCommit ? (
+              <code className="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-ink ring-1 ring-line ring-inset">
+                {sapCommit.slice(0, 7)}
+              </code>
+            ) : (
+              <span className="text-ink-subtle">tag unavailable</span>
+            )}
+          </Meta>
+          {generatedAt ? <Meta label="Run">{formatDate(generatedAt)}</Meta> : null}
+          <Meta label="Data">
+            <DataOriginBadge origin={origin} />
+          </Meta>
+        </dl>
+      </Card>
+
+      <div
+        role="tablist"
+        aria-label="Site Signal views"
+        className="mb-5 inline-flex max-w-full overflow-x-auto rounded-xl border border-line bg-gray-100/80 p-1"
+      >
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -97,11 +111,11 @@ export default function SitesPage() {
             aria-controls={`sites-panel-${id}`}
             onClick={() => setTab(id)}
             className={cn(
-              "-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium whitespace-nowrap",
-              tab === id ? "border-accent-700 text-accent-800" : "border-transparent text-ink-muted hover:text-ink",
+              "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-sm font-medium whitespace-nowrap transition-colors",
+              tab === id ? "bg-white text-ink shadow-card ring-1 ring-line" : "text-ink-muted hover:text-ink",
             )}
           >
-            <Icon className="size-4" aria-hidden />
+            <Icon className={cn("size-4", tab === id ? "text-accent-700" : "text-ink-subtle")} aria-hidden />
             {label}
           </button>
         ))}
@@ -167,8 +181,8 @@ function RoleNotice({ title = "Switch to CRA to view site rankings." }: { title?
 function UnavailableCard({ message }: { message: string }) {
   return (
     <Card>
-      <CardHeader title="Sites" icon={<Building2 className="size-4 text-ink-subtle" aria-hidden />} />
-      <div className="p-4">
+      <CardHeader title="Sites" icon={<Building2 className="size-4" aria-hidden />} />
+      <div className="p-5">
         <TierBadge tier="not_computed" labels={null} unavailableText={message} className="whitespace-normal" />
       </div>
     </Card>
@@ -188,22 +202,32 @@ function SignalTab({ data }: { data: SitesResponse }) {
     : null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {studyReason ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-700" role="status">
-          <span className="font-medium">{labels.not_computed}:</span> {studyReason}
+        <div
+          className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3.5 text-sm leading-6 text-slate-700 shadow-card"
+          role="status"
+        >
+          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-600 ring-1 ring-slate-200">
+            <Building2 className="size-4" aria-hidden />
+          </span>
+          <p>
+            <span className="font-semibold">{labels.not_computed}:</span> {studyReason}
+          </p>
         </div>
       ) : null}
 
-      <Card>
+      <TierSummary sites={sites} labels={labels} />
+
+      <Card className="overflow-hidden">
         <CardHeader
           title="Funnel"
-          icon={<LineChart className="size-4 text-ink-subtle" aria-hidden />}
+          icon={<LineChart className="size-4" aria-hidden />}
           subtitle="Each computed site's observed over expected matched episodes (O/E) against its expected count (E). Sites below a lower limit get that tier."
           actions={<DataOriginBadge origin={run.data_origin} />}
           className="flex-wrap"
         />
-        <div className="p-4">
+        <div className="p-5">
           <FunnelPlot
             points={funnel.points}
             limits={funnel.limits}
@@ -218,10 +242,10 @@ function SignalTab({ data }: { data: SitesResponse }) {
         </div>
       </Card>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader
           title="Sites, ranked"
-          icon={<Building2 className="size-4 text-ink-subtle" aria-hidden />}
+          icon={<Building2 className="size-4" aria-hidden />}
           subtitle="Computed sites by adjusted score, then sites not computed. Open a site for its episodes and quotes."
           className="flex-wrap"
           actions={
@@ -238,7 +262,7 @@ function SignalTab({ data }: { data: SitesResponse }) {
         />
         {revealed ? <AnswerKeyNote q={answerKey} /> : null}
         <RankedTable sites={sites} labels={labels} answerKey={revealed ? answerKey.data : undefined} />
-        <footer className="space-y-1 border-t border-line px-4 py-3 text-sm text-ink-muted">
+        <footer className="space-y-1 border-t border-line bg-gray-50/70 px-5 py-3.5 text-sm leading-6 text-ink-muted">
           <p className="font-medium text-ink">{labels.footer}</p>
           <p>{footerText(labels, run.expected_false_look_flags_per_study)}</p>
         </footer>
@@ -249,7 +273,10 @@ function SignalTab({ data }: { data: SitesResponse }) {
 
 function AnswerKeyNote({ q }: { q: ReturnType<typeof useAnswerKey> }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line bg-slate-50 px-4 py-2.5 text-sm text-ink-muted" role="status">
+    <div
+      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line bg-gray-50/70 px-5 py-3 text-sm leading-6 text-ink-muted"
+      role="status"
+    >
       {q.isPending ? (
         <span>Loading the answer key…</span>
       ) : q.isError ? (
@@ -303,9 +330,17 @@ function RankedTable({
           const grey = s.tier === "not_computed";
           const key = keyBySite.get(s.site_id);
           return (
-            <tr key={s.site_id} className={cn(grey && "bg-slate-50 text-slate-500")} data-site={s.site_id} data-tier={s.tier}>
-              <Td className="min-w-48">
-                <Link href={`/sites/${encodeURIComponent(s.site_id)}`} className="font-medium text-accent-800 hover:underline">
+            <tr
+              key={s.site_id}
+              className={cn("transition-colors", grey ? "bg-slate-50/80 text-slate-500" : "hover:bg-gray-50/80")}
+              data-site={s.site_id}
+              data-tier={s.tier}
+            >
+              <Td className="min-w-56">
+                <Link
+                  href={`/sites/${encodeURIComponent(s.site_id)}`}
+                  className="font-mono font-semibold text-accent-800 hover:underline"
+                >
                   {s.site_id}
                 </Link>
                 <div className={cn("text-sm", grey ? "text-slate-500" : "text-ink-subtle")}>{s.name}</div>
@@ -318,7 +353,7 @@ function RankedTable({
               <Td className="tabular text-right">{s.n_pending}</Td>
               <Td className="tabular text-right">{s.n_paged}</Td>
               <Td className="tabular text-right">{pct(s.call_completion)}</Td>
-              <Td className="tabular text-right">{num(s.oe_ratio, 2)}</Td>
+              <Td className="tabular text-right font-medium">{num(s.oe_ratio, 2)}</Td>
               <Td className={cn(grey && "min-w-72")}>
                 <TierBadge tier={s.tier} reason={s.not_computed_reason} labels={labels} />
               </Td>
@@ -377,16 +412,18 @@ function HowWellItWorksTab({ canView }: { canView: boolean }) {
 
   const v = q.data;
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Card>
         <CardHeader
           title="How well it works"
-          icon={<BookOpenCheck className="size-4 text-ink-subtle" aria-hidden />}
+          icon={<BookOpenCheck className="size-4" aria-hidden />}
           subtitle="Operating characteristics of the three indicators in simulated studies at the sap-v1 design."
           actions={<DataOriginBadge origin={v.data_origin} />}
           className="flex-wrap"
         />
-        <div className="space-y-2 px-4 pt-3 text-sm text-ink-muted">
+        <div className="mx-5 mt-4 flex gap-3 rounded-xl border border-dashed border-slate-400 bg-slate-50/70 p-4 text-sm leading-6 text-ink-muted">
+          <FlaskConical className="mt-1 size-4 shrink-0 text-slate-600" aria-hidden />
+          <div className="space-y-2">
           <p>
             Every number on this tab is <span className="font-semibold text-ink">SIMULATED</span>: both data streams and the
             planted sites come from the simulation in the pre-registered plan. Capture discordance is a reason to look, not a
@@ -396,26 +433,19 @@ function HowWellItWorksTab({ canView }: { canView: boolean }) {
             The only non-circular validation is a retrospective analysis of trials with paired patient-reported and
             clinician-reported (CTCAE) data and site IDs.
           </p>
+          </div>
         </div>
-        <dl className="grid grid-cols-1 gap-3 p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <dt className="text-ink-subtle">sap-v1 tag commit</dt>
-            <dd className="font-mono text-ink">{v.sap_tag_commit.slice(0, 7)}</dd>
-          </div>
-          <div>
-            <dt className="text-ink-subtle">Code commit</dt>
-            <dd className="font-mono text-ink">{v.code_commit.slice(0, 7)}</dd>
-          </div>
-          <div>
-            <dt className="text-ink-subtle">Generated</dt>
-            <dd className="text-ink">{formatDate(v.generated_at)}</dd>
-          </div>
-          <div>
-            <dt className="text-ink-subtle">What it gets wrong</dt>
-            <dd className="text-ink">
-              <RepoLink href={wrongHref} path="WHAT_IT_GETS_WRONG.md" />
-            </dd>
-          </div>
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 px-5 py-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <Meta label="sap-v1 tag commit">
+            <code className="font-mono">{v.sap_tag_commit.slice(0, 7)}</code>
+          </Meta>
+          <Meta label="Code commit">
+            <code className="font-mono">{v.code_commit.slice(0, 7)}</code>
+          </Meta>
+          <Meta label="Generated">{formatDate(v.generated_at)}</Meta>
+          <Meta label="What it gets wrong">
+            <RepoLink href={wrongHref} path="WHAT_IT_GETS_WRONG.md" />
+          </Meta>
         </dl>
       </Card>
 
@@ -457,8 +487,50 @@ function EquitySection({ validation }: { validation: SiteSignalValidation }) {
 
 function RepoLink({ href, path }: { href: string; path: string }) {
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-accent-700 hover:underline">
-      {path} <ExternalLink className="size-3.5" aria-hidden />
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1 rounded-md font-medium break-all text-accent-700 hover:underline"
+    >
+      {path} <ExternalLink className="size-3.5 shrink-0" aria-hidden />
     </a>
+  );
+}
+
+function Meta({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-ink-subtle">{label}</dt>
+      <dd className="mt-0.5 flex flex-wrap items-center gap-1.5 font-medium text-ink">{children}</dd>
+    </div>
+  );
+}
+
+/**
+ * Sites per tier in the committed run, each under the tier's own slate badge and API label. The counts are taken
+ * from the `sites` rows of `GET /api/sites`; nothing here is typed.
+ */
+function TierSummary({ sites, labels }: { sites: SiteRow[]; labels: SiteSignalLabels }) {
+  const tiers: SignalTier[] = ["watch", "look", "none", "not_computed"];
+  return (
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4" aria-label="Sites per tier">
+      {tiers.map((t) => {
+        const n = sites.filter((x) => x.tier === t).length;
+        return (
+          <li
+            key={t}
+            className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3.5 shadow-card"
+            data-tier-count={t}
+          >
+            <TierBadge tier={t} labels={labels} />
+            <span className="shrink-0 text-2xl leading-none font-semibold text-ink tabular">
+              {n}
+              <span className="sr-only"> {n === 1 ? "site" : "sites"}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

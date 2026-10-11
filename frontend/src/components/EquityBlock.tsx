@@ -41,16 +41,16 @@ export function EquityBlock({ equity, validation }: { equity: SiteSignalEquity; 
   const oc = pick(validation?.full_mix, "equity");
 
   return (
-    <Card id="equity">
+    <Card id="equity" className="overflow-hidden">
       <CardHeader
         title="Equity: capture within the same site"
-        icon={<Scale className="size-4 text-ink-subtle" aria-hidden />}
+        icon={<Scale className="size-4" aria-hidden />}
         subtitle="Are Spanish-speaking (or extra-time) patients' episodes found in the site AE log less often than other patients' episodes at the same site? Mantel-Haenszel odds ratio over sites with enough episodes in each group; below 1 means lower capture for that group."
         actions={<DataOriginBadge origin={origin} />}
         className="flex-wrap"
       />
       {powerIsLow || note ? (
-        <div className="space-y-1 border-b border-line bg-slate-50 px-4 py-2.5 text-sm text-ink-muted" role="note">
+        <div className="space-y-1 border-b border-line bg-slate-50 px-5 py-3 text-sm leading-6 text-ink-muted" role="note">
           {powerIsLow ? <p className="font-semibold text-ink">Power is low at these sample sizes.</p> : null}
           {note ? <p>{note}</p> : null}
         </div>
@@ -112,14 +112,14 @@ export function EquityBlock({ equity, validation }: { equity: SiteSignalEquity; 
           })}
         </tbody>
       </Table>
-      <p className="px-4 pt-3 text-sm text-ink-muted">
+      <p className="px-5 pt-4 text-sm leading-6 text-ink-muted">
         Episodes: evaluable, non-paged episodes of the compared group / the reference group, at the sites used. A gap planted at
         one site is diluted in a pooled odds ratio; the per-site odds ratios are in <code className="font-mono text-sm">equity.json</code>.
       </p>
       {asRec(oc) ? (
-        <div className="px-4 py-3">
+        <div className="m-5 rounded-xl border border-line bg-gray-50/70 px-4 py-3.5">
           <h3 className="text-sm font-semibold text-ink">How the intervals behave in simulation</h3>
-          <dl className="mt-1.5 grid grid-cols-1 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-[auto_1fr]">
+          <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1.5 text-sm sm:grid-cols-[auto_1fr]">
             <dt className="text-ink-subtle">Language interval covers 1, no planted gap</dt>
             <dd>
               <Est r={readRateSe(pick(oc, "language_ci_covers_1_null"))} />
@@ -135,7 +135,7 @@ export function EquityBlock({ equity, validation }: { equity: SiteSignalEquity; 
           </dl>
         </div>
       ) : (
-        <div className="pb-3" />
+        <div className="pb-4" />
       )}
     </Card>
   );

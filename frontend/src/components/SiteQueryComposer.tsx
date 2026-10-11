@@ -35,8 +35,10 @@ function invalidateKeys(siteId: string) {
 export function InlineError({ error }: { error: unknown }) {
   if (!error) return null;
   return (
-    <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
-      {isApiError(error) ? <code className="mr-1.5 font-mono text-sm">{error.code}</code> : null}
+    <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm leading-6 text-red-900">
+      {isApiError(error) ? (
+        <code className="mr-1.5 rounded-md bg-red-100 px-1.5 py-0.5 font-mono text-sm ring-1 ring-red-200 ring-inset">{error.code}</code>
+      ) : null}
       {errorMessage(error)}
     </p>
   );
@@ -84,8 +86,8 @@ export function SiteQueryComposer({
   }
 
   return (
-    <div className="space-y-3 p-4">
-      <p className="text-sm text-ink-muted">
+    <div className="space-y-3.5 px-5 pt-2 pb-5">
+      <p className="max-w-3xl text-sm leading-6 text-ink-muted">
         Select <span className="font-medium text-ink">Unmatched</span> episodes in the table below to cite them. Other statuses
         cannot be cited. The draft shows the approved template text for review; nothing reaches the site until you approve it.
       </p>
@@ -93,11 +95,11 @@ export function SiteQueryComposer({
         <ul className="flex flex-wrap gap-1.5" aria-label="Selected episodes">
           {chosen.map((e) => (
             <li key={e.episode_id}>
-              <Chip tone="gray" className="font-normal">
-                <span className="font-mono">{e.subject_id}</span> · {e.term} · {formatDay(e.episode_date)}
+              <Chip tone="gray" className="bg-white py-0.5 pr-1 font-normal shadow-card">
+                <span className="font-mono font-medium">{e.subject_id}</span> · {e.term} · {formatDay(e.episode_date)}
                 <button
                   type="button"
-                  className="ml-0.5 rounded-full p-0.5 text-ink-subtle hover:bg-gray-200 hover:text-ink"
+                  className="ml-0.5 rounded-full p-0.5 text-ink-subtle hover:bg-gray-100 hover:text-ink"
                   aria-label={`Remove ${e.subject_id} ${e.term}`}
                   onClick={() => {
                     const next = new Set(selected);
@@ -179,35 +181,37 @@ function DraftEditor({
   };
 
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-4 px-5 pt-3 pb-5">
       <div className="flex flex-wrap items-center gap-2">
         <QueryStatusChip status={draft.status} />
         <DataOriginBadge origin={draft.data_origin} />
-        <code className="font-mono text-sm text-ink-subtle">{draft.id}</code>
+        <code className="rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-ink-muted ring-1 ring-line ring-inset">{draft.id}</code>
         {draft.edited ? <span className="text-sm text-ink-subtle">edited</span> : null}
       </div>
-      <div>
-        <p className="text-sm text-ink-subtle">Template preview · {draft.template_id}</p>
+      <div className="rounded-xl border border-line bg-gray-50/70 px-4 py-3">
+        <p className="text-sm text-ink-subtle">
+          Template preview · <span className="font-mono">{draft.template_id}</span>
+        </p>
         <h3 className="mt-0.5 text-base font-semibold text-ink">{draft.title_en}</h3>
-        <p className="mt-1 text-sm text-ink-muted">
+        <p className="mt-1 text-sm leading-6 text-ink-muted">
           Cites <span className="font-mono text-ink">{draft.subject_ids.join(", ")}</span> ({draft.episode_ids.length}{" "}
           {draft.episode_ids.length === 1 ? "episode" : "episodes"}). Subject IDs only.
         </p>
       </div>
       <div>
-        <label htmlFor={`body-${draft.id}`} className="mb-1 block text-sm font-medium text-ink-muted">
+        <label htmlFor={`body-${draft.id}`} className="mb-1.5 block text-sm font-medium text-ink-muted">
           Query text (English)
         </label>
         <textarea
           id={`body-${draft.id}`}
-          className={cn(inputClass, "min-h-56 font-sans leading-6")}
+          className={cn(inputClass, "min-h-56 px-3.5 py-3 font-sans text-[15px] leading-6")}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           disabled={busy}
         />
       </div>
       <div>
-        <label htmlFor={`note-${draft.id}`} className="mb-1 block text-sm font-medium text-ink-muted">
+        <label htmlFor={`note-${draft.id}`} className="mb-1.5 block text-sm font-medium text-ink-muted">
           Edit note (optional, kept in the audit row)
         </label>
         <input
@@ -238,7 +242,7 @@ function DraftEditor({
         </Button>
         {dirty ? <span className="text-sm text-ink-subtle">Unsaved edit: saved first when you approve.</span> : null}
       </div>
-      <p className="text-sm text-ink-subtle">
+      <p className="border-t border-line pt-3 text-sm leading-6 text-ink-subtle">
         A CRA approves every site query. Approval sends it to the mock site inbox and writes an audit row. The draft stays in
         the list below until it is approved.
       </p>
@@ -284,9 +288,9 @@ export function CloseQueryControl({ query, compact = false }: { query: SiteQuery
   }
   const noteId = `close-note-${query.id}`;
   return (
-    <div className={cn("w-full space-y-2", compact ? "min-w-56" : "max-w-xl")}>
+    <div className={cn("w-full space-y-2.5 rounded-xl border border-line bg-gray-50/70 p-3", compact ? "min-w-56" : "max-w-xl")}>
       <div>
-        <label htmlFor={noteId} className="mb-1 block text-sm font-medium text-ink-muted">
+        <label htmlFor={noteId} className="mb-1.5 block text-sm font-medium text-ink-muted">
           Closure note (optional, kept in the audit row)
         </label>
         <input
@@ -338,8 +342,10 @@ export function SiteQueryList({
 }) {
   if (queries.length === 0) {
     return (
-      <p className="flex items-center gap-2 px-4 py-6 text-sm text-ink-muted">
-        <MailCheck className="size-4 text-ink-subtle" aria-hidden />
+      <p className="flex items-center gap-2.5 px-5 py-6 text-sm text-ink-muted">
+        <span className="flex size-8 items-center justify-center rounded-full bg-gray-100 text-ink-subtle" aria-hidden>
+          <MailCheck className="size-4" />
+        </span>
         No site queries for this site yet.
       </p>
     );
@@ -362,13 +368,13 @@ export function SiteQueryList({
       </thead>
       <tbody>
         {queries.map((q) => (
-          <tr key={q.id} data-query={q.id} data-status={q.status} className="align-top">
+          <tr key={q.id} data-query={q.id} data-status={q.status} className="align-top transition-colors hover:bg-gray-50/70">
             <Td className="min-w-56 align-top">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-sm">{q.id}</span>
+                <span className="font-mono text-sm font-medium text-ink">{q.id}</span>
                 <DataOriginBadge origin={q.data_origin} />
               </div>
-              <div className="text-sm text-ink-muted">{q.title_en}</div>
+              <div className="mt-0.5 text-sm text-ink-muted">{q.title_en}</div>
               {q.edited ? <div className="text-sm text-ink-subtle">edited by the CRA</div> : null}
             </Td>
             <Td className="align-top">
