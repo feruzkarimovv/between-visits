@@ -5,14 +5,16 @@ Evaluation seed (docs/11 §1.3)::
     int(sha256(("sap-v1:" + S + ":" + B).encode()).hexdigest()[:8], 16)
 
 ``S`` is the 40-hex output of ``git rev-parse sap-v1^{commit}``; ``B`` is the beacon randomness in
-``monitoring/seed_beacon.json`` (the first drand mainnet round whose time is at least 10 minutes after
-the sap-v1 tagger timestamp; NIST beacon v2 fallback; the empty string if neither is reachable). Every
+``monitoring/seed_beacon.json``: the first drand mainnet round whose time is at least 10 minutes after
+the sap-v1 tagger timestamp, retried at least once a minute from that round time; the NIST beacon v2
+pulse only if drand has not returned the round by round time + 30 min; the empty string only if neither
+has by round time + 60 min. Every failed attempt is recorded in the beacon file's ``attempts``. Every
 replicate is keyed ``SeedSequence(seed, spawn_key=(stream, cell_index, role, i))``.
 
 Command line, from the repository root::
 
     uv run --project monitoring python -m bvsignal.seed --show
-    uv run --project monitoring python -m bvsignal.seed --fetch-beacon [--wait]
+    uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait
     uv run --project monitoring python -m bvsignal.seed --frozen-inputs | --write-frozen | --check-frozen
 
 No LLM and no network access except ``--fetch-beacon`` (drand, then NIST).
@@ -43,6 +45,7 @@ from bvsignal import REPO_ROOT
 TAG = "sap-v1"
 PARAMS_REL = "monitoring/params.yaml"
 BEACON_REL = "monitoring/seed_beacon.json"
+BEACON_ATTEMPTS_REL = "monitoring/seed_beacon_attempts.jsonl"  # failed attempts of runs that ended without a beacon
 RUN_LOG_REL = "validation/site_signal/run_log.jsonl"
 SAP_REL = "docs/11-site-signal-sap.md"
 SIGNAL_RULES_REL = "data/signal_rules.json"
@@ -51,7 +54,7 @@ CTCAE_RULES_REL = "data/ctcae_rules.json"
 RULES_PY_REL = "backend/app/services/rules.py"
 EPISODES_PY_REL = "backend/app/services/episodes.py"
 PENDING_EPISODES = "pending-B16"
-BEACON_KEYS = ("source", "round", "randomness", "url", "fetched_at")
+BEACON_KEYS = ("source", "round", "randomness", "url", "fetched_at", "selection", "attempts")
 FROZEN_KEYS = ("red_flags_rule_level_sha256", "ctcae_rules_sha256", "rules_py_sha256", "episodes_py_sha256")
 
 # docs/11 §15 rule 7: `code_commit` is the last commit that changed an analysis input.
@@ -79,7 +82,11 @@ class BeaconNotYetPublished(SeedError):
 
 
 class BeaconUnreachable(SeedError):
-    """The beacon service could not be reached or returned an unusable answer."""
+    """The beacon service could not be reached or has not returned the round; `url` is the URL that failed."""
+
+    def __init__(self, message: str, url: str | None = None) -> None:
+        super().__init__(message)
+        self.url = url
 
 
 # ---- git -------------------------------------------------------------------------------------------
@@ -210,8 +217,9 @@ def load_beacon(repo: Path = REPO_ROOT) -> dict[str, Any]:
         )
     beacon = json.loads(path.read_text(encoding="utf-8"))
     missing = [k for k in BEACON_KEYS if k not in beacon]
-    if missing or not isinstance(beacon.get("randomness"), str):
-        raise SeedError(f"{BEACON_REL} must hold {{{', '.join(BEACON_KEYS)}}} with a string randomness; missing {missing}")
+    if missing or not isinstance(beacon.get("randomness"), str) or not isinstance(beacon.get("attempts"), list):
+        raise SeedError(f"{BEACON_REL} must hold {{{', '.join(BEACON_KEYS)}}} with a string randomness and a list of "
+                        f"attempts; missing {missing}")
     return beacon
 
 
@@ -286,7 +294,15 @@ def http_get_json(url: str, timeout: float = 15.0) -> tuple[int, Any]:
     except urllib.error.HTTPError as e:
         return e.code, None
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
-        raise BeaconUnreachable(f"{url}: {e}") from e
+        raise BeaconUnreachable(f"{url}: {e}", url=url) from e
+
+
+def _get(http: HttpGet, url: str) -> tuple[int, Any]:
+    """`http(url)`, with the URL attached to a network failure (for the attempt log)."""
+    try:
+        return http(url)
+    except BeaconUnreachable as e:
+        raise BeaconUnreachable(str(e), url=url) from e
 
 
 def _wait_until(when: float, *, wait: bool, what: str, now: Callable[[], float], sleep: Callable[[float], None]) -> None:
@@ -302,89 +318,132 @@ def _wait_until(when: float, *, wait: bool, what: str, now: Callable[[], float],
         sleep(min(remaining + 1, 60))
 
 
-def fetch_drand(target: int, cfg: dict[str, Any], *, wait: bool, http: HttpGet = http_get_json,
-                now: Callable[[], float] = time.time, sleep: Callable[[float], None] = time.sleep,
-                retries: int = 10) -> dict[str, Any]:
-    """The first drand mainnet (default chain) round at or after `target`, verified."""
-    status, info = http(cfg["info_url"])
+def beacon_schedule(tagger_time: int, cfg: dict[str, Any]) -> dict[str, int]:
+    """The docs/11 §1.3 selection, computed offline from the pre-registered chain parameters (Unix seconds).
+
+    target = tagger time + delay_seconds; the drand round is the first round at or after the target, and its
+    round time is genesis + (round - 1) * period. NIST may be used from round time + nist_after_seconds and
+    the empty string from round time + empty_after_seconds."""
+    d = cfg["drand"]
+    target = int(tagger_time) + int(cfg["delay_seconds"])
+    genesis, period = int(d["genesis_time"]), int(d["period_seconds"])
+    round_ = drand_round_at_or_after(target, genesis, period)
+    t_round = drand_round_time(round_, genesis, period)
+    return {"tagger_time": int(tagger_time), "target_time": target, "drand_round": round_, "drand_round_time": t_round,
+            "nist_allowed_from": t_round + int(cfg["nist_after_seconds"]),
+            "empty_allowed_from": t_round + int(cfg["empty_after_seconds"])}
+
+
+def _selection_record(schedule: dict[str, int]) -> dict[str, Any]:
+    """`schedule` with its times as UTC ISO strings (the beacon file's `selection`)."""
+    return {k: (v if k == "drand_round" else _utc(v)) for k, v in schedule.items()}
+
+
+def fetch_drand(round_: int, cfg: dict[str, Any], *, http: HttpGet = http_get_json,
+                now: Callable[[], float] = time.time) -> dict[str, Any]:
+    """One attempt at drand mainnet (default chain) round `round_`, verified against the pre-registered chain.
+
+    Network failures and non-200 answers (404/425: the round is not published yet) raise BeaconUnreachable;
+    a different chain or an answer that fails verification raises SeedError."""
+    status, info = _get(http, cfg["info_url"])
     if status != 200 or not isinstance(info, dict):
-        raise BeaconUnreachable(f"{cfg['info_url']} returned HTTP {status}")
+        raise BeaconUnreachable(f"{cfg['info_url']} returned HTTP {status}", url=cfg["info_url"])
     expected = (cfg["chain_hash"], int(cfg["genesis_time"]), int(cfg["period_seconds"]))
     got = (info.get("hash"), info.get("genesis_time"), info.get("period"))
     if got != expected:
         raise SeedError(f"drand chain info {got} differs from the pre-registered chain {expected} (params.yaml seeds.beacon.drand)")
-    genesis, period = expected[1], expected[2]
-    round_ = drand_round_at_or_after(target, genesis, period)
-    _wait_until(drand_round_time(round_, genesis, period), wait=wait, what=f"drand round {round_}", now=now, sleep=sleep)
     url = cfg["round_url"].format(round=round_)
-    for attempt in range(retries):
-        status, body = http(url)
-        if status == 200 and isinstance(body, dict):
-            randomness, signature = str(body.get("randomness", "")), str(body.get("signature", ""))
-            if body.get("round") != round_ or not _HEX64.fullmatch(randomness):
-                raise SeedError(f"{url}: unexpected round or randomness in {body}")
-            try:
-                derived = hashlib.sha256(bytes.fromhex(signature)).hexdigest()
-            except ValueError as e:
-                raise SeedError(f"{url}: signature is not hex") from e
-            if derived != randomness:
-                raise SeedError(f"{url}: randomness is not sha256(signature)")
-            return {"source": "drand", "round": round_, "randomness": randomness, "url": url, "fetched_at": now_utc_iso()}
-        if status in (404, 425) and wait and attempt + 1 < retries:
-            sleep(period)
-            continue
-        if status in (404, 425):
-            raise BeaconNotYetPublished(f"{url} returned HTTP {status} (round not published yet); rerun later or pass --wait")
-        raise BeaconUnreachable(f"{url} returned HTTP {status}")
-    raise BeaconUnreachable(f"{url}: no answer after {retries} attempts")
+    status, body = _get(http, url)
+    if status == 200 and isinstance(body, dict):
+        randomness, signature = str(body.get("randomness", "")), str(body.get("signature", ""))
+        if body.get("round") != round_ or not _HEX64.fullmatch(randomness):
+            raise SeedError(f"{url}: unexpected round or randomness in {body}")
+        try:
+            derived = hashlib.sha256(bytes.fromhex(signature)).hexdigest()
+        except ValueError as e:
+            raise SeedError(f"{url}: signature is not hex") from e
+        if derived != randomness:
+            raise SeedError(f"{url}: randomness is not sha256(signature)")
+        return {"source": "drand", "round": round_, "randomness": randomness, "url": url, "fetched_at": _utc(now())}
+    if status in (404, 425):
+        raise BeaconUnreachable(f"{url} returned HTTP {status} (round not published yet)", url=url)
+    raise BeaconUnreachable(f"{url} returned HTTP {status}", url=url)
 
 
-def fetch_nist(target: int, cfg: dict[str, Any], *, wait: bool, http: HttpGet = http_get_json,
-               now: Callable[[], float] = time.time, sleep: Callable[[float], None] = time.sleep,
-               retries: int = 10) -> dict[str, Any]:
-    """The first NIST Randomness Beacon 2.0 pulse at or after `target` (fallback, docs/11 §1.3)."""
+def fetch_nist(target: int, cfg: dict[str, Any], *, http: HttpGet = http_get_json,
+               now: Callable[[], float] = time.time) -> dict[str, Any]:
+    """One attempt at the first NIST Randomness Beacon 2.0 pulse at or after `target` (fallback, docs/11 §1.3)."""
     period = int(cfg["period_seconds"])
-    _wait_until(nist_pulse_at_or_after(target, period), wait=wait, what="the NIST beacon pulse", now=now, sleep=sleep)
     url = cfg["pulse_url"].format(timestamp_ms=target * 1000)
-    for attempt in range(retries):
-        status, body = http(url)
-        if status == 200 and isinstance(body, dict) and isinstance(body.get("pulse"), dict):
-            pulse = body["pulse"]
-            ts = dt.datetime.fromisoformat(str(pulse["timeStamp"]).replace("Z", "+00:00")).timestamp()
-            if not (target <= ts < target + period):
-                raise SeedError(f"{url}: pulse at {pulse['timeStamp']} is not the first pulse at or after {_utc(target)}")
-            value = str(pulse.get("outputValue", ""))
-            if not re.fullmatch(r"[0-9A-Fa-f]{128}", value):
-                raise SeedError(f"{url}: unexpected outputValue")
-            return {"source": "nist-beacon-2.0", "round": int(pulse["pulseIndex"]), "randomness": value,
-                    "url": str(pulse.get("uri") or url), "fetched_at": now_utc_iso()}
-        if status == 404 and wait and attempt + 1 < retries:
-            sleep(period)
-            continue
-        if status == 404:
-            raise BeaconNotYetPublished(f"{url} returned HTTP 404 (pulse not published yet)")
-        raise BeaconUnreachable(f"{url} returned HTTP {status}")
-    raise BeaconUnreachable(f"{url}: no answer after {retries} attempts")
+    status, body = _get(http, url)
+    if status == 200 and isinstance(body, dict) and isinstance(body.get("pulse"), dict):
+        pulse = body["pulse"]
+        ts = dt.datetime.fromisoformat(str(pulse["timeStamp"]).replace("Z", "+00:00")).timestamp()
+        if not (target <= ts < target + period):
+            raise SeedError(f"{url}: pulse at {pulse['timeStamp']} is not the first pulse at or after {_utc(target)}")
+        value = str(pulse.get("outputValue", ""))
+        if not re.fullmatch(r"[0-9A-Fa-f]{128}", value):
+            raise SeedError(f"{url}: unexpected outputValue")
+        return {"source": "nist-beacon-2.0", "round": int(pulse["pulseIndex"]), "randomness": value,
+                "url": str(pulse.get("uri") or url), "fetched_at": _utc(now())}
+    if status == 404:
+        raise BeaconUnreachable(f"{url} returned HTTP 404 (pulse not published yet)", url=url)
+    raise BeaconUnreachable(f"{url} returned HTTP {status}", url=url)
 
 
 def select_beacon(tagger_time: int, cfg: dict[str, Any], *, wait: bool, http: HttpGet = http_get_json,
                   now: Callable[[], float] = time.time, sleep: Callable[[float], None] = time.sleep,
-                  attempts: int = 3) -> dict[str, Any]:
-    """drand first, NIST if drand is unreachable, the empty string if neither is (docs/11 §1.3)."""
-    target = int(tagger_time) + int(cfg["delay_seconds"])
-    errors: list[str] = []
-    for name, fetch in (("drand", fetch_drand), ("nist", fetch_nist)):
-        for attempt in range(attempts):
+                  attempts: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """The beacon value B of docs/11 §1.3, with deadlines relative to the drand round time.
+
+    From the round time, drand is tried every `retry_seconds` (at most 60). NIST is tried, after drand, only
+    once now >= round time + `nist_after_seconds`; the empty string is returned only when both have just
+    failed at now >= round time + `empty_after_seconds`. Every failed attempt is appended to `attempts`
+    ({utc_time, source, url, error}) and returned as the beacon's `attempts`, with the `selection` times.
+    Without `wait`, one round of attempts is made and BeaconUnreachable is raised (nothing returned, so no
+    file is written) unless a beacon was obtained or the empty-string deadline has passed. Before the round
+    time: BeaconNotYetPublished without `wait`, else sleep until it."""
+    log = attempts if attempts is not None else []
+    sched = beacon_schedule(tagger_time, cfg)
+    retry = int(cfg["retry_seconds"])
+    if not 0 < retry <= 60:
+        raise SeedError("params.yaml seeds.beacon.retry_seconds must be in (0, 60]: drand is retried at least once a minute (docs/11 §1.3)")
+    round_, t_round = sched["drand_round"], sched["drand_round_time"]
+    selection = _selection_record(sched)
+    _wait_until(t_round, wait=wait, what=f"drand round {round_}", now=now, sleep=sleep)
+
+    def failed(source: str, e: BeaconUnreachable) -> None:
+        log.append({"utc_time": _utc(now()), "source": source, "url": e.url, "error": str(e)})
+        print(f"beacon: {source} attempt failed at {_utc(now())}: {e}", file=sys.stderr, flush=True)
+
+    while True:
+        started = now()
+        try:
+            return {**fetch_drand(round_, cfg["drand"], http=http, now=now), "selection": selection, "attempts": log}
+        except BeaconUnreachable as e:
+            failed("drand", e)
+        if now() >= sched["nist_allowed_from"]:
             try:
-                return fetch(target, cfg[name], wait=wait, http=http, now=now, sleep=sleep)
+                return {**fetch_nist(sched["target_time"], cfg["nist"], http=http, now=now), "selection": selection,
+                        "attempts": log}
             except BeaconUnreachable as e:
-                errors.append(f"{name} attempt {attempt + 1}: {e}")
-                if attempt + 1 < attempts:
-                    sleep(5)
-    print("WARNING: neither drand nor the NIST beacon was reachable; B is the empty string and a docs/11 §17 "
-          "entry must say so (docs/11 §1.3):\n  " + "\n  ".join(errors), file=sys.stderr)
-    return {"source": "none (drand and NIST unreachable)", "round": None, "randomness": "", "url": None,
-            "fetched_at": now_utc_iso()}
+                failed("nist", e)
+        if now() >= sched["empty_allowed_from"]:
+            print(f"WARNING: neither drand nor the NIST beacon returned the round by {selection['empty_allowed_from']}; "
+                  f"B is the empty string. Cite the {len(log)} failed attempts recorded in the beacon file in docs/11 §17 "
+                  "(docs/11 §1.3).", file=sys.stderr)
+            return {"source": "none (drand and NIST did not return the round by the deadline)", "round": None,
+                    "randomness": "", "url": None, "fetched_at": _utc(now()), "selection": selection, "attempts": log}
+        before_nist = now() < sched["nist_allowed_from"]
+        nxt = "the NIST fallback" if before_nist else "the empty-string fallback"
+        when = selection["nist_allowed_from"] if before_nist else selection["empty_allowed_from"]
+        if not wait:
+            raise BeaconUnreachable(
+                f"drand round {round_} not obtained ({len(log)} failed attempts so far); {nxt} is allowed only from {when} "
+                "(docs/11 §1.3). Rerun with --wait to keep retrying at least once a minute; no beacon file was written")
+        delay = started + retry - now()
+        if delay > 0:
+            sleep(delay)
 
 
 def write_beacon(beacon: dict[str, Any], repo: Path = REPO_ROOT) -> Path:
@@ -393,6 +452,19 @@ def write_beacon(beacon: dict[str, Any], repo: Path = REPO_ROOT) -> Path:
         raise SeedError(f"{BEACON_REL} already exists; the beacon is fetched once and never replaced (docs/11 §1.4)")
     path.write_text(json.dumps({k: beacon[k] for k in BEACON_KEYS}, indent=2) + "\n", encoding="utf-8")
     return path
+
+
+def load_pending_attempts(repo: Path = REPO_ROOT) -> list[dict[str, Any]]:
+    """Failed attempts of earlier `--fetch-beacon` runs that ended without a beacon file."""
+    path = repo / BEACON_ATTEMPTS_REL
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def save_pending_attempts(attempts: Iterable[dict[str, Any]], repo: Path = REPO_ROOT) -> None:
+    path = repo / BEACON_ATTEMPTS_REL
+    path.write_text("".join(json.dumps(a, sort_keys=True) + "\n" for a in attempts), encoding="utf-8")
 
 
 # ---- run log ---------------------------------------------------------------------------------------
@@ -541,18 +613,38 @@ def _show(repo: Path) -> int:
     return 0
 
 
-def _fetch(repo: Path, wait: bool) -> int:
+def _fetch(repo: Path, wait: bool, **io: Any) -> int:
+    """--fetch-beacon: select B by the docs/11 §1.3 rule and write the beacon file once.
+
+    Failed attempts of a run that ends without a beacon (no --wait, Ctrl-C, a verification error) are kept
+    in BEACON_ATTEMPTS_REL and carried into the beacon file by the run that writes it. `io` passes `http`,
+    `now` and `sleep` through to `select_beacon` (tests)."""
     if (repo / BEACON_REL).exists():
         raise SeedError(f"{BEACON_REL} already exists; the beacon is fetched once and never replaced (docs/11 §1.4)")
     tagger = tag_tagger_time(repo)
-    beacon = select_beacon(tagger, beacon_config(repo), wait=wait)
-    path = write_beacon(beacon, repo)
+    prior = load_pending_attempts(repo)
+    log = list(prior)
+    written = False
+    try:
+        beacon = select_beacon(tagger, beacon_config(repo), wait=wait, attempts=log, **io)
+        path = write_beacon(beacon, repo)
+        written = True
+    finally:
+        if written:
+            (repo / BEACON_ATTEMPTS_REL).unlink(missing_ok=True)
+        elif len(log) > len(prior):
+            save_pending_attempts(log, repo)
+            print(f"{len(log)} failed beacon attempts kept in {BEACON_ATTEMPTS_REL}; they go into the beacon file "
+                  "when it is written", file=sys.stderr)
     print(f"wrote {path.relative_to(repo)}: source={beacon['source']} round={beacon['round']} "
-          f"(sap-v1 tagger time {_utc(tagger)}); commit it with a docs/11 §17 clarification")
+          f"(sap-v1 tagger time {_utc(tagger)}; drand round {beacon['selection']['drand_round']} at "
+          f"{beacon['selection']['drand_round_time']}; {len(beacon['attempts'])} failed attempts recorded); "
+          "commit it with a docs/11 §17 clarification that cites them")
     return 0
 
 
-def main(argv: list[str] | None = None, *, repo: Path | None = None) -> int:
+def main(argv: list[str] | None = None, *, repo: Path | None = None, **io: Any) -> int:
+    """Command line. `io` (`http`, `now`, `sleep`) replaces the network and the clock for --fetch-beacon in tests."""
     repo = Path(repo) if repo is not None else REPO_ROOT
     ap = argparse.ArgumentParser(prog="python -m bvsignal.seed", description=__doc__.split("\n\n")[0])
     act = ap.add_mutually_exclusive_group(required=True)
@@ -561,7 +653,9 @@ def main(argv: list[str] | None = None, *, repo: Path | None = None) -> int:
     act.add_argument("--frozen-inputs", action="store_true", help="print signal_rules_sha256 and the frozen_inputs hashes")
     act.add_argument("--write-frozen", action="store_true", help="write those hashes into monitoring/params.yaml (comments kept)")
     act.add_argument("--check-frozen", action="store_true", help="exit 1 if params.yaml differs and no docs/11 §17 row cites the new hash")
-    ap.add_argument("--wait", action="store_true", help="with --fetch-beacon: sleep until the round is published")
+    ap.add_argument("--wait", action="store_true",
+                    help="with --fetch-beacon: sleep until the round time, then retry drand at least once a minute; NIST "
+                         "from round time + 30 min, the empty string from round time + 60 min (docs/11 §1.3)")
     args = ap.parse_args(argv)
     if args.wait and not args.fetch_beacon:
         ap.error("--wait only applies to --fetch-beacon")
@@ -569,7 +663,7 @@ def main(argv: list[str] | None = None, *, repo: Path | None = None) -> int:
         if args.show:
             return _show(repo)
         if args.fetch_beacon:
-            return _fetch(repo, args.wait)
+            return _fetch(repo, args.wait, **io)
         if args.frozen_inputs:
             print(f"signal_rules_sha256: {signal_rules_sha256(repo)}")
             print("frozen_inputs:")

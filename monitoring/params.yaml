@@ -203,6 +203,9 @@ seeds:                            # docs/11 §1.3
   beacon:
     file: monitoring/seed_beacon.json   # written after the tag by `python -m bvsignal.seed --fetch-beacon`
     delay_seconds: 600            # first round at least 10 minutes after the sap-v1 tagger timestamp (docs/11 §1.3)
+    retry_seconds: 30             # drand is retried at least once a minute from the round time (docs/11 §1.3); <= 60
+    nist_after_seconds: 1800      # NIST only if drand has not returned the round by round time + 30 min (docs/11 §1.3)
+    empty_after_seconds: 3600     # B = "" only if neither has returned it by round time + 60 min (docs/11 §1.3)
     drand:                        # drand mainnet, default chain [25]
       info_url: https://api.drand.sh/info
       round_url: https://api.drand.sh/public/{round}

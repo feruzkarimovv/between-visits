@@ -28,7 +28,8 @@ GIT_ENV = {
 DRAND = {"chain_hash": "ab" * 32, "genesis_time": 1_595_431_050, "period_seconds": 30,
          "info_url": "https://drand.invalid/info", "round_url": "https://drand.invalid/public/{round}"}
 NIST = {"pulse_url": "https://nist.invalid/pulse/time/{timestamp_ms}", "period_seconds": 60}
-CFG = {"delay_seconds": 600, "drand": DRAND, "nist": NIST}
+CFG = {"delay_seconds": 600, "retry_seconds": 30, "nist_after_seconds": 1800, "empty_after_seconds": 3600,
+       "drand": DRAND, "nist": NIST}
 
 
 def git(repo: Path, *args: str, date: int | None = None) -> str:
@@ -73,7 +74,8 @@ def test_derivation_rejects_anything_but_40_hex(bad: str) -> None:
 
 
 def test_eval_seed_from_tag_commit_and_beacon_file(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    beacon = {"source": "drand", "round": 123, "randomness": FAKE_B, "url": "u", "fetched_at": "t"}
+    beacon = {"source": "drand", "round": 123, "randomness": FAKE_B, "url": "u", "fetched_at": "t", "selection": {},
+              "attempts": []}
     repo = make_repo(tmp_path, tag=True, beacon=beacon)
     commit = git(repo, "rev-parse", "sap-v1^{commit}")
     assert s.sap_tag_commit(repo) == commit
@@ -83,7 +85,8 @@ def test_eval_seed_from_tag_commit_and_beacon_file(tmp_path: Path, capsys: pytes
 
 
 def test_show_with_empty_beacon(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    repo = make_repo(tmp_path, tag=True, beacon={"source": "none", "round": None, "randomness": "", "url": None, "fetched_at": "t"})
+    repo = make_repo(tmp_path, tag=True, beacon={"source": "none", "round": None, "randomness": "", "url": None, "fetched_at": "t",
+                                                 "selection": {}, "attempts": [{"utc_time": "t", "source": "drand", "url": "u", "error": "e"}]})
     assert s.main(["--show"], repo=repo) == 0
     out = capsys.readouterr().out
     assert "beacon_round=none" in out and f"eval_seed={s.derive_eval_seed(git(repo, 'rev-parse', 'HEAD'), '')}" in out
@@ -190,74 +193,192 @@ def _drand_body(round_: int) -> dict:
     return {"round": round_, "randomness": hashlib.sha256(bytes.fromhex(sig)).hexdigest(), "signature": sig}
 
 
-def fake_http(*, drand_up: bool = True, nist_up: bool = True, published_until: float = float("inf"), clock: FakeClock | None = None):
-    def http(url: str) -> tuple[int, object]:
-        now = clock.now() if clock else 0.0
+class FakeNet:
+    """drand and NIST stand-ins on a fake clock; `drand_up`/`nist_up` may be a bool or a function of the time.
+    `requests` records (time, url) of every request."""
+
+    def __init__(self, clock: FakeClock, *, drand_up=True, nist_up=True, published_until: float = float("inf")) -> None:
+        self.clock, self.drand_up, self.nist_up, self.published_until = clock, drand_up, nist_up, published_until
+        self.requests: list[tuple[float, str]] = []
+
+    @staticmethod
+    def _is(up, t: float) -> bool:
+        return up(t) if callable(up) else bool(up)
+
+    def __call__(self, url: str) -> tuple[int, object]:
+        now = self.clock.now()
+        self.requests.append((now, url))
         if url.startswith("https://drand.invalid"):
-            if not drand_up:
-                raise s.BeaconUnreachable(url)
+            if not self._is(self.drand_up, now):
+                raise s.BeaconUnreachable(f"{url}: connection refused")
             if url.endswith("/info"):
                 return 200, {"hash": DRAND["chain_hash"], "genesis_time": DRAND["genesis_time"], "period": DRAND["period_seconds"]}
             r = int(url.rsplit("/", 1)[1])
-            if s.drand_round_time(r, DRAND["genesis_time"], DRAND["period_seconds"]) > min(now, published_until):
+            if s.drand_round_time(r, DRAND["genesis_time"], DRAND["period_seconds"]) > min(now, self.published_until):
                 return 425, None
             return 200, _drand_body(r)
-        if not nist_up:
-            raise s.BeaconUnreachable(url)
+        if not self._is(self.nist_up, now):
+            raise s.BeaconUnreachable(f"{url}: connection refused")
         ts_ms = int(url.rsplit("/", 1)[1])
         pulse_t = s.nist_pulse_at_or_after(ts_ms // 1000)
         if pulse_t > now:
             return 404, None
         stamp = s._utc(pulse_t).replace("Z", ".000Z")
         return 200, {"pulse": {"timeStamp": stamp, "pulseIndex": 42, "outputValue": "AB" * 64, "uri": "https://nist.invalid/chain/2/pulse/42"}}
-    return http
+
+    def times(self, prefix: str) -> list[float]:
+        return [t for t, url in self.requests if url.startswith(prefix)]
+
+
+TAGGER = 1_790_000_007
+
+
+def _round_time() -> int:
+    return s.beacon_schedule(TAGGER, CFG)["drand_round_time"]
 
 
 def test_fetch_selects_first_drand_round_ten_minutes_after_the_tag() -> None:
-    tagger = 1_790_000_007
-    clock = FakeClock(tagger + 3600)
-    b = s.select_beacon(tagger, CFG, wait=False, http=fake_http(clock=clock), now=clock.now, sleep=clock.sleep)
-    expected = s.drand_round_at_or_after(tagger + 600, DRAND["genesis_time"], DRAND["period_seconds"])
+    clock = FakeClock(TAGGER + 3600)
+    b = s.select_beacon(TAGGER, CFG, wait=False, http=FakeNet(clock), now=clock.now, sleep=clock.sleep)
+    expected = s.drand_round_at_or_after(TAGGER + 600, DRAND["genesis_time"], DRAND["period_seconds"])
     assert b["source"] == "drand" and b["round"] == expected
     assert b["url"] == f"https://drand.invalid/public/{expected}" and len(b["randomness"]) == 64
-    assert s.drand_round_time(expected, DRAND["genesis_time"], DRAND["period_seconds"]) >= tagger + 600
-    assert set(b) == set(s.BEACON_KEYS)
+    assert s.drand_round_time(expected, DRAND["genesis_time"], DRAND["period_seconds"]) >= TAGGER + 600
+    assert set(b) == set(s.BEACON_KEYS) and b["attempts"] == []
+    t_round = _round_time()
+    assert b["selection"] == {"tagger_time": s._utc(TAGGER), "target_time": s._utc(TAGGER + 600), "drand_round": expected,
+                              "drand_round_time": s._utc(t_round), "nist_allowed_from": s._utc(t_round + 1800),
+                              "empty_allowed_from": s._utc(t_round + 3600)}
 
 
 def test_fetch_before_the_round_refuses_without_wait_and_sleeps_with_wait() -> None:
-    tagger = 1_790_000_007
-    clock = FakeClock(tagger + 60)
+    clock = FakeClock(TAGGER + 60)
     with pytest.raises(s.BeaconNotYetPublished):
-        s.select_beacon(tagger, CFG, wait=False, http=fake_http(clock=clock), now=clock.now, sleep=clock.sleep)
-    b = s.select_beacon(tagger, CFG, wait=True, http=fake_http(clock=clock), now=clock.now, sleep=clock.sleep)
-    assert b["source"] == "drand" and clock.t >= tagger + 600 and clock.slept
+        s.select_beacon(TAGGER, CFG, wait=False, http=FakeNet(clock), now=clock.now, sleep=clock.sleep)
+    b = s.select_beacon(TAGGER, CFG, wait=True, http=FakeNet(clock), now=clock.now, sleep=clock.sleep)
+    assert b["source"] == "drand" and clock.t >= _round_time() and clock.slept and max(clock.slept) <= 60
 
 
 def test_fetch_falls_back_to_nist_then_to_the_empty_string() -> None:
-    tagger = 1_790_000_007
-    clock = FakeClock(tagger + 3600)
-    b = s.select_beacon(tagger, CFG, wait=False, http=fake_http(drand_up=False, clock=clock), now=clock.now, sleep=clock.sleep)
-    assert b["source"] == "nist-beacon-2.0" and b["round"] == 42 and b["randomness"] == "AB" * 64
-    b = s.select_beacon(tagger, CFG, wait=False, http=fake_http(drand_up=False, nist_up=False, clock=clock),
-                        now=clock.now, sleep=clock.sleep)
-    assert b["randomness"] == "" and b["round"] is None and b["source"].startswith("none")
+    """docs/11 §1.3: NIST only from round time + 30 min, the empty string only from round time + 60 min; a
+    failure before a deadline raises (no beacon, so no file) instead of falling back."""
+    t_round = _round_time()
+
+    def attempt(at: float, **net: object) -> tuple[dict | None, FakeNet, list[dict]]:
+        clock = FakeClock(at)
+        http, log = FakeNet(clock, **net), []
+        try:
+            return s.select_beacon(TAGGER, CFG, wait=False, http=http, now=clock.now, sleep=clock.sleep, attempts=log), http, log
+        except s.BeaconUnreachable:
+            return None, http, log
+
+    # drand down, NIST up: before round time + 30 min NIST is not even asked
+    b, http, log = attempt(t_round + 1799, drand_up=False)
+    assert b is None and http.times("https://nist.invalid") == []
+    assert log == [{"utc_time": s._utc(t_round + 1799), "source": "drand", "url": DRAND["info_url"],
+                    "error": f"{DRAND['info_url']}: connection refused"}]
+    b, http, log = attempt(t_round + 1800, drand_up=False)
+    assert b is not None and b["source"] == "nist-beacon-2.0" and b["round"] == 42 and b["randomness"] == "AB" * 64
+    assert [a["source"] for a in b["attempts"]] == ["drand"] and b["attempts"] is log
+    # both down: no empty string before round time + 60 min
+    b, http, log = attempt(t_round + 3599, drand_up=False, nist_up=False)
+    assert b is None and [a["source"] for a in log] == ["drand", "nist"]
+    b, http, log = attempt(t_round + 3600, drand_up=False, nist_up=False)
+    assert b is not None and b["randomness"] == "" and b["round"] is None and b["source"].startswith("none")
+    assert [(a["source"], a["url"]) for a in b["attempts"]] == [
+        ("drand", DRAND["info_url"]), ("nist", NIST["pulse_url"].format(timestamp_ms=(TAGGER + 600) * 1000))]
+    # drand back before the deadline: drand wins even after the NIST deadline
+    b, _, _ = attempt(t_round + 3000, drand_up=True, nist_up=True)
+    assert b is not None and b["source"] == "drand"
+
+
+def test_fetch_with_wait_retries_drand_every_minute_until_each_deadline() -> None:
+    t_round = _round_time()
+    # both down from the round time: drand at least once a minute, NIST only from + 30 min, empty from + 60 min
+    clock = FakeClock(TAGGER)
+    http = FakeNet(clock, drand_up=False, nist_up=False)
+    b = s.select_beacon(TAGGER, CFG, wait=True, http=http, now=clock.now, sleep=clock.sleep)
+    assert b["randomness"] == "" and t_round + 3600 <= clock.t < t_round + 3600 + 60
+    drand_t = http.times(DRAND["info_url"])
+    assert t_round <= drand_t[0] <= t_round + 1 and max(y - x for x, y in zip(drand_t, drand_t[1:], strict=False)) <= 60
+    assert drand_t[-1] >= t_round + 3600
+    nist_t = http.times("https://nist.invalid")
+    assert nist_t and min(nist_t) >= t_round + 1800 and max(nist_t) >= t_round + 3600
+    assert len(b["attempts"]) == len(drand_t) + len(nist_t)
+    assert max(clock.slept) <= 60
+    # drand down, NIST up: NIST at the first attempt at or after round time + 30 min
+    clock = FakeClock(t_round)
+    http = FakeNet(clock, drand_up=False)
+    b = s.select_beacon(TAGGER, CFG, wait=True, http=http, now=clock.now, sleep=clock.sleep)
+    assert b["source"] == "nist-beacon-2.0" and t_round + 1800 <= clock.t < t_round + 1800 + 60
+    assert len(http.times("https://nist.invalid")) == 1 and all(a["source"] == "drand" for a in b["attempts"])
+    # a transient drand outage (2 minutes) or a late round (HTTP 425) never switches to NIST
+    clock = FakeClock(t_round)
+    http = FakeNet(clock, drand_up=lambda t: t >= t_round + 120)
+    b = s.select_beacon(TAGGER, CFG, wait=True, http=http, now=clock.now, sleep=clock.sleep)
+    assert b["source"] == "drand" and len(b["attempts"]) >= 4 and http.times("https://nist.invalid") == []
+    clock = FakeClock(t_round)
+    http = FakeNet(clock, published_until=t_round - 1)  # drand stalls: the round is never published
+    b = s.select_beacon(TAGGER, CFG, wait=True, http=http, now=clock.now, sleep=clock.sleep)
+    assert b["source"] == "nist-beacon-2.0" and all("HTTP 425" in a["error"] for a in b["attempts"])
 
 
 def test_fetch_refuses_a_different_drand_chain() -> None:
     clock = FakeClock(1_790_010_000)
     cfg = {**CFG, "drand": {**DRAND, "chain_hash": "cd" * 32}}
     with pytest.raises(s.SeedError, match="pre-registered chain"):
-        s.select_beacon(1_790_000_000, cfg, wait=False, http=fake_http(clock=clock), now=clock.now, sleep=clock.sleep)
+        s.select_beacon(1_790_000_000, cfg, wait=False, http=FakeNet(clock), now=clock.now, sleep=clock.sleep)
+
+
+def test_fetch_refuses_a_retry_interval_above_a_minute() -> None:
+    clock = FakeClock(1_790_010_000)
+    with pytest.raises(s.SeedError, match="once a minute"):
+        s.select_beacon(1_790_000_000, {**CFG, "retry_seconds": 61}, wait=False, http=FakeNet(clock), now=clock.now,
+                        sleep=clock.sleep)
+
+
+def test_fetch_beacon_cli_keeps_failed_attempts_and_writes_the_file_once(tmp_path: Path,
+                                                                        capsys: pytest.CaptureFixture[str]) -> None:
+    repo = make_repo(tmp_path, tag=True, tagger_time=TAGGER)
+    (repo / s.PARAMS_REL).write_text(yaml.safe_dump({"seeds": {"beacon": CFG}}))
+    t_round = _round_time()
+    clock = FakeClock(t_round + 60)
+    io = {"now": clock.now, "sleep": clock.sleep}
+    # drand down, no --wait: refused, nothing written, the failed attempt is kept
+    assert s.main(["--fetch-beacon"], repo=repo, http=FakeNet(clock, drand_up=False), **io) == 2
+    assert "allowed only from" in capsys.readouterr().err
+    assert not (repo / s.BEACON_REL).exists()
+    assert [a["source"] for a in s.load_pending_attempts(repo)] == ["drand"]
+    # drand back: the beacon file carries the earlier failure, the pending file is gone
+    clock.t += 90
+    assert s.main(["--fetch-beacon"], repo=repo, http=FakeNet(clock), **io) == 0
+    beacon = s.load_beacon(repo)
+    assert beacon["source"] == "drand" and [a["utc_time"] for a in beacon["attempts"]] == [s._utc(t_round + 60)]
+    assert beacon["selection"]["drand_round_time"] == s._utc(t_round)
+    assert not (repo / s.BEACON_ATTEMPTS_REL).exists()
+    assert list(json.loads((repo / s.BEACON_REL).read_text())) == list(s.BEACON_KEYS)
+    # never replaced
+    assert s.main(["--fetch-beacon"], repo=repo, http=FakeNet(clock), **io) == 2
+    assert "already exists" in capsys.readouterr().err
+    assert s.main(["--show"], repo=repo) == 0
+    assert f"beacon_round={beacon['round']}" in capsys.readouterr().out
 
 
 def test_beacon_file_is_written_once(tmp_path: Path) -> None:
     repo = tmp_path
     (repo / "monitoring").mkdir()
-    b = {"source": "drand", "round": 1, "randomness": FAKE_B, "url": "u", "fetched_at": "t"}
+    b = {"source": "drand", "round": 1, "randomness": FAKE_B, "url": "u", "fetched_at": "t", "selection": {}, "attempts": []}
     s.write_beacon(b, repo)
     assert json.loads((repo / s.BEACON_REL).read_text()) == b
     with pytest.raises(s.SeedError, match="already exists"):
         s.write_beacon(b, repo)
+
+
+def test_beacon_file_without_attempts_is_refused(tmp_path: Path) -> None:
+    beacon = {"source": "drand", "round": 1, "randomness": FAKE_B, "url": "u", "fetched_at": "t", "selection": {}}
+    repo = make_repo(tmp_path, tag=True, beacon=beacon)
+    with pytest.raises(s.SeedError, match="attempts"):
+        s.load_beacon(repo)
 
 
 def test_params_preregister_the_drand_default_chain() -> None:
@@ -265,6 +386,9 @@ def test_params_preregister_the_drand_default_chain() -> None:
     assert cfg["delay_seconds"] == 600
     assert cfg["drand"]["round_url"] == "https://api.drand.sh/public/{round}"
     assert cfg["drand"]["info_url"] == "https://api.drand.sh/info"
+    # docs/11 §1.3: retried at least once a minute; NIST from round time + 30 min; empty B from + 60 min
+    assert 0 < cfg["retry_seconds"] <= 60
+    assert cfg["nist_after_seconds"] == 30 * 60 and cfg["empty_after_seconds"] == 60 * 60
 
 
 # ---- run log and code commit -----------------------------------------------------------------------
