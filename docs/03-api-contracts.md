@@ -411,9 +411,17 @@ An odds ratio below 1 means that group's episodes were captured less often.
              "per_site":[{"site_id":"108","or":0.0,"ci95":[0.0,0.0],"n_es":0,"n_en":0}]},
  "pace":{"mh_or":0.0,"ci95":[0.0,0.0],"n_sites_used":0,
          "per_site":[{"site_id":"108","or":0.0,"ci95":[0.0,0.0],"n_extra_time":0,"n_standard":0}]},
- "single_language_counterfactual":[{"site_id":"108","tier_now":"look","tier_if_english_only":"not_computed","reason":"insufficient_episodes"}],
+ "single_language_counterfactual":[{"site_id":"108","tier_now":"look","tier_if_english_only":"not_computed","reason":"insufficient_episodes",
+                                     "share_no_reference_stream":0.0}],
  "note":"Within-site comparisons; power is low at these sample sizes."}
 ```
+
+- `pace` has the same fields as `language` (including `rbg_ci95` and `breslow_day_p`); pace is a built-in negative control (`negative_control: true`).
+- When no site has ≥ 5 evaluable episodes in each group, the block is not computed: `n_sites_used` 0, `mh_or`, `ci95`, `rbg_ci95` and `breslow_day_p` null, `not_computed_reason: "insufficient_data"` and `label: "not computed: insufficient data"`.
+- An interval bound is null when it is unbounded (for example a bootstrap upper bound when enough resamples have no discordant pair).
+- `per_site[].ci95` is null ("point estimate only", `interval: "point_estimate_only"`) when the site has < 10 evaluable episodes in either group.
+- `single_language_counterfactual` has one row per site in site order. `reason` is the site's `not_computed_reason` with English-only calls (null when it would be computed); `share_no_reference_stream` is the share of the site's patients who are Spanish-speaking, so get no calls in the counterfactual.
+- `equity.json` also carries `_about`, the provenance fields of `11-site-signal-sap.md` §15 rule 7 and descriptive extras (`method`, `breslow_day`, `bootstrap`, `sensitivity_site_x_term`, per-site `cells`, `counterfactual`); clients ignore keys they do not use. Every object carries `data_origin`.
 
 Errors: 403 `wrong_role`; 404 `no_equity_run` when `equity.json` is missing.
 
