@@ -73,7 +73,7 @@ Append-only list: time, actor, role, action, entity, before/after diff on expand
 
 ## Components to build once
 
-`StatusChip`, `LevelChip`, `LanguageChip`, `PaceChip`, `GradeBadge` (always shows "provisional"), `EvidenceQuote` (quote + translation + timestamp + source), `AiLabel`, `CountdownClock`, `RelativeTime`, `RoleSwitch`, `EscalationBanner`, `WebCallWidget`, `Sparkline`.
+`StatusChip`, `LevelChip`, `LanguageChip`, `PaceChip`, `GradeBadge` (always shows "provisional"), `EvidenceQuote` (quote + translation + timestamp + source), `AiLabel`, `CountdownClock`, `RelativeTime`, `RoleSwitch`, `EscalationBanner`, `WebCallWidget`, `Sparkline`. *Planned (Site Signal, below):* `TierBadge`, `DataOriginBadge`, `FunnelPlot`, `EpisodeTable`, `SiteQueryComposer`, `BlindRunDialog`, `PowerTable`, `EquityPanel`.
 
 ## States
 
@@ -82,3 +82,34 @@ Every list has a designed empty state ("No check-ins due today. Patients appear 
 ## Accessibility
 
 Keyboard reachable actions, visible focus, color never the only signal (chips have text), minimum 14 px text, 4.5:1 contrast.
+
+## Site Signal pages (planned, Sun Oct 11)
+
+What each page must show and who can act is in `docs/10-site-signal.md` §6; payloads are in `docs/03-api-contracts.md` §5; tasks are WS3 F10–F19. This section fixes layout, components and tokens.
+
+**Tokens.** Site Signal tiers get their own neutral scale and never reuse state colors: no green or "success" token (no tier means "clean") and no escalation red or amber (a statistical tier is not a clinical escalation). Watch = strongest emphasis (dark slate fill, white text), Look = medium (slate outline), "No signal at this sample size" = neutral gray text, "Not computed: reason" = light gray with the reason. `DataOriginBadge`: SIMULATED (dashed outline), MEASURED (solid outline), MIXED (half dashed). AI-assisted translations, including those of synthetic quotes, keep the violet `AiLabel`.
+
+**Nav.** `AppShell` adds **Sites** (`/sites`) and **Site inbox** (`/site-inbox`); `/sae` gets its own nav state. The role switch adds **CRA (sponsor)** (Sam Rivera). On phone width the bottom nav scrolls horizontally without page overflow.
+
+### `/sites` Site Signal (cra, sponsor; other roles see a "Switch to CRA to view site rankings" notice)
+- Header: `DataOriginBadge` SIMULATED, `sap-v1` short sha and date, "Thresholds fixed from the pre-registered null". Tabs: **Signal** · **How well it works** · **Equity**.
+- **Signal:** `FunnelPlot` (hand-built SVG: x = E, y = O/E, Look and Watch lower-limit curves from `funnel.limits`, one dot per computed site, not-computed sites as hollow gray markers in a strip below the axis, accessible table fallback). Ranked table: site, patients, evaluable, pending, paged, coverage, O/E, `TierBadge`, rate-KRI tier, "simaerep classic (legacy)" tier, open queries. Tier legend with the number of computed sites. Footer from `labels.footer` and `labels.footer_expected_false_look` (number from the API). Buttons **Blind run** (`BlindRunDialog`, demo mode only) and **Reveal answer key** (display labels from `labels.answer_key` only).
+- **How well it works** (any role): `PowerTable` with power at both tiers for every indicator, the 25% and 50% rows, null false-flag rates with MC SE, the failure case, sensitivity rows and the committed-study confusion labeled "illustration only"; link to `WHAT_IT_GETS_WRONG.md`. No number is typed in a component.
+- **Equity** (Checkpoint C): `EquityPanel` with within-site odds ratios (Spanish vs English, extra time vs standard) and intervals, the "power is low" note, per-site rows, and the **Single-language app** toggle that grays out the sites in the counterfactual list.
+
+### `/sites/[id]` Site drill-down (cra, sponsor; query actions cra only)
+- Site card: fictional name, region, roster mix, call completion, `TierBadge` with reason.
+- `EpisodeTable`: subject ID, term, `GradeBadge` ("provisional, rule-graded"), episode date, status chip (Unmatched, Matched, Pending grayed, "Paged: separate stratum", Not evaluated), `EvidenceQuote` (original language first, `AiLabel` translation), source chip (Live call / Replay / Synthetic), `DataOriginBadge`. Site 101 lists MEASURED episodes first. Strata mini-table (language, pace) and paged-stratum counts.
+- `SiteQueryComposer` (cra): select `unmatched` rows → template preview → edit → **Approve and send**; 422 codes shown inline. Query list with status and links to the audit rows.
+
+### `/site-inbox` Mock site inbox (coordinator responds; cra and sponsor read-only)
+Banner "Mock site inbox (synthetic data)". Sent, answered and closed queries for every queried site (optional site filter): body, cited subject IDs and dates, status timeline, coded response plus note. Drafts never appear. Coordinators see no patient quotes.
+
+### `/sae` Serious-event reports (any role)
+Table: subject ID, event term, status, `aware_at`, `CountdownClock` to `due_at`, sent / on time. Rows open `/sae/[id]`; "Download CIOMS JSON" per row and on `/sae/[id]`.
+
+### Changed pages
+- `/` Today: replay speed 1x/2x/4x; "Call in browser" disabled with a reason in demo mode; replay controls only when `health.demo_mode` is true.
+- `/checkins/[id]`: MEASURED badge "Site aware N days before next visit" (Checkpoint C); recorded-scenario label ("Recorded real call; synthetic patient played by a teammate" or "Scripted") and an audio player when `audio_url` is set.
+- `/review` and `/sponsor`: "Download AE.csv" / "Download CM.csv"; "origin: between_visits" tag on confirmed AE rows; the sponsor page gets an `h1`.
+- `/report-card`: Clopper-Pearson 95% interval on every proportion; the zero-failure note from `zero_failure_n`; a separate MEASURED "Real voice calls" row from `/api/eval/voice-checks`, never pooled with text mode; a line stating whether the evaluated and deployed agent models match.
