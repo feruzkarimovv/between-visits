@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FilePenLine, MailCheck, Save, ScrollText, Send, X } from "lucide-react";
+import { CircleCheckBig, FilePenLine, MailCheck, Save, ScrollText, Send, X } from "lucide-react";
 import type { SiteEpisode, SiteQuery, SiteQueryStatus } from "@/lib/types";
 import { useApiMutation } from "@/lib/queries";
 import { errorMessage, hasErrorCode, isApiError } from "@/lib/api";
@@ -31,7 +31,8 @@ function invalidateKeys(siteId: string) {
   return [["site", siteId], ["sites"], ["audit"], ["site-queries"]];
 }
 
-function InlineError({ error }: { error: unknown }) {
+/** An API error shown inline, with its `error.code`. */
+export function InlineError({ error }: { error: unknown }) {
   if (!error) return null;
   return (
     <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
@@ -252,6 +253,70 @@ const QUERY_STATUS: Record<SiteQueryStatus, { label: string; className: string }
   closed: { label: "Closed", className: "border-slate-200 bg-slate-50 font-normal text-slate-600" },
 };
 
+/**
+ * CRA closes an answered query (`POST /api/site-queries/{id}/close`, audit `site_query.closed`), with an optional
+ * closure note. Used on `/sites/[id]` and in the mock site inbox (`/site-inbox`).
+ */
+export function CloseQueryControl({ query, compact = false }: { query: SiteQuery; compact?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const close = useApiMutation<void, SiteQuery>({
+    request: () => ({
+      path: `/api/site-queries/${encodeURIComponent(query.id)}/close`,
+      init: { method: "POST", body: { note: note.trim() || null } },
+    }),
+    success: `Query ${query.id} closed`,
+    invalidate: invalidateKeys(query.site_id),
+    inlineErrorCodes: ["not_answered", "site_query_not_found"],
+    onSuccess: () => {
+      setOpen(false);
+      setNote("");
+    },
+  });
+
+  if (query.status !== "answered") return null;
+  if (!open) {
+    return (
+      <Button size="sm" icon={<CircleCheckBig className="size-4" aria-hidden />} onClick={() => setOpen(true)}>
+        Close query
+      </Button>
+    );
+  }
+  const noteId = `close-note-${query.id}`;
+  return (
+    <div className={cn("w-full space-y-2", compact ? "min-w-56" : "max-w-xl")}>
+      <div>
+        <label htmlFor={noteId} className="mb-1 block text-sm font-medium text-ink-muted">
+          Closure note (optional, kept in the audit row)
+        </label>
+        <input
+          id={noteId}
+          className={inputClass}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          disabled={close.isPending}
+          placeholder="For example: Explained; no entry needed"
+        />
+      </div>
+      <InlineError error={close.isError && hasErrorCode(close.error, "not_answered", "site_query_not_found") ? close.error : null} />
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="sm"
+          variant="primary"
+          icon={<CircleCheckBig className="size-4" aria-hidden />}
+          loading={close.isPending}
+          onClick={() => close.mutate()}
+        >
+          Confirm close
+        </Button>
+        <Button size="sm" variant="ghost" disabled={close.isPending} onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function QueryStatusChip({ status }: { status: SiteQueryStatus }) {
   const s = QUERY_STATUS[status] ?? { label: status, className: "" };
   return (
@@ -354,6 +419,7 @@ export function SiteQueryList({
                     Continue editing
                   </Button>
                 ) : null}
+                {canEdit && q.status === "answered" ? <CloseQueryControl query={q} compact /> : null}
               </div>
             </Td>
           </tr>

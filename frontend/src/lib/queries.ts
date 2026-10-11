@@ -18,6 +18,9 @@ import type {
   AnswerKeyResponse,
   SAEReport,
   SiteDetail,
+  SiteQuery,
+  SiteQueryDetail,
+  SiteQueryResponseCode,
   SiteSignalValidation,
   SitesResponse,
   SponsorInboxItem,
@@ -239,6 +242,46 @@ export function useSiteDetail(siteId: string, enabled = true) {
     queryFn: () => apiFetch<SiteDetail>(`/api/sites/${encodeURIComponent(siteId)}`),
     enabled: enabled && siteId !== "",
     refetchInterval: 15_000,
+    retry,
+  });
+}
+
+/**
+ * Site queries (`GET /api/site-queries`, cra, sponsor and coordinator), newest first; `siteId` narrows to one site,
+ * `statuses` to those statuses. The coordinator never receives drafts. Polled, so a response or closure made in
+ * another tab shows up without a reload.
+ */
+export function useSiteQueries(opts: { siteId?: string; statuses?: SiteQuery["status"][] } = {}, enabled = true) {
+  const qs = new URLSearchParams();
+  if (opts.siteId) qs.set("site_id", opts.siteId);
+  if (opts.statuses?.length) qs.set("status", opts.statuses.join(","));
+  return useQuery({
+    queryKey: ["site-queries", "list", opts.siteId ?? "all", opts.statuses?.join(",") ?? "any"],
+    queryFn: () => apiFetch<SiteQuery[]>(`/api/site-queries${qs.size ? `?${qs}` : ""}`),
+    enabled,
+    refetchInterval: 10_000,
+    retry,
+  });
+}
+
+/** One site query with its cited episodes and audit rows (`GET /api/site-queries/{query_id}`). */
+export function useSiteQuery(queryId: string, enabled = true) {
+  return useQuery({
+    queryKey: ["site-queries", "detail", queryId],
+    queryFn: () => apiFetch<SiteQueryDetail>(`/api/site-queries/${encodeURIComponent(queryId)}`),
+    enabled: enabled && queryId !== "",
+    staleTime: 30_000,
+    retry,
+  });
+}
+
+/** The coded responses a site can give (`GET /api/site-queries/response-codes`, from data/site_queries.json). */
+export function useSiteQueryResponseCodes(enabled = true) {
+  return useQuery({
+    queryKey: ["site-query-response-codes"],
+    queryFn: () => apiFetch<SiteQueryResponseCode[]>("/api/site-queries/response-codes"),
+    enabled,
+    staleTime: Infinity,
     retry,
   });
 }

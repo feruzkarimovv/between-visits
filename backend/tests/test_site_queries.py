@@ -192,6 +192,28 @@ def test_coordinator_detail_has_no_patient_quotes(client, site_signal_fixtures) 
     assert [a["action"] for a in coord["audit"]] == ["site_query.drafted", "site_query.approved"]
 
 
+def test_response_codes_come_from_the_data_file_for_every_reader(client) -> None:
+    """F14: the inbox's respond form lists exactly data/site_queries.json `response_codes`, in file order; the
+    literal path is not taken for a query ID, and each listed code is accepted by POST .../respond."""
+    expected = [{"code": c["code"], "label_en": c["label_en"]} for c in content.site_queries()["response_codes"]]
+    assert len(expected) >= 2
+    for headers in (CRA, SPONSOR, COORD):
+        r = client.get("/api/site-queries/response-codes", headers=headers)
+        assert r.status_code == 200, r.text
+        assert r.json() == expected
+    r = client.get("/api/site-queries/response-codes", headers=INVESTIGATOR)
+    assert (r.status_code, error_code(r)) == (403, "wrong_role")
+
+
+def test_every_listed_response_code_is_accepted(client, site_signal_fixtures) -> None:
+    codes = [c["code"] for c in client.get("/api/site-queries/response-codes", headers=COORD).json()]
+    for code in codes:
+        qid = sent_query(client)
+        r = client.post(f"/api/site-queries/{qid}/respond", json={"response_code": code, "note": None}, headers=COORD)
+        assert r.status_code == 200, r.text
+        assert (r.json()["status"], r.json()["response_code"]) == ("answered", code)
+
+
 # ---- eligibility -----------------------------------------------------------------------------------------
 
 

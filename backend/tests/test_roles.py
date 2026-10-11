@@ -77,7 +77,7 @@ ROLE_TABLE: list[tuple[str, str, str | None, int]] = [
     *[("POST", "/api/site-queries/{sent_query_id}/respond", role, 200 if role in ("coordinator", None) else 403)
       for role in ("cra", "sponsor", "coordinator", "investigator", None)],
     *[("GET", path, role, 403 if role == "investigator" else 200)
-      for path in ("/api/site-queries", "/api/site-queries/{sent_query_id}")
+      for path in ("/api/site-queries", "/api/site-queries/response-codes", "/api/site-queries/{sent_query_id}")
       for role in ("cra", "sponsor", "coordinator", "investigator", None)],
     *[("GET", "/api/site-queries/{draft_query_id}", role, status)
       for role, status in (("cra", 200), ("sponsor", 200), ("coordinator", 404), ("investigator", 403), (None, 404))],

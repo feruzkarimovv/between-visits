@@ -25,6 +25,7 @@ from app.schemas import (
     SiteQueryOut,
     SiteQueryPatchIn,
     SiteQueryRespondIn,
+    SiteQueryResponseCodeOut,
     SiteSignalValidationOut,
     SitesOut,
 )
@@ -93,6 +94,13 @@ def list_site_queries(
 ) -> list[SiteQueryOut]:
     return site_queries.list_queries(session, who.role, site_id=site_id,
                                      statuses=site_queries.parse_statuses(status))
+
+
+@router.get("/site-queries/response-codes", response_model=list[SiteQueryResponseCodeOut])
+def site_query_response_codes(_: Actor = Depends(query_reader)) -> list[SiteQueryResponseCodeOut]:
+    """The coded responses a site can give (data/site_queries.json), for the mock site inbox's respond form.
+    Declared before `/site-queries/{query_id}` so the literal path wins."""
+    return site_queries.response_code_options()
 
 
 @router.get("/site-queries/{query_id}", response_model=SiteQueryDetailOut)

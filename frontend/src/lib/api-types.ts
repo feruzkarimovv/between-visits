@@ -645,6 +645,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/site-queries/response-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Site Query Response Codes
+         * @description The coded responses a site can give (data/site_queries.json), for the mock site inbox's respond form.
+         *     Declared before `/site-queries/{query_id}` so the literal path wins.
+         */
+        get: operations["site_query_response_codes_api_site_queries_response_codes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/site-queries/{query_id}": {
         parameters: {
             query?: never;
@@ -2333,6 +2354,16 @@ export interface components {
             note?: string | null;
         };
         /**
+         * SiteQueryResponseCodeOut
+         * @description `GET /api/site-queries/response-codes`: one entry of data/site_queries.json `response_codes`, in file order.
+         */
+        SiteQueryResponseCodeOut: {
+            /** Code */
+            code: string;
+            /** Label En */
+            label_en: string;
+        };
+        /**
          * SiteRowOut
          * @description One `GET /api/sites` row: the `Site` and `SiteSignalRow` fields merged, plus `open_queries`.
          */
@@ -3931,6 +3962,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SiteQueryOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    site_query_response_codes_api_site_queries_response_codes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteQueryResponseCodeOut"][];
                 };
             };
             /** @description Validation Error */

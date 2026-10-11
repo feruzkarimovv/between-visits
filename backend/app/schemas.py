@@ -881,6 +881,13 @@ class SiteQueryCloseIn(BaseModel):
     note: str | None = None
 
 
+class SiteQueryResponseCodeOut(BaseModel):
+    """`GET /api/site-queries/response-codes`: one entry of data/site_queries.json `response_codes`, in file order."""
+
+    code: str
+    label_en: str
+
+
 class SiteQueryOut(BaseModel):
     """`SiteQueryOut` (docs/03 §5.4). `title_en` and `response_label_en` come from data/site_queries.json;
     `data_origin` from the cited episodes (all simulated SIMULATED, all live MEASURED, a mix MIXED)."""

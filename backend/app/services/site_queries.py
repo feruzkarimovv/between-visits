@@ -35,6 +35,7 @@ from app.schemas import (
     SiteQueryDetailOut,
     SiteQueryEpisode,
     SiteQueryOut,
+    SiteQueryResponseCodeOut,
     SiteQueryStatus,
 )
 from app.services import site_signal
@@ -76,6 +77,11 @@ def response_label(code: str | None) -> str | None:
 
 def response_codes() -> list[str]:
     return [r["code"] for r in _doc()["response_codes"]]
+
+
+def response_code_options() -> list[SiteQueryResponseCodeOut]:
+    """`GET /api/site-queries/response-codes`: every coded response with its label, in file order."""
+    return [SiteQueryResponseCodeOut(code=r["code"], label_en=r["label_en"]) for r in _doc()["response_codes"]]
 
 
 def banned_phrases() -> list[str]:

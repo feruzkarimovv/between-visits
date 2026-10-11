@@ -376,6 +376,16 @@ export type PagedStratum = S["PagedStratum"];
 export type SiteQueryStatus = S["SiteQueryOut"]["status"];
 /** `SiteQueryOut` (docs/03 §5.4). */
 export type SiteQuery = S["SiteQueryOut"];
+/**
+ * `GET /api/site-queries/{query_id}` (docs/03 §5.4): the query, its cited episodes and its audit rows. For the
+ * coordinator every episode's `evidence` is null (patient quotes stay on the sponsor side).
+ */
+export type SiteQueryDetail = Narrow<
+  S["SiteQueryDetailOut"],
+  { episodes: Narrow<S["SiteQueryEpisode"], { evidence: EpisodeEvidence | null }>[] }
+>;
+/** `GET /api/site-queries/response-codes`: the coded responses a site can give (data/site_queries.json). */
+export type SiteQueryResponseCode = S["SiteQueryResponseCodeOut"];
 /** `GET /api/sites/{site_id}` (docs/03 §5.3). Site 101 lists its MEASURED live episodes first. */
 export type SiteDetail = Narrow<S["SiteDetailOut"], { episodes: SiteEpisode[] }>;
 
