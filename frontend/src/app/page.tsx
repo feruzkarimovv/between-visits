@@ -122,7 +122,7 @@ export default function TodayPage() {
     <>
       <section className="relative mb-6 overflow-hidden rounded-3xl border border-line bg-white shadow-card">
         <div className="bv-grid-light pointer-events-none absolute inset-y-0 right-0 w-1/2 [mask-image:linear-gradient(to_left,black,transparent)]" aria-hidden />
-        <div className="relative grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:items-end">
+        <div className="relative grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:items-center">
           <div className="min-w-0">
             <div className="text-sm font-medium text-accent-700 tabular">{now ? longDate.format(now) : " "}</div>
             <h1 className="mt-1 font-display text-[2.75rem] leading-[1.05] text-ink">
@@ -239,7 +239,7 @@ function ReplayPanel({
       <div className="relative">
         <div className="flex items-center gap-2 text-sm font-medium text-live">
           <Clapperboard className="size-4" aria-hidden />
-          Demo mode · scripted calls
+          Demo mode · scripted calls{scenarios.some((s) => s.audio_url) ? " with voice" : ""}
         </div>
         <p className="mt-1 text-sm leading-5 text-rail-muted">Drives the same rules, paging and drafts as a live call.</p>
         <div className="mt-3 flex flex-col gap-2">
@@ -254,7 +254,7 @@ function ReplayPanel({
           >
             {scenarios.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.title} ({Math.round(s.duration_s / 60)} min{s.audio_url ? ", with voice" : ""})
+                {s.title} ({Math.round(s.duration_s / 60)} min)
               </option>
             ))}
           </select>
