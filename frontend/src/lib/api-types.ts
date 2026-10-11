@@ -729,6 +729,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/demo/scenarios/{scenario_id}/audio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scenario Audio
+         * @description `scenarios/audio/<id>.mp3` as audio/mpeg (docs/03 §6.2; demo only, any role, no audit).
+         *
+         *     The mp3 is gitignored and exists only where someone put it; serving a recorded call's audio on the public
+         *     instance needs the written consent of the teammate who played the patient (otherwise transcript-only).
+         */
+        get: operations["scenario_audio_api_demo_scenarios__scenario_id__audio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/demo/replay/{scenario_id}": {
         parameters: {
             query?: never;
@@ -3099,6 +3122,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScenarioOut"][];
+                };
+            };
+        };
+    };
+    scenario_audio_api_demo_scenarios__scenario_id__audio_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scenario_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The scenario's call audio. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "audio/mpeg": string;
+                };
+            };
+            /** @description Error `demo_disabled`, `scenario_not_found` or `audio_not_found`. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

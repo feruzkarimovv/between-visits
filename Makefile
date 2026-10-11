@@ -36,6 +36,7 @@ test-backend:
 	cd backend && uv run ruff check app tests && uv run pytest -q
 	$(UV) python data/validate_data.py
 	python3 agent/test_sync_agent.py
+	python3 agent/test_export_scenario.py
 
 test-frontend:
 	cd frontend && npm run typecheck && npm run lint

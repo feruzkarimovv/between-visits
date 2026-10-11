@@ -64,6 +64,21 @@ def audio_url(scenario_id: str) -> str | None:
     return f"/api/demo/scenarios/{scenario_id}/audio"
 
 
+def scenario_audio_file(scenario_id: str) -> Path:
+    """The mp3 behind `GET /api/demo/scenarios/{id}/audio` (docs/03 §6.2, WS1 V11).
+
+    404 `scenario_not_found` when `scenarios/<id>.json` does not exist (or the ID is not a plain slug), then
+    404 `audio_not_found` when `scenarios/audio/<id>.mp3` is absent. Audio is gitignored and never committed; a
+    recorded call's audio is on a server only when the teammate who played the patient consented in writing.
+    """
+    path = audio_path(scenario_id)
+    if path is None or not (SCENARIOS_DIR / f"{scenario_id}.json").is_file():
+        raise ApiError(404, "scenario_not_found", f"scenario {scenario_id} not found")
+    if not path.is_file():
+        raise ApiError(404, "audio_not_found", f"no audio for scenario {scenario_id} on this server")
+    return path
+
+
 def _recorded_at(value: Any, scenario_id: str) -> date | None:
     if value is None:
         return None

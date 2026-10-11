@@ -276,6 +276,8 @@ Recorded from a real call (WS1 V6) and played back by `backend/app/services/repl
 ```
 `checkin_id` is injected by the replay engine into every tool body.
 
+**Recorded scenarios (WS1 V11).** `agent/export_scenario.py` writes this format from a real call (procedure: `agent/README.md`) and adds provenance: `"recorded": true`, `"recorded_at"` (local date in `DISPLAY_TZ`), `"label": "Recorded real call; synthetic patient played by a teammate"`, a consent note in `_about`, and `"agent_id_suffix"` / `"conversation_id_suffix"` (last 4 characters only). It keeps only whitelisted fields: transcript turns (`role`, `text`, `t_s`), tool calls (name, the arguments declared in `agent/tools.json` minus `checkin_id` and `conversation_id`, seconds from call start), the acknowledgment time as `page_ack` (`by` is always "RN on call"), `call_ended` and `post_call`. A human reads each exported transcript before it is committed. A file without `"recorded": true` is listed as "Scripted" (`docs/03` §6.2). Audio stays in `scenarios/audio/<id>.mp3` (gitignored) and is served by `GET /api/demo/scenarios/{id}/audio` in demo mode only.
+
 ## TTS gotchas
 
 - Write emergency numbers digit by digit in `data/scripts.json` ("9-1-1", "9-8-8") so TTS doesn't say "nine hundred eleven".

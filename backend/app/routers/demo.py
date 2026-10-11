@@ -1,6 +1,7 @@
 """Demo controls (enabled only when DEMO_MODE=1; otherwise 404 demo_disabled)."""
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import FileResponse
 from sqlmodel import Session
 
 from app.config import get_settings
@@ -20,6 +21,25 @@ def require_demo() -> None:
 @router.get("/scenarios", response_model=list[ScenarioOut], dependencies=[Depends(require_demo)])
 def scenarios() -> list[ScenarioOut]:
     return [ScenarioOut(**s) for s in replay.list_scenarios()]
+
+
+@router.get(
+    "/scenarios/{scenario_id}/audio",
+    response_class=FileResponse,
+    dependencies=[Depends(require_demo)],
+    responses={
+        200: {"description": "The scenario's call audio.",
+              "content": {"audio/mpeg": {"schema": {"type": "string", "format": "binary"}}}},
+        404: {"description": "Error `demo_disabled`, `scenario_not_found` or `audio_not_found`."},
+    },
+)
+def scenario_audio(scenario_id: str) -> FileResponse:
+    """`scenarios/audio/<id>.mp3` as audio/mpeg (docs/03 §6.2; demo only, any role, no audit).
+
+    The mp3 is gitignored and exists only where someone put it; serving a recorded call's audio on the public
+    instance needs the written consent of the teammate who played the patient (otherwise transcript-only).
+    """
+    return FileResponse(replay.scenario_audio_file(scenario_id), media_type="audio/mpeg")
 
 
 @router.post("/replay/{scenario_id}", response_model=ReplayOut, dependencies=[Depends(require_demo)])
