@@ -89,3 +89,48 @@ Steps that need a person. Everything around them is done; each item says exactly
       git commit -m "SAP v1: beacon round and external timestamp (docs/11 §17)" && git push origin site-signal-build
       ```
    Only after this may S6/S7/S8 produce evaluation output (`monitoring/out/`, `validation/site_signal/`).
+
+7. **Deploy to Render: public demo pair and private live API (R6; `render.yaml`, full guide in `docs/deploy.md`).** R6 is integrated on `site-signal-build` and verified locally only (token tests, a live-config container returning 401 without `X-BV-Token`, `render.yaml` parses to the three services). Dashboard labels are as of Oct 2026 and may have moved (UNVERIFIED). Never type a secret into a file in the repository.
+   1. **`render.yaml` must be on `main`**: the Blueprint and every auto-deploy read `main`. Do item 1 (merge `site-signal-build` into `main`) first.
+   2. **Billing.** Sign in at https://dashboard.render.com with GitHub → **Workspace Settings → Billing** → add a payment method, and approve three always-on `starter` instances (`bv-demo-api`, `bv-demo-web`, `bv-live-api`; pricing UNVERIFIED).
+   3. **GitHub app access.** Render dashboard → **New → Blueprint → Connect a repository** → on GitHub's Render app page choose the account that owns `feruzkarimovv/between-visits` → **Only select repositories** → add `between-visits` → **Install** (or **Save**). Do not change the repository's visibility.
+   4. **Create the Blueprint.** Select `between-visits`; Blueprint name `between-visits`, branch `main`, Blueprint path `render.yaml`. When Render asks for the `sync: false` values of `bv-live-api`, paste:
+      - `TOOL_SHARED_SECRET` = the exact value in the local `.env` (it must equal the ElevenLabs workspace secret `bv_tool_secret`);
+      - `BV_DASHBOARD_TOKEN` = a new value; keep a copy for sub-step 8:
+        ```bash
+        python3 -c 'import secrets; print(secrets.token_urlsafe(32), end="")' | pbcopy
+        ```
+      - `ELEVENLABS_API_KEY`, `ELEVENLABS_WEBHOOK_SECRET`, `ANTHROPIC_API_KEY`, `NTFY_TOPIC`, `NTFY_BACKUP_TOPIC` = the local `.env` values;
+      - `AGENTS_LOCK_JSON` = the lock file on one line, copied without printing it (run in the repo root):
+        ```bash
+        python3 -c 'import json; print(json.dumps(json.load(open("agent/agents.lock.json")), separators=(",", ":")))' | pbcopy
+        ```
+      Then click **Deploy Blueprint** (or **Apply**).
+   5. **After three green deploys, check the cross-service URLs** on each service's **Environment** tab: `bv-demo-api` `CORS_ORIGINS` = the `bv-demo-web` URL; `bv-demo-web` `NEXT_PUBLIC_API_BASE_URL` = the `bv-demo-api` URL; `bv-live-api` `PUBLIC_BASE_URL` = its own URL. If any is empty or wrong, set the `https://….onrender.com` URL by hand. For `bv-demo-web`, then use **Manual Deploy → Clear build cache & deploy** (the URL is inlined at build time).
+   6. **Point the agents at the live API**, from a laptop with the full `.env`:
+      ```bash
+      LIVE_API=https://bv-live-api.onrender.com     # the real URL from sub-step 5
+      PUBLIC_BASE_URL=$LIVE_API make sync-agent ARGS="--setup-webhook"
+      ```
+      If it warns that the webhook points at an old tunnel, edit the webhook URL in ElevenLabs (workspace **Settings → Webhooks**) to `$LIVE_API/webhooks/elevenlabs/post-call`. If a new `ELEVENLABS_WEBHOOK_SECRET` is printed or `agent/agents.lock.json` changed, update those two values in **`bv-live-api` → Environment → Save**, then rebuild and deploy.
+   7. **Acceptance**, with `main` checked out at the deployed commit:
+      ```bash
+      DEMO_API=https://bv-demo-api.onrender.com   # the real URLs from sub-step 5
+      DEMO_WEB=https://bv-demo-web.onrender.com
+      LIVE_API=https://bv-live-api.onrender.com
+      curl -fsS $DEMO_API/api/health | jq -e '.demo_mode==true and .commit=="'$(git rev-parse --short HEAD)'"'   # true
+      curl -fsS $LIVE_API/api/health | jq -e '.demo_mode==false and .browser_calls_enabled'                       # true
+      curl -s -o /dev/null -w '%{http_code}\n' $LIVE_API/api/patients                                               # 401
+      ```
+      Then, in an incognito window on `$DEMO_WEB`: **Replay** a scenario → confirm the drafts → switch to Investigator → assessment → SAE sign → send → the report appears in the sponsor inbox.
+   8. **Live calls** run from a local dashboard against `bv-live-api`. Put these in `frontend/.env.local` (gitignored), then start it:
+      ```bash
+      # frontend/.env.local
+      NEXT_PUBLIC_API_BASE_URL=https://bv-live-api.onrender.com
+      NEXT_PUBLIC_BV_DASHBOARD_TOKEN=<the BV_DASHBOARD_TOKEN from sub-step 4>
+      ```
+      ```bash
+      cd frontend && npm run dev      # http://localhost:3000
+      ```
+      Do not merge to `main` during the calls: each deploy resets the live SQLite state. You can also turn off **`bv-live-api` → Settings → Build & Deploy → Auto-Deploy** for the session. Known gap (F10): the SAE JSON export link is a plain link and cannot send `X-BV-Token`, so it returns 401 on the live instance (`docs/deploy.md` §5).
+   9. **Once it works:** replace the README line "**Live demo:** not deployed yet" with the `bv-demo-web` URL, and remove "verified locally only" from `docs/deploy.md`; commit and push.
