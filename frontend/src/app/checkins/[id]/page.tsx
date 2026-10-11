@@ -11,6 +11,7 @@ import {
   AudioLines,
   Bot,
   ClipboardCheck,
+  FastForward,
   Clock,
   Languages,
   ListChecks,
@@ -27,7 +28,8 @@ import {
 import { apiFetch, hasErrorCode } from "@/lib/api";
 import { useApiMutation } from "@/lib/queries";
 import { useNow } from "@/lib/hooks";
-import type { Answer, CheckIn, CheckInDetail, DraftEntry, Finding, TranscriptTurn } from "@/lib/types";
+import type { Answer, CheckIn, CheckInDetail, DraftEntry, FinishResponse, Finding, TranscriptTurn } from "@/lib/types";
+import { stopReplayAudio } from "@/lib/replayAudio";
 import { formatAbsolute, formatDuration, fullName, humanize, parseTs } from "@/lib/format";
 import { CHANNEL_LABELS, itemLabel, valueLabel } from "@/lib/labels";
 import { Avatar, Button, ButtonLink, Card, CardHeader, EmptyState, ErrorState, Segmented, Skeleton, cn } from "@/components/ui/primitives";
@@ -56,12 +58,17 @@ export default function CheckInPage() {
     queryFn: () => apiFetch<CheckInDetail>(`/api/checkins/${encodeURIComponent(id)}`),
     enabled: !!id,
     retry: (n, e) => !hasErrorCode(e, "checkin_not_found") && n < 2,
-    // 1 s while the call is live, then 5 s for 30 s while the post-call pipeline lands, then stop.
+    // 1 s while the call is live, 2 s until post-call is done, then 5 s for 30 s, then stop.
     refetchInterval: (query) => {
       const status = query.state.data?.checkin.status;
       if (!status || LIVE.has(status)) {
         terminalSince.current = null;
         return 1000;
+      }
+      const postcall = query.state.data?.checkin.postcall_status;
+      if (status === "completed" && postcall !== "done" && postcall !== "failed") {
+        terminalSince.current = null;
+        return 2000;
       }
       if (terminalSince.current === null) terminalSince.current = Date.now();
       return Date.now() - terminalSince.current < POST_CALL_WINDOW_MS ? 5000 : false;
@@ -265,6 +272,13 @@ function CallConsole({ detail, onCancelled }: { detail: CheckInDetail; onCancell
     invalidate: [["checkins"]],
     onSuccess: onCancelled,
   });
+  // Replay only: play the rest of the scenario at once, so everything it produces shows now (docs/03 §6.12).
+  const finish = useApiMutation<string, FinishResponse>({
+    request: (id) => ({ path: `/api/checkins/${encodeURIComponent(id)}/finish`, init: { method: "POST" } }),
+    success: "Finishing the call: results, pages and drafts appear in a moment",
+    invalidate: [["checkins"], ["checkin", checkin.id], ["drafts"], ["escalations"]],
+    onSuccess: onCancelled,
+  });
 
   return (
     <section
@@ -320,9 +334,26 @@ function CallConsole({ detail, onCancelled }: { detail: CheckInDetail; onCancell
             {formatDuration(elapsed ?? 0)}
           </span>
           {live ? (
-            <Button size="sm" variant="dark" loading={cancel.isPending} onClick={() => cancel.mutate(checkin.id)} icon={<PhoneOff className="size-4" aria-hidden />}>
-              Cancel check-in
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {checkin.channel === "replay" && inCall ? (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="border-live/40 bg-accent-600 hover:bg-accent-500"
+                  loading={finish.isPending}
+                  onClick={() => {
+                    stopReplayAudio();
+                    finish.mutate(checkin.id);
+                  }}
+                  icon={<FastForward className="size-4" aria-hidden />}
+                >
+                  Finish now
+                </Button>
+              ) : null}
+              <Button size="sm" variant="dark" loading={cancel.isPending} onClick={() => cancel.mutate(checkin.id)} icon={<PhoneOff className="size-4" aria-hidden />}>
+                Cancel check-in
+              </Button>
+            </div>
           ) : null}
         </div>
       </div>

@@ -905,3 +905,12 @@ Measurement definitions:
 - `grade`, `rule_id`: from the finding for `expected.term`, or else the finding with the highest provisional grade.
 
 The report card compares `latest.json` `model.agent` with `voice_checks.json` `agent_llm` and states plainly whether they match. When the file is absent or has no `agent_llm`, it says that the deployed model is not recorded yet.
+
+### 6.12 Finish a call now
+
+**New: `POST /api/checkins/{checkin_id}/finish`** (any role; audited as `checkin.finished_early`). Ends a call early and shows everything it produced, without waiting:
+
+- **Replay** (`channel: "replay"`, demo mode): the scenario's remaining events run at once (answers, pages, acknowledgment, post-call drafts). The dashboard's **Finish now** button on the check-in page calls it and stops the replay audio.
+- **Browser or phone call:** after the call has ended, the backend reads the conversation from the ElevenLabs conversations API (polling until its status is `done`, at most 45 s) and runs the same post-call pipeline as the webhook. The web call widget calls it when the call disconnects (**End call**, or either side hanging up). Whichever arrives first, this read or the post-call webhook, is processed; the second is ignored (`postcall_status` is already `processing` or `done`). If ElevenLabs cannot be read, the webhook stays the path.
+
+Response `200`: `{"mode": "fast_forward" | "pulling" | "already_done", "checkin": CheckInOut}`. `409 not_in_call`: a replay that is not running, or a check-in with no call (scheduled, cancelled, or no conversation ID).

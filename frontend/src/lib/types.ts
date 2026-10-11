@@ -523,4 +523,5 @@ export type DemoScenario = S["ScenarioOut"];
 /** `POST /api/demo/replay/{id}?speed=` playback multiplier (docs/03 §6.2). */
 export type ReplaySpeed = S["ReplaySpeed"];
 export type ReplayResponse = S["ReplayOut"];
+export type FinishResponse = S["FinishOut"];
 export type OkResponse = S["OkOut"];

@@ -4,10 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { Mic, MicOff, PhoneOff, Headphones, AlertTriangle, Loader2, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
-import { apiFetch, errorMessage, USE_FIXTURES } from "@/lib/api";
+import { apiFetch, errorMessage, hasErrorCode, USE_FIXTURES } from "@/lib/api";
 import { clearWebSession, loadWebSession } from "@/lib/webSession";
 import { formatDuration } from "@/lib/format";
-import type { OkResponse, WebSession } from "@/lib/types";
+import type { FinishResponse, OkResponse, WebSession } from "@/lib/types";
 import { Button, cn } from "./ui/primitives";
 
 interface Props {
@@ -83,6 +83,19 @@ function usePostWebStarted(checkinId: string, onStarted?: () => void) {
   );
 }
 
+/** After the call ends: have the backend read it from ElevenLabs now instead of waiting for the post-call webhook
+ * (docs/03 §6.12), so answers, findings and drafts show within seconds. */
+async function finishCall(checkinId: string, onDone?: () => void) {
+  try {
+    await apiFetch<FinishResponse>(`/api/checkins/${encodeURIComponent(checkinId)}/finish`, { method: "POST" });
+    toast.success("Call ended. Processing it now: drafts appear in a few seconds.");
+    onDone?.();
+  } catch (e) {
+    if (!hasErrorCode(e, "not_in_call"))
+      toast.error(`Call ended, but processing did not start: ${errorMessage(e)}. The post-call webhook will still deliver it.`);
+  }
+}
+
 function LiveCall({ checkinId, subjectId, checkinStatus, onStarted, session }: Props & { session: WebSession }) {
   const [micError, setMicError] = useState<string | null>(null);
   const [connError, setConnError] = useState<string | null>(null);
@@ -90,9 +103,11 @@ function LiveCall({ checkinId, subjectId, checkinStatus, onStarted, session }: P
   const [level, setLevel] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const postStarted = usePostWebStarted(checkinId, onStarted);
+  const wasConnected = useRef(false);
 
   const convo = useConversation({
     onConnect: ({ conversationId }) => {
+      wasConnected.current = true;
       setConnectedAt(Date.now());
       setConnError(null);
       void postStarted(conversationId || session.conversation_id || "");
@@ -100,6 +115,11 @@ function LiveCall({ checkinId, subjectId, checkinStatus, onStarted, session }: P
     onDisconnect: () => {
       setConnectedAt(null);
       clearWebSession(checkinId);
+      // End call, the agent's end_call, or the browser dropping: any of them ends the call
+      if (wasConnected.current) {
+        wasConnected.current = false;
+        void finishCall(checkinId, onStarted);
+      }
     },
     onError: (message) => setConnError(typeof message === "string" ? message : "Connection error"),
   });

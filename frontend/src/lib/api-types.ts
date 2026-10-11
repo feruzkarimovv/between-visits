@@ -157,6 +157,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/checkins/{checkin_id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Finish Checkin
+         * @description End a call early and show everything now (docs/03 §6.12): a replay plays its remaining events at once; an
+         *     ended browser or phone call is read from ElevenLabs and post-processed without waiting for the webhook.
+         *     409 `not_in_call` when there is nothing to finish.
+         */
+        post: operations["finish_checkin_api_checkins__checkin_id__finish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/checkins/{checkin_id}": {
         parameters: {
             query?: never;
@@ -1420,6 +1442,20 @@ export interface components {
             escalation_level: string;
             /** Answer Ids */
             answer_ids: string[];
+        };
+        /**
+         * FinishOut
+         * @description `POST /api/checkins/{id}/finish` (docs/03 §6.12): what finishing did. fast_forward: the replay's remaining
+         *     events run at once; pulling: the ended call is being read from ElevenLabs for the post-call pipeline;
+         *     already_done: post-call had already started.
+         */
+        FinishOut: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "fast_forward" | "pulling" | "already_done";
+            checkin: components["schemas"]["CheckInOut"];
         };
         /** Funnel */
         Funnel: {
@@ -3048,6 +3084,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CheckInOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finish_checkin_api_checkins__checkin_id__finish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-bv-user"?: string | null;
+                "x-bv-role"?: string | null;
+            };
+            path: {
+                checkin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinishOut"];
                 };
             };
             /** @description Validation Error */

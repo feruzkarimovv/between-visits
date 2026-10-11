@@ -8,7 +8,7 @@ from AGENTS_LOCK_JSON (docs/03 §6.9). Tests install a fake with set_client().
 import json
 import logging
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 import httpx
 
@@ -39,6 +39,7 @@ class WebToken:
 class Client(Protocol):
     def outbound_call(self, agent_id: str, to_number: str, user_id: str, dynamic_variables: dict[str, str]) -> CallStarted: ...
     def web_token(self, agent_id: str) -> WebToken: ...
+    def get_conversation(self, conversation_id: str) -> dict[str, Any]: ...
 
 
 def load_lock() -> dict[str, str]:
@@ -135,6 +136,13 @@ class HttpClient:
             raise RuntimeError(f"ElevenLabs token {r.status_code}: {r.text[:500]}")
         data = r.json()
         return WebToken(data["token"], data.get("conversation_id"))
+
+    def get_conversation(self, conversation_id: str) -> dict[str, Any]:
+        """`GET /v1/convai/conversations/{id}`: the same transcript, metadata and analysis as the post-call webhook."""
+        r = httpx.get(f"{API}/v1/convai/conversations/{conversation_id}", headers=self.headers, timeout=15)
+        if r.status_code >= 400:
+            raise RuntimeError(f"ElevenLabs conversation {r.status_code}: {r.text[:300]}")
+        return r.json()
 
 
 _override: Client | None = None

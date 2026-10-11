@@ -32,6 +32,7 @@ from app.schemas import (
     DraftOut,
     DraftPatchIn,
     EscalationOut,
+    FinishOut,
     Health,
     InvestigatorIn,
     InvestigatorOut,
@@ -57,8 +58,8 @@ from app.schemas import (
 )
 from app.seed import today_local
 from app.serialize import checkin_detail, checkin_out, draft_out, escalation_out, patient_summary, sae_out
+from app.services import call_end, elevenlabs, review, sae
 from app.services import checkins as checkin_svc
-from app.services import elevenlabs, review, sae
 from app.services import escalation as esc_svc
 from app.services import export as export_svc
 from app.timeutil import local_date, utcnow
@@ -336,6 +337,21 @@ def cancel_checkin(checkin_id: str, who: Actor = Depends(actor), session: Sessio
                 entity_id=c.id, before=before, after={"status": c.status}, checkin_id=c.id)
     session.commit()
     return checkin_out(c)
+
+
+@router.post("/checkins/{checkin_id}/finish", response_model=FinishOut)
+def finish_checkin(checkin_id: str, who: Actor = Depends(actor), session: Session = Depends(get_session)) -> FinishOut:
+    """End a call early and show everything now (docs/03 §6.12): a replay plays its remaining events at once; an
+    ended browser or phone call is read from ElevenLabs and post-processed without waiting for the webhook.
+    409 `not_in_call` when there is nothing to finish."""
+    c = _get(session, CheckIn, checkin_id, "checkin")
+    before = {"status": c.status, "postcall_status": c.postcall_status}
+    mode = call_end.finish(session, c)
+    write_audit(session, actor=who.user, role=who.role, action="checkin.finished_early", entity_type="CheckIn",
+                entity_id=c.id, before=before, after={"mode": mode}, checkin_id=c.id)
+    session.commit()
+    session.refresh(c)
+    return FinishOut(mode=mode, checkin=checkin_out(c))
 
 
 @router.get("/checkins/{checkin_id}", response_model=CheckInDetail)

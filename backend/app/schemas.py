@@ -366,6 +366,15 @@ class WebStartedIn(BaseModel):
     conversation_id: str | None = None
 
 
+class FinishOut(BaseModel):
+    """`POST /api/checkins/{id}/finish` (docs/03 §6.12): what finishing did. fast_forward: the replay's remaining
+    events run at once; pulling: the ended call is being read from ElevenLabs for the post-call pipeline;
+    already_done: post-call had already started."""
+
+    mode: Literal["fast_forward", "pulling", "already_done"]
+    checkin: CheckInOut
+
+
 class OkOut(BaseModel):
     ok: bool = True
 

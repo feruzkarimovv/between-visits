@@ -34,6 +34,22 @@ REAL_TIME_SPEED = 1.0  # outside demo mode (direct service calls), unless a spee
 SCRIPTED_LABEL = "Scripted"
 RECORDED_LABEL = "Recorded real call; synthetic patient played by a teammate"
 _SAFE_ID = re.compile(r"^[A-Za-z0-9_-]+$")
+_fast_forward: set[str] = set()  # check-ins whose remaining replay events run without waiting ("Finish now")
+_running: set[str] = set()
+
+
+def is_running(checkin_id: str) -> bool:
+    return checkin_id in _running
+
+
+def fast_forward(checkin_id: str) -> bool:
+    """Play the rest of a running replay at once (answers, pages, acknowledgment, post-call), so a demo can end
+    early and still show everything. False when no replay is running for this check-in."""
+    if checkin_id not in _running:
+        return False
+    _fast_forward.add(checkin_id)
+    log.info("replay_fast_forward checkin_id=%s", checkin_id)
+    return True
 
 
 def resolve_speed(requested: float | None = None) -> float:
@@ -159,14 +175,25 @@ def start(session: Session, scenario_id: str, speed: float | None = None, run_as
 
 
 def _run(checkin_id: str, sc: dict[str, Any], speed: float) -> None:
+    _running.add(checkin_id)
+    try:
+        _play(checkin_id, sc, speed)
+    finally:
+        _running.discard(checkin_id)
+        _fast_forward.discard(checkin_id)
+
+
+def _play(checkin_id: str, sc: dict[str, Any], speed: float) -> None:
     from app.routers.agent_tools import call_tool_inprocess
     from app.routers.webhooks import process_post_call
 
     t0 = time.monotonic()
     for ev in sorted(sc["events"], key=lambda e: e.get("t", 0)):
-        wait = ev.get("t", 0) / max(speed, 0.001) - (time.monotonic() - t0)
-        if wait > 0:
-            time.sleep(wait)
+        while checkin_id not in _fast_forward:  # short naps, so "Finish now" takes effect within 0.25 s
+            wait = ev.get("t", 0) / max(speed, 0.001) - (time.monotonic() - t0)
+            if wait <= 0:
+                break
+            time.sleep(min(wait, 0.25))
         try:
             with new_session() as s:
                 c = s.get(CheckIn, checkin_id)
