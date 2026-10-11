@@ -57,7 +57,7 @@ Concurrency 2 with exponential backoff on 429s. Expect about 25 LLM calls per pe
 
 **ElevenLabs mode (optional):** the ElevenLabs **Tests API** (not `simulate-conversation`, which is removed Oct 31 2026) can run a few personas against the real agent config with real tools through the tunnel (`docs/04-voice-agent.md` § Testing). It costs credits, so use it for 3–4 personas at most.
 
-**Voice spot checks (manual, 6 calls):** EN standard, EN extra time, ES standard, ES extra time (Rosa), EN chest-pain emergency, ES caregiver. Recorded on teammates' phones, scored with the same rubric, saved to `eval/results/voice_checks.json`. Count interruptions by listening (agent starts speaking while the person is mid-sentence).
+**Voice spot checks (manual, 6 calls):** EN standard, EN extra time, ES standard, ES extra time (Rosa), EN chest-pain emergency, ES caregiver. Recorded on teammates' phones, scored with the same rubric, saved to `eval/results/voice_checks.json`. Count interruptions by listening (agent starts speaking while the person is mid-sentence). *Superseded on Sun Oct 11:* phone calling is not connected, so `voice_checks.json` holds the three browser calls of the real-voice stratum (§6, "Real-voice stratum") instead.
 
 ## 3. Metrics (all reported overall, by language, and by pace)
 
@@ -145,5 +145,9 @@ Tests are tagged with `@pytest.mark.req("REQ-005")` (register the marker in `pyp
 | REQ-031 | Site Signal equity strata | Capture is reported by language and by pace within sites, with intervals, and the single-language counterfactual is reported per site. | low | C | `monitoring/tests/test_equity.py` + API test |
 
 **Real-voice stratum (V10).** Real browser calls against the deployed backend are recorded in `eval/results/voice_checks.json` and served by `GET /api/eval/voice-checks` as `MEASURED`. They are reported as their own row on the report card and are never pooled with the text-mode evaluation in §3.
+- The stratum is three planned calls (WS1 V10): James grade 2 with no page, James grade 3 with an urgent page, and Rosa in Spanish at extra time, grade 3 with an urgent page.
+- Each call is logged by `agent/voice_check.py` from the ElevenLabs conversation and the live check-in (procedure and checklist in `agent/README.md`, field definitions in `docs/03` §6.11). A call is not scored by listening.
+- Until a call is logged, its row is `"status": "pending"` with every measurement null. Pending rows are not results, and the report card counts none of them.
+- A failed call stays in the file as measured.
 
 **Red-flag evidence (D10).** The 8/8 red-flag recall from the text-mode evaluation covers the `report_red_flag` tool and the live paging path end to end. The red-flag and grading thresholds themselves are covered by unit tests (REQ-004, REQ-005 and the D9 boundary tests), not by the evaluation.

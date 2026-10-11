@@ -37,6 +37,7 @@ test-backend:
 	$(UV) python data/validate_data.py
 	python3 agent/test_sync_agent.py
 	python3 agent/test_export_scenario.py
+	python3 agent/test_voice_check.py
 
 test-frontend:
 	cd frontend && npm run typecheck && npm run lint
