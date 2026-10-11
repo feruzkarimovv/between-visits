@@ -1,0 +1,1622 @@
+{
+ "_about": "Site Signal operating characteristics (docs/11-site-signal-sap.md §12). Every number is SIMULATED; capture discordance is a reason to look, not a finding. Values are unrounded; round only for display.",
+ "data_origin": "SIMULATED",
+ "sap_tag_commit": "68838978bb305e0f730d30e5cbf3c00bceca5a25",
+ "eval_seed": 92794863,
+ "beacon_round": 6542582,
+ "seed_label": "eval",
+ "seed": 92794863,
+ "code_commit": "9204a1e025443d19150cc4bb7c41c02d485fb620",
+ "generated_at": "2026-10-11T08:18:52-04:00",
+ "numpy_version": "2.5.4",
+ "scipy_version": "1.18.1",
+ "scale": 1.0,
+ "failure_case": {
+  "between_site_sd_logit": 0.6,
+  "casemix_sd_log": 0.2,
+  "a": {
+   "r_null": 1000,
+   "reps": 300,
+   "thresholds": {
+    "discordance": {
+     "look": -1.7997720552485816,
+     "watch": -2.610542213429836
+    },
+    "rate_kri": {
+     "look": -1.771900792041024,
+     "watch": -2.720372428575833
+    },
+    "simaerep_classic": {
+     "look": 0.964035964035964,
+     "watch": 0.9933399933399933
+    },
+    "ae_report_ratio": {
+     "look": -1.9638924390301622,
+     "watch": -2.978257280876514
+    }
+   },
+   "achieved": {
+    "discordance": {
+     "look": {
+      "rate": 0.049984629572702124,
+      "mc_se": 0.00132113330248776
+     },
+     "watch": {
+      "rate": 0.1,
+      "mc_se": 0.009486832980505138
+     },
+     "expected_false_look_flags_per_study": {
+      "mean": 0.813,
+      "mc_se": 0.02169104657460081
+     },
+     "n_pooled": 16265,
+     "mean_computed_sites": 16.265,
+     "studies_without_computed_site": 2
+    },
+    "rate_kri": {
+     "look": {
+      "rate": 0.05,
+      "mc_se": 0.0012753927342691845
+     },
+     "watch": {
+      "rate": 0.1,
+      "mc_se": 0.009486832980505138
+     },
+     "expected_false_look_flags_per_study": {
+      "mean": 1.0,
+      "mc_se": 0.02550785468538369
+     },
+     "n_pooled": 20000,
+     "mean_computed_sites": 20.0,
+     "studies_without_computed_site": 0
+    },
+    "simaerep_classic": {
+     "look": {
+      "rate": 0.04655,
+      "mc_se": 0.0018245345780298129
+     },
+     "watch": {
+      "rate": 0.01,
+      "mc_se": 0.003146426544510455
+     },
+     "expected_false_look_flags_per_study": {
+      "mean": 0.931,
+      "mc_se": 0.036490691560596256
+     },
+     "n_pooled": 20000,
+     "mean_computed_sites": 20.0,
+     "studies_without_computed_site": 0
+    },
+    "ae_report_ratio": {
+     "look": {
+      "rate": 0.049984629572702124,
+      "mc_se": 0.0013699173045494675
+     },
+     "watch": {
+      "rate": 0.1,
+      "mc_se": 0.009486832980505138
+     },
+     "expected_false_look_flags_per_study": {
+      "mean": 0.813,
+      "mc_se": 0.02214772045880843
+     },
+     "n_pooled": 16265,
+     "mean_computed_sites": 16.265,
+     "studies_without_computed_site": 2
+    }
+   },
+   "power": [
+    {
+     "indicator": "discordance",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.09666666666666666,
+     "mc_se": 0.017060893120645064,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.01,
+     "mc_se": 0.005744562646538029,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.30333333333333334,
+     "mc_se": 0.02654067458463344,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.05,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.06,
+     "mc_se": 0.013711309200802086,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.2866666666666667,
+     "mc_se": 0.02610803764417444,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.04655,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.02,
+     "mc_se": 0.00808290376865476,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.01,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.10333333333333333,
+     "mc_se": 0.01757418139919615,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power": 0.0033333333333333335,
+     "mc_se": 0.003327773140415986,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.3,
+     "mc_se": 0.026457513110645904,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.04,
+     "mc_se": 0.01131370849898476,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.8166666666666667,
+     "mc_se": 0.02233996584764789,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.05,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.3566666666666667,
+     "mc_se": 0.027655955088404592,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.8133333333333334,
+     "mc_se": 0.0224960901952778,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.04655,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.02,
+     "mc_se": 0.00808290376865476,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.01,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.38,
+     "mc_se": 0.0280237994093116,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power": 0.06,
+     "mc_se": 0.013711309200802086,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 0.6766666666666666,
+     "mc_se": 0.027005486411029452,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 0.26,
+     "mc_se": 0.025324559884296775,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 1.0,
+     "mc_se": 0.0,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.05,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 0.8866666666666667,
+     "mc_se": 0.01830199341500709,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 1.0,
+     "mc_se": 0.0,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.04655,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 0.043333333333333335,
+     "mc_se": 0.011755219486899646,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.01,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 0.7366666666666667,
+     "mc_se": 0.025428913260885325,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power": 0.29333333333333333,
+     "mc_se": 0.026286174369104437,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 0.7966666666666666,
+     "mc_se": 0.02323710315342605,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 0.4166666666666667,
+     "mc_se": 0.02846375212766555,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 1.0,
+     "mc_se": 0.0,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.05,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 0.9666666666666667,
+     "mc_se": 0.010363754503432016,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 1.0,
+     "mc_se": 0.0,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.04655,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 0.03666666666666667,
+     "mc_se": 0.010850840554571832,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.01,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 0.8,
+     "mc_se": 0.02309401076758503,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power": 0.48333333333333334,
+     "mc_se": 0.028851471494663966,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 0.8233333333333334,
+     "mc_se": 0.022019351758211497,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "discordance",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 0.4766666666666667,
+     "mc_se": 0.02883606281236255,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 1.0,
+     "mc_se": 0.0,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.05,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 0.9933333333333333,
+     "mc_se": 0.004698305447081342,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 1.0,
+     "mc_se": 0.0,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.04655,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 0.03333333333333333,
+     "mc_se": 0.010363754503432016,
+     "reps": 300,
+     "p_computed": 1.0,
+     "null_rate_achieved": 0.01,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 0.8133333333333334,
+     "mc_se": 0.0224960901952778,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.049984629572702124,
+     "threshold_never_assigned": false
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power": 0.5466666666666666,
+     "mc_se": 0.028741504380843986,
+     "reps": 300,
+     "p_computed": 0.83,
+     "null_rate_achieved": 0.1,
+     "threshold_never_assigned": false
+    }
+   ],
+   "head_to_head": [
+    {
+     "comparator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power_diff": -0.20666666666666667,
+     "paired_mc_se": 0.030816945538012487,
+     "reps": 300,
+     "power_discordance": 0.09666666666666666,
+     "power_comparator": 0.30333333333333334,
+     "comparator_null_rate_achieved": 0.05,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power_diff": -0.05,
+     "paired_mc_se": 0.015025062674119,
+     "reps": 300,
+     "power_discordance": 0.01,
+     "power_comparator": 0.06,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power_diff": -0.19,
+     "paired_mc_se": 0.029895768390693876,
+     "reps": 300,
+     "power_discordance": 0.09666666666666666,
+     "power_comparator": 0.2866666666666667,
+     "comparator_null_rate_achieved": 0.04655,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power_diff": -0.01,
+     "paired_mc_se": 0.009999999999999997,
+     "reps": 300,
+     "power_discordance": 0.01,
+     "power_comparator": 0.02,
+     "comparator_null_rate_achieved": 0.01,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power_diff": -0.006666666666666667,
+     "paired_mc_se": 0.019465163882679267,
+     "reps": 300,
+     "power_discordance": 0.09666666666666666,
+     "power_comparator": 0.10333333333333333,
+     "comparator_null_rate_achieved": 0.049984629572702124,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.25,
+     "power_diff": 0.006666666666666667,
+     "paired_mc_se": 0.006666666666666666,
+     "reps": 300,
+     "power_discordance": 0.01,
+     "power_comparator": 0.0033333333333333335,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power_diff": -0.5166666666666667,
+     "paired_mc_se": 0.03320767843583368,
+     "reps": 300,
+     "power_discordance": 0.3,
+     "power_comparator": 0.8166666666666667,
+     "comparator_null_rate_achieved": 0.05,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power_diff": -0.31666666666666665,
+     "paired_mc_se": 0.029282894711850364,
+     "reps": 300,
+     "power_discordance": 0.04,
+     "power_comparator": 0.3566666666666667,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power_diff": -0.5133333333333333,
+     "paired_mc_se": 0.03321271375931615,
+     "reps": 300,
+     "power_discordance": 0.3,
+     "power_comparator": 0.8133333333333334,
+     "comparator_null_rate_achieved": 0.04655,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power_diff": 0.02,
+     "paired_mc_se": 0.013305433463185452,
+     "reps": 300,
+     "power_discordance": 0.04,
+     "power_comparator": 0.02,
+     "comparator_null_rate_achieved": 0.01,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power_diff": -0.08,
+     "paired_mc_se": 0.028737849451226902,
+     "reps": 300,
+     "power_discordance": 0.3,
+     "power_comparator": 0.38,
+     "comparator_null_rate_achieved": 0.049984629572702124,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.5,
+     "power_diff": -0.02,
+     "paired_mc_se": 0.014887163857316952,
+     "reps": 300,
+     "power_discordance": 0.04,
+     "power_comparator": 0.06,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power_diff": -0.3233333333333333,
+     "paired_mc_se": 0.027050608391385764,
+     "reps": 300,
+     "power_discordance": 0.6766666666666666,
+     "power_comparator": 1.0,
+     "comparator_null_rate_achieved": 0.05,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power_diff": -0.6266666666666667,
+     "paired_mc_se": 0.030635532642260207,
+     "reps": 300,
+     "power_discordance": 0.26,
+     "power_comparator": 0.8866666666666667,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power_diff": -0.3233333333333333,
+     "paired_mc_se": 0.027050608391385764,
+     "reps": 300,
+     "power_discordance": 0.6766666666666666,
+     "power_comparator": 1.0,
+     "comparator_null_rate_achieved": 0.04655,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power_diff": 0.21666666666666667,
+     "paired_mc_se": 0.027718256557053077,
+     "reps": 300,
+     "power_discordance": 0.26,
+     "power_comparator": 0.043333333333333335,
+     "comparator_null_rate_achieved": 0.01,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power_diff": -0.06,
+     "paired_mc_se": 0.02335323247673858,
+     "reps": 300,
+     "power_discordance": 0.6766666666666666,
+     "power_comparator": 0.7366666666666667,
+     "comparator_null_rate_achieved": 0.049984629572702124,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.75,
+     "power_diff": -0.03333333333333333,
+     "paired_mc_se": 0.028657565120703173,
+     "reps": 300,
+     "power_discordance": 0.26,
+     "power_comparator": 0.29333333333333333,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power_diff": -0.20333333333333334,
+     "paired_mc_se": 0.023275928749679643,
+     "reps": 300,
+     "power_discordance": 0.7966666666666666,
+     "power_comparator": 1.0,
+     "comparator_null_rate_achieved": 0.05,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power_diff": -0.55,
+     "paired_mc_se": 0.029910680858707277,
+     "reps": 300,
+     "power_discordance": 0.4166666666666667,
+     "power_comparator": 0.9666666666666667,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power_diff": -0.20333333333333334,
+     "paired_mc_se": 0.023275928749679643,
+     "reps": 300,
+     "power_discordance": 0.7966666666666666,
+     "power_comparator": 1.0,
+     "comparator_null_rate_achieved": 0.04655,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power_diff": 0.38,
+     "paired_mc_se": 0.030360156956688856,
+     "reps": 300,
+     "power_discordance": 0.4166666666666667,
+     "power_comparator": 0.03666666666666667,
+     "comparator_null_rate_achieved": 0.01,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power_diff": -0.0033333333333333335,
+     "paired_mc_se": 0.013765299248345707,
+     "reps": 300,
+     "power_discordance": 0.7966666666666666,
+     "power_comparator": 0.8,
+     "comparator_null_rate_achieved": 0.049984629572702124,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.85,
+     "power_diff": -0.06666666666666667,
+     "paired_mc_se": 0.031792713991582656,
+     "reps": 300,
+     "power_discordance": 0.4166666666666667,
+     "power_comparator": 0.48333333333333334,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power_diff": -0.17666666666666667,
+     "paired_mc_se": 0.022056142680706676,
+     "reps": 300,
+     "power_discordance": 0.8233333333333334,
+     "power_comparator": 1.0,
+     "comparator_null_rate_achieved": 0.05,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "rate_kri",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power_diff": -0.5166666666666667,
+     "paired_mc_se": 0.029661160913574985,
+     "reps": 300,
+     "power_discordance": 0.4766666666666667,
+     "power_comparator": 0.9933333333333333,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power_diff": -0.17666666666666667,
+     "paired_mc_se": 0.022056142680706676,
+     "reps": 300,
+     "power_discordance": 0.8233333333333334,
+     "power_comparator": 1.0,
+     "comparator_null_rate_achieved": 0.04655,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "simaerep_classic",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power_diff": 0.44333333333333336,
+     "paired_mc_se": 0.030241810055561168,
+     "reps": 300,
+     "power_discordance": 0.4766666666666667,
+     "power_comparator": 0.03333333333333333,
+     "comparator_null_rate_achieved": 0.01,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "look",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power_diff": 0.01,
+     "paired_mc_se": 0.008814956379037025,
+     "reps": 300,
+     "power_discordance": 0.8233333333333334,
+     "power_comparator": 0.8133333333333334,
+     "comparator_null_rate_achieved": 0.049984629572702124,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    },
+    {
+     "comparator": "ae_report_ratio",
+     "tier": "watch",
+     "design_row": false,
+     "cell": 27,
+     "n_sites": 20,
+     "patients_per_site": [
+      40,
+      80
+     ],
+     "mu": 1.5,
+     "f": 0.9,
+     "power_diff": -0.07,
+     "paired_mc_se": 0.031943721414272354,
+     "reps": 300,
+     "power_discordance": 0.4766666666666667,
+     "power_comparator": 0.5466666666666666,
+     "comparator_null_rate_achieved": 0.1,
+     "comparator_never_assigned": false,
+     "discordance_never_assigned": false
+    }
+   ]
+  },
+  "b": {
+   "r_null": 1000,
+   "thresholds": "sap-v1",
+   "null": [
+    {
+     "indicator": "discordance",
+     "look_per_site": {
+      "rate": 0.057398115285766736,
+      "mc_se": 0.001417807630670643,
+      "ci95": [
+       0.05461926339264621,
+       0.060176967178887264
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 16342,
+      "n_studies": 1000
+     },
+     "look_per_study": {
+      "rate": 0.938,
+      "mc_se": 0.023594760280891025,
+      "n": 1000
+     },
+     "watch_fwer": {
+      "rate": 0.148,
+      "mc_se": 0.011229247525992114,
+      "n": 1000,
+      "ci95": [
+       0.12655273282842236,
+       0.17154243829517657
+      ]
+     }
+    },
+    {
+     "indicator": "rate_kri",
+     "look_per_site": {
+      "rate": 0.0627,
+      "mc_se": 0.0013362243432505992,
+      "ci95": [
+       0.06008104841196314,
+       0.06531895158803687
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 20000,
+      "n_studies": 1000
+     },
+     "look_per_study": {
+      "rate": 1.254,
+      "mc_se": 0.026724486865011984,
+      "n": 1000
+     },
+     "watch_fwer": {
+      "rate": 0.211,
+      "mc_se": 0.012902674141432851,
+      "n": 1000,
+      "ci95": [
+       0.1860919540107737,
+       0.2376218722355963
+      ]
+     }
+    },
+    {
+     "indicator": "simaerep_classic",
+     "look_per_site": {
+      "rate": 0.0,
+      "mc_se": 0.0,
+      "ci95": [
+       0.0,
+       0.0
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 20000,
+      "n_studies": 1000
+     },
+     "look_per_study": {
+      "rate": 0.0,
+      "mc_se": 0.0,
+      "n": 1000
+     },
+     "watch_fwer": {
+      "rate": 0.0,
+      "mc_se": 0.0,
+      "n": 1000,
+      "ci95": [
+       0.0,
+       0.0036820838968656708
+      ]
+     }
+    },
+    {
+     "indicator": "ae_report_ratio",
+     "look_per_site": {
+      "rate": 0.05519520254558805,
+      "mc_se": 0.0013987132438035618,
+      "ci95": [
+       0.052453774963033876,
+       0.05793663012814223
+      ],
+      "ci95_method": "normal, cluster-aware MC SE",
+      "n_sites": 16342,
+      "n_studies": 1000
+     },
+     "look_per_study": {
+      "rate": 0.902,
+      "mc_se": 0.022691648483768447,
+      "n": 1000
+     },
+     "watch_fwer": {
+      "rate": 0.155,
+      "mc_se": 0.011444430960078356,
+      "n": 1000,
+      "ci95": [
+       0.13311091275596743,
+       0.17894149488665514
+      ]
+     }
+    }
+   ]
+  }
+ }
+}
