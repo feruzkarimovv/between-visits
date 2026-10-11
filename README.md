@@ -72,7 +72,7 @@ The statistical analysis plan ([`docs/11-site-signal-sap.md`](docs/11-site-signa
 
 1. **The tag.** The tag's GitHub Release was published at 2026-10-11T08:38:10Z. That is the external timestamp.
 2. **The seed.** The evaluation seed was then derived from the tag commit and a public randomness beacon published after the tag: drand round 6542582, round time 08:48:00Z (`monitoring/seed_beacon.json`). So nobody could pick a seed before freezing the plan.
-3. **The runs.** Every evaluation run is logged with the sha256 of its outputs (`validation/site_signal/run_log.jsonl`). The outputs record the seed and tag they used: `eval_seed` {{ss:summary:eval_seed:int}} and `sap_tag_commit` `{{ss:summary:sap_tag_commit:text}}` in `summary.json`.
+3. **The runs.** Every evaluation run is logged with the sha256 of its outputs (`validation/site_signal/run_log.jsonl`). The outputs record the seed and tag they used: `eval_seed` 92794863 and `sap_tag_commit` `68838978bb305e0f730d30e5cbf3c00bceca5a25` in `summary.json`.
 4. **The checks.** Requirement REQ-022 (`docs/07` §6) states this order as a testable check, and every clarification since the tag is a row in the SAP's §17 Deviations table.
 
 ## Safety by design
@@ -145,21 +145,23 @@ The table shows how often the discordance indicator flags one planted site that 
 
 | Planted capture loss *f* | Flagged at Look or Watch | Flagged at Watch |
 |---|---|---|
-| 0.25 | {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.25].power // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.25].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.25].mc_se:f3}}) | {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.25].power // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.25].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.25].mc_se:f3}}) |
-| 0.50 | {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.5].power // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.5].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.5].mc_se:f3}}) | {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.5].power // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.5].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.5].mc_se:f3}}) |
-| {{ss:summary:design.gross_f:p2}} (gross loss) | {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.9].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se:f3}}) | {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.9].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se:f3}}) |
+| 0.25 | 0.15 (MC SE 0.021) | 0.03 (MC SE 0.009) |
+| 0.50 | 0.51 (MC SE 0.029) | 0.22 (MC SE 0.024) |
+| 0.90 (gross loss) | 0.77 (MC SE 0.024) | 0.70 (MC SE 0.026) |
 
-Moderate capture gaps (25% and 50%) are expected to go mostly unflagged at Watch. Look catches more, at the price of false Look flags.
+Moderate capture gaps (25% and 50%) mostly go unflagged at Watch. Look catches more, at the price of false Look flags.
 
-| False flags with no planted site ({{ss:summary:null.r:int}} fresh null studies) | Rate | MC SE | REQ-023 |
+**Against a plain AE-rate KRI at the same design** (same replicates, `head_to_head.grid`), discordance is ahead at Watch for a 50% gap (difference 0.09, paired MC SE 0.029) but behind for a gross loss: the KRI flags it at Look or Watch in 0.99 of studies (MC SE 0.005). Discordance needs a minimum number of evaluable episodes per site: the planted site was computed in 0.77 of studies at the design, and never at a lower episode rate (*μ* = 0.5), so there discordance never flags it while the KRI still does.
+
+| False flags with no planted site (2000 fresh null studies) | Rate | MC SE | REQ-023 |
 |---|---|---|---|
-| False Look per site (nominal 0.05) | {{ss:summary:null.look_per_site.rate:p2}} | {{ss:summary:null.look_per_site.mc_se:f3}} | {{ss:derived:req023.look.outcome:text}} |
-| Any false Watch per study (nominal 0.10) | {{ss:summary:null.watch_fwer.rate:p2}} (95% CI {{ss:summary:null.watch_fwer.ci95:ci3}}) | {{ss:summary:null.watch_fwer.mc_se:f3}} | {{ss:derived:req023.watch.outcome:text}} |
+| False Look per site (nominal 0.05) | 0.05 | 0.001 | met (conservative: below the nominal rate) |
+| Any false Watch per study (nominal 0.10) | 0.11 (95% CI [0.095, 0.122]) | 0.007 | met |
 
-**The failure case.** Here honest sites differ mainly in how thoroughly they record AEs, not in case mix, and the advantage over a plain AE-rate KRI shrinks.
+**The failure case.** Honest sites differ mainly in how thoroughly they record AEs, not in case mix. Here a plain AE-rate KRI does much better than discordance.
 
-- **Re-calibrated thresholds, *f* = 0.50.** Discordance flags the planted site at Look or Watch in {{ss:summary:failure_case.a.power[indicator=discordance,tier=look,f=0.5].power:p2}} of studies (MC SE {{ss:summary:failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se:f3}}). The AE-rate KRI flags it in {{ss:summary:failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power:p2}} (MC SE {{ss:summary:failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se:f3}}).
-- **Frozen thresholds.** The false Look rate becomes {{ss:summary:failure_case.b.null[indicator=discordance].look_per_site.rate:p2}} (MC SE {{ss:summary:failure_case.b.null[indicator=discordance].look_per_site.mc_se:f3}}).
+- **Re-calibrated thresholds, *f* = 0.50.** Discordance flags the planted site at Look or Watch in 0.30 of studies (MC SE 0.026). The AE-rate KRI flags it in 0.82 (MC SE 0.022).
+- **Frozen thresholds.** The false Look rate becomes 0.06 (MC SE 0.001) and the chance of any false Watch flag per study 0.15 (MC SE 0.011), both above nominal.
 
 Both streams are simulated, so these numbers show method and power under stated assumptions, not real-world validity. The comparator rows, the misspecified-null rows and the committed study are in [`WHAT_IT_GETS_WRONG.md`](WHAT_IT_GETS_WRONG.md) and on the **How well it works** tab. The only non-circular validation is retrospective. It needs trials that collected patient-reported and clinician-reported (CTCAE) symptoms for the same patients, with site IDs.
 
@@ -171,7 +173,8 @@ The validation pack traces each requirement in [`validation/requirements.yaml`](
 
 - **Both Site Signal streams are simulated**, and its thresholds come from an assumed null.
 - **Moderate capture gaps are mostly invisible at the Watch tier.**
-- **The advantage over a plain AE-rate KRI depends on assumptions**, which the failure case breaks.
+- **Discordance is not ahead of a plain AE-rate KRI everywhere.** The KRI flags a gross loss more often at the design, and the failure case reverses the comparison.
+- **Too few episodes means no signal.** At a lower episode rate discordance is not computed for the planted site at all.
 - **Episode date = call date**, only three terms are graded, and there is no MedDRA.
 - **Speech-recognition error is unmeasured.**
 - **The text-mode evaluation has one known miss (P19).**

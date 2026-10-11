@@ -23,8 +23,8 @@
     how-well-it-works.png, report-card.png
   A missing screenshot shows its expected path in a dashed frame.
 
-  Export: open this file in Chrome after rendering, Print, Destination "Save as PDF", Margins "None",
-  Background graphics on, save as docs/pitch/deck.pdf. Or headless:
+  Export: uv run --no-project --with playwright==1.63.0 python docs/pitch/export_pdf.py (headless Chromium; fails unless one
+  page per slide). Or Chrome: Print, "Save as PDF", Margins "None", Background graphics on. Or headless Chrome:
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --no-pdf-header-footer \
       --print-to-pdf=docs/pitch/deck.pdf docs/pitch/deck.html
 -->
@@ -258,7 +258,7 @@
   <div class="grid3">
     <figure class="shot">
       <div class="frame"><img src="../screenshots/sites-funnel.png" alt="docs/screenshots/sites-funnel.png: Sites page, funnel and ranked table with Look and Watch tiers, SIMULATED badge"></div>
-      <figcaption>Funnel of observed vs expected capture for {{ss:signal_run:run.n_computed_sites:int}} computed sites. About {{ss:thresholds:expected_false_look_flags_per_study:f1}} false Look flags are expected in a study with no problems.</figcaption>
+      <figcaption>Funnel of observed vs expected capture for 14 computed sites. About 0.8 false Look flags are expected in a study with no problems.</figcaption>
     </figure>
     <figure class="shot">
       <div class="frame"><img src="../screenshots/site-drilldown.png" alt="docs/screenshots/site-drilldown.png: a flagged site with unmatched episodes and verbatim patient quotes"></div>
@@ -295,14 +295,14 @@
       <table>
         <thead><tr><th>Planted capture loss</th><th>Look or Watch</th><th>Watch</th></tr></thead>
         <tbody>
-          <tr><td>25%</td><td class="num">{{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.25].power // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.25].power:p2}} ± {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.25].mc_se:f3}}</td><td class="num">{{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.25].power // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.25].power:p2}} ± {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.25].mc_se:f3}}</td></tr>
-          <tr><td>50%</td><td class="num">{{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.5].power // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.5].power:p2}} ± {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.5].mc_se:f3}}</td><td class="num">{{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.5].power // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.5].power:p2}} ± {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.5].mc_se:f3}}</td></tr>
-          <tr><td>Gross ({{ss:summary:design.gross_f:pct2}})</td><td class="num">{{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.9].power:p2}} ± {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se:f3}}</td><td class="num">{{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.9].power:p2}} ± {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se:f3}}</td></tr>
-          <tr><td>No planted site: false Look per site</td><td class="num" colspan="2">{{ss:summary:null.look_per_site.rate:p2}} ± {{ss:summary:null.look_per_site.mc_se:f3}} (nominal 0.05)</td></tr>
-          <tr><td>No planted site: any false Watch per study</td><td class="num" colspan="2">{{ss:summary:null.watch_fwer.rate:p2}} ± {{ss:summary:null.watch_fwer.mc_se:f3}} (nominal 0.10)</td></tr>
+          <tr><td>25%</td><td class="num">0.15 ± 0.021</td><td class="num">0.03 ± 0.009</td></tr>
+          <tr><td>50%</td><td class="num">0.51 ± 0.029</td><td class="num">0.22 ± 0.024</td></tr>
+          <tr><td>Gross (90%)</td><td class="num">0.77 ± 0.024</td><td class="num">0.70 ± 0.026</td></tr>
+          <tr><td>No planted site: false Look per site</td><td class="num" colspan="2">0.05 ± 0.001 (nominal 0.05)</td></tr>
+          <tr><td>No planted site: any false Watch per study</td><td class="num" colspan="2">0.11 ± 0.007 (nominal 0.10)</td></tr>
         </tbody>
       </table>
-      <p class="small" style="margin-top:0.8cqw">Failure case (honest sites differ mainly in recording diligence), 50% loss, Look or Watch: discordance {{ss:summary:failure_case.a.power[indicator=discordance,tier=look,f=0.5].power:p2}} ± {{ss:summary:failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se:f3}} vs plain AE-rate KRI {{ss:summary:failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power:p2}} ± {{ss:summary:failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se:f3}}. ± is the Monte Carlo SE.</p>
+      <p class="small" style="margin-top:0.8cqw">Not ahead everywhere: a plain AE-rate KRI flags the gross loss at Look or Watch in 0.99 ± 0.005; discordance needs enough episodes and computed the planted site in 0.77 of studies. Failure case (honest sites differ mainly in recording diligence), 50% loss, Look or Watch: discordance 0.30 ± 0.026 vs plain AE-rate KRI 0.82 ± 0.022. ± is the Monte Carlo SE.</p>
     </div>
   </div>
   <div class="foot"><span>eval/results/latest.json (overall.*, *_ci95: Clopper-Pearson 95%) · validation/site_signal/summary.json · WHAT_IT_GETS_WRONG.md</span><span>8</span></div>
