@@ -30,7 +30,10 @@ COPY scenarios/ /app/scenarios/
 COPY agent/variants.json /app/agent/variants.json
 COPY eval/results/ /app/eval/results/
 COPY validation/ /app/validation/
-# From Checkpoint B (B19): also monitoring/ (the project and its committed out/).
+# Site Signal: the committed evaluation outputs (read by app/services/site_signal.py at <repo>/monitoring/out;
+# validation/site_signal/ is copied above). Only the JSON outputs, not the monitoring project: the blind run that
+# would need it is not built (NOT_BUILT.md).
+COPY monitoring/out/ /app/monitoring/out/
 
 # Run as an unprivileged user; only the database directory and replay audio are writable.
 RUN useradd --system --uid 10001 --no-create-home --home-dir /app bv \
