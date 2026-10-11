@@ -1,0 +1,63 @@
+[
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_101_2", "site_id": "101", "subject_id": "101-031",
+    "usubjid": "FIXTURE-101-031", "aeseq": 1, "aeterm": "Diarrhea", "aetoxgr": "2", "aestdtc": "2026-03-09",
+    "entered_on": "2026-03-18", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_101_5", "site_id": "101", "subject_id": "101-044",
+    "usubjid": "FIXTURE-101-044", "aeseq": 1, "aeterm": "Dyspnea", "aetoxgr": "3", "aestdtc": "2026-07-14",
+    "entered_on": "2026-07-15", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_103_2", "site_id": "103", "subject_id": "103-005",
+    "usubjid": "FIXTURE-103-005", "aeseq": 1, "aeterm": "Fatigue", "aetoxgr": "", "aestdtc": "2026-05-04",
+    "entered_on": "2026-05-14", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_104_3", "site_id": "104", "subject_id": "104-009",
+    "usubjid": "FIXTURE-104-009", "aeseq": 1, "aeterm": "Breathlessness", "aetoxgr": "2", "aestdtc": "2026-02-23",
+    "entered_on": "2026-03-04", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_107_3", "site_id": "107", "subject_id": "107-008",
+    "usubjid": "FIXTURE-107-008", "aeseq": 1, "aeterm": "Nausea", "aetoxgr": "1", "aestdtc": "2026-06-01",
+    "entered_on": "2026-06-10", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_108_5", "site_id": "108", "subject_id": "108-010",
+    "usubjid": "FIXTURE-108-010", "aeseq": 1, "aeterm": "Loose stools", "aetoxgr": "2", "aestdtc": "2026-06-22",
+    "entered_on": "2026-07-01", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_109_6", "site_id": "109", "subject_id": "109-019",
+    "usubjid": "FIXTURE-109-019", "aeseq": 1, "aeterm": "Shortness of breath", "aetoxgr": "2",
+    "aestdtc": "2026-05-25", "entered_on": "2026-06-03", "origin": "site", "symptomatic": true,
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_112_4", "site_id": "112", "subject_id": "112-003",
+    "usubjid": "FIXTURE-112-003", "aeseq": 1, "aeterm": "Dyspnoea", "aetoxgr": "2", "aestdtc": "2026-05-10",
+    "entered_on": "2026-05-19", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_112_7", "site_id": "112", "subject_id": "112-014",
+    "usubjid": "FIXTURE-112-014", "aeseq": 1, "aeterm": "Anemia", "aetoxgr": "1", "aestdtc": "2026-07-30",
+    "entered_on": "2026-08-10", "origin": "site", "symptomatic": false, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_112_9", "site_id": "112", "subject_id": "112-009",
+    "usubjid": "FIXTURE-112-009", "aeseq": 1, "aeterm": "Pyrexia", "aetoxgr": "2", "aestdtc": "2026-08-04",
+    "entered_on": "2026-08-06", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_112_11", "site_id": "112", "subject_id": "112-022",
+    "usubjid": "FIXTURE-112-022", "aeseq": 1, "aeterm": "Diarrhoea", "aetoxgr": "2", "aestdtc": "2026-09-07",
+    "entered_on": "2026-09-18", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "site_ae_id": "ae_117_1", "site_id": "117", "subject_id": "117-002",
+    "usubjid": "FIXTURE-117-002", "aeseq": 1, "aeterm": "Dyspnea", "aetoxgr": "2", "aestdtc": "2026-04-13",
+    "entered_on": "2026-04-22", "origin": "site", "symptomatic": true, "data_origin": "SIMULATED"
+  }
+]

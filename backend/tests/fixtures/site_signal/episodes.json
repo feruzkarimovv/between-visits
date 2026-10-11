@@ -1,0 +1,223 @@
+[
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_101_03", "site_id": "101", "subject_id": "101-031",
+    "language": "en", "pace": "standard", "term": "Diarrhea", "grade": 2, "kind": "new", "episode_date": "2026-03-10",
+    "checkin_ids": ["sim_101_0060", "sim_101_0061"], "status": "matched", "paged_level": null,
+    "matched_site_ae_id": "ae_101_2",
+    "evidence": {
+      "quote": "Five or six times a day the last couple of days, more than my usual.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_101_04", "site_id": "101", "subject_id": "101-044",
+    "language": "es", "pace": "extra_time", "term": "Dyspnea", "grade": 3, "kind": "new",
+    "episode_date": "2026-07-14", "checkin_ids": ["sim_101_0302"], "status": "paged", "paged_level": "emergency",
+    "matched_site_ae_id": "ae_101_5",
+    "evidence": {
+      "quote": "Me ahogo hasta para vestirme, tengo que sentarme.", "quote_lang": "es",
+      "translation_en": "I get breathless even getting dressed; I have to sit down.", "translation_is_ai": true,
+      "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_103_04", "site_id": "103", "subject_id": "103-005",
+    "language": "en", "pace": "standard", "term": "Diarrhea", "grade": 2, "kind": "new", "episode_date": "2026-05-05",
+    "checkin_ids": ["sim_103_0071"], "status": "unmatched", "paged_level": null, "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "I've had to run to the bathroom about six times a day since my last treatment.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_103_06", "site_id": "103", "subject_id": "103-012",
+    "language": "es", "pace": "extra_time", "term": "Dyspnea", "grade": 2, "kind": "new",
+    "episode_date": "2026-09-03", "checkin_ids": ["sim_103_0160"], "status": "pending", "paged_level": null,
+    "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Me canso y me falta el aire al caminar a la tienda.", "quote_lang": "es",
+      "translation_en": "I get tired and short of breath walking to the store.", "translation_is_ai": true,
+      "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_104_02", "site_id": "104", "subject_id": "104-009",
+    "language": "en", "pace": "standard", "term": "Dyspnea", "grade": 2, "kind": "new", "episode_date": "2026-02-24",
+    "checkin_ids": ["sim_104_0040"], "status": "matched", "paged_level": null, "matched_site_ae_id": "ae_104_3",
+    "evidence": {
+      "quote": "Getting out of breath when I walk around the block.", "quote_lang": "en", "translation_en": null,
+      "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_107_11", "site_id": "107", "subject_id": "107-008",
+    "language": "en", "pace": "standard", "term": "Diarrhea", "grade": 2, "kind": "new", "episode_date": "2026-06-02",
+    "checkin_ids": ["sim_107_0210", "sim_107_0211"], "status": "unmatched", "paged_level": null,
+    "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Since Sunday I've been going five or six times a day, way more than normal for me.",
+      "quote_lang": "en", "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic",
+      "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_107_12", "site_id": "107", "subject_id": "107-008",
+    "language": "en", "pace": "standard", "term": "Diarrhea", "grade": 3, "kind": "worsened",
+    "episode_date": "2026-06-08", "checkin_ids": ["sim_107_0212"], "status": "paged", "paged_level": "urgent",
+    "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "It's ten or more times a day now and I can barely leave the house.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_107_19", "site_id": "107", "subject_id": "107-015",
+    "language": "es", "pace": "extra_time", "term": "Dyspnea", "grade": 2, "kind": "new",
+    "episode_date": "2026-07-07", "checkin_ids": ["sim_107_0330"], "status": "unmatched", "paged_level": null,
+    "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Me falta el aire cuando subo las escaleras y tengo que parar a mitad de camino.", "quote_lang": "es",
+      "translation_en": "I get short of breath when I climb the stairs and have to stop halfway.",
+      "translation_is_ai": true, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_108_14", "site_id": "108", "subject_id": "108-006",
+    "language": "es", "pace": "standard", "term": "Diarrhea", "grade": 2, "kind": "new", "episode_date": "2026-06-17",
+    "checkin_ids": ["sim_108_0240", "sim_108_0241"], "status": "unmatched", "paged_level": null,
+    "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Llevo tres días con el estómago suelto, unas cinco veces al día.", "quote_lang": "es",
+      "translation_en": "I've had a loose stomach for three days, about five times a day.", "translation_is_ai": true,
+      "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_108_15", "site_id": "108", "subject_id": "108-010",
+    "language": "en", "pace": "standard", "term": "Diarrhea", "grade": 2, "kind": "new", "episode_date": "2026-06-23",
+    "checkin_ids": ["sim_108_0252"], "status": "matched", "paged_level": null, "matched_site_ae_id": "ae_108_5",
+    "evidence": {
+      "quote": "About five times yesterday and four so far today, more than I usually go.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_109_07", "site_id": "109", "subject_id": "109-011",
+    "language": "en", "pace": "extra_time", "term": "Diarrhea", "grade": 2, "kind": "new",
+    "episode_date": "2026-04-22", "checkin_ids": ["sim_109_0150", "sim_109_0151"], "status": "unmatched",
+    "paged_level": null, "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "It's been loose all week, maybe five trips to the bathroom a day.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_109_08", "site_id": "109", "subject_id": "109-019",
+    "language": "en", "pace": "standard", "term": "Dyspnea", "grade": 2, "kind": "new", "episode_date": "2026-05-27",
+    "checkin_ids": ["sim_109_0188"], "status": "matched", "paged_level": null, "matched_site_ae_id": "ae_109_6",
+    "evidence": {
+      "quote": "I have to rest after carrying the groceries in; I get short of breath.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_111_09", "site_id": "111", "subject_id": "111-027",
+    "language": "en", "pace": "standard", "term": "Dyspnea", "grade": 2, "kind": "new", "episode_date": "2026-03-18",
+    "checkin_ids": ["sim_111_0098", "sim_111_0099"], "status": "unmatched", "paged_level": null,
+    "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "I'm breathing hard after one flight of stairs, which is new for me.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_112_05", "site_id": "112", "subject_id": "112-003",
+    "language": "en", "pace": "standard", "term": "Dyspnea", "grade": 2, "kind": "new", "episode_date": "2026-05-12",
+    "checkin_ids": ["sim_112_0101", "sim_112_0102"], "status": "matched", "paged_level": null,
+    "matched_site_ae_id": "ae_112_4",
+    "evidence": {
+      "quote": "I get winded walking up the stairs and have to stop halfway.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_112_17", "site_id": "112", "subject_id": "112-014",
+    "language": "es", "pace": "extra_time", "term": "Diarrhea", "grade": 2, "kind": "new",
+    "episode_date": "2026-08-14", "checkin_ids": ["sim_112_0381", "sim_112_0382"], "status": "unmatched",
+    "paged_level": null, "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Desde el domingo voy al baño unas seis veces al día, mucho más de lo normal para mí.",
+      "quote_lang": "es",
+      "translation_en": "Since Sunday I've been going to the bathroom about six times a day, much more than normal for me.",
+      "translation_is_ai": true, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_112_18", "site_id": "112", "subject_id": "112-009",
+    "language": "en", "pace": "standard", "term": "Fever", "grade": 2, "kind": "new", "episode_date": "2026-08-04",
+    "checkin_ids": ["sim_112_0390"], "status": "paged", "paged_level": "urgent", "matched_site_ae_id": "ae_112_9",
+    "evidence": {
+      "quote": "Last night the thermometer read 39.4 and I had the shakes.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_112_23", "site_id": "112", "subject_id": "112-020",
+    "language": "en", "pace": "standard", "term": "Dyspnea", "grade": 2, "kind": "new", "episode_date": "2026-07-21",
+    "checkin_ids": ["sim_112_0344", "sim_112_0345"], "status": "unmatched", "paged_level": null,
+    "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Walking to the mailbox leaves me out of breath now.", "quote_lang": "en", "translation_en": null,
+      "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_112_30", "site_id": "112", "subject_id": "112-022",
+    "language": "es", "pace": "standard", "term": "Diarrhea", "grade": 2, "kind": "new", "episode_date": "2026-09-08",
+    "checkin_ids": ["sim_112_0457"], "status": "pending", "paged_level": null, "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Hoy ya fui cinco veces, más que en un día normal.", "quote_lang": "es",
+      "translation_en": "I've already gone five times today, more than on a normal day.", "translation_is_ai": true,
+      "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_115_06", "site_id": "115", "subject_id": "115-014",
+    "language": "en", "pace": "standard", "term": "Diarrhea", "grade": 2, "kind": "new", "episode_date": "2026-05-19",
+    "checkin_ids": ["sim_115_0120"], "status": "unmatched", "paged_level": null, "matched_site_ae_id": null,
+    "evidence": {
+      "quote": "Four or five extra trips a day since the weekend.", "quote_lang": "en", "translation_en": null,
+      "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  },
+  {
+    "_about": "fixture, not a result", "episode_id": "ep_117_02", "site_id": "117", "subject_id": "117-002",
+    "language": "en", "pace": "extra_time", "term": "Dyspnea", "grade": 2, "kind": "new",
+    "episode_date": "2026-04-14", "checkin_ids": ["sim_117_0031"], "status": "matched", "paged_level": null,
+    "matched_site_ae_id": "ae_117_1",
+    "evidence": {
+      "quote": "I need to stop and catch my breath walking across the parking lot.", "quote_lang": "en",
+      "translation_en": null, "translation_is_ai": false, "t_s": null, "source": "synthetic", "checkin_id": null
+    },
+    "data_origin": "SIMULATED"
+  }
+]

@@ -1,0 +1,33 @@
+{
+  "_about": "fixture, not a result", "data_origin": "SIMULATED", "sap_tag_commit": "0000000", "eval_seed": 0,
+  "code_commit": "0000000", "generated_at": "2026-10-11T00:00:00Z",
+  "answer_key": [
+    {"site_id": "101", "label": "honest", "f": null},
+    {"site_id": "102", "label": "honest", "f": null},
+    {"site_id": "103", "label": "low_coverage", "f": null},
+    {"site_id": "104", "label": "decoy_healthy_casemix", "f": null},
+    {"site_id": "105", "label": "honest", "f": null},
+    {"site_id": "106", "label": "honest", "f": null},
+    {"site_id": "107", "label": "gross_under", "f": 0.9},
+    {"site_id": "108", "label": "language_gap", "f": null},
+    {"site_id": "109", "label": "under_50", "f": 0.5},
+    {"site_id": "110", "label": "honest", "f": null},
+    {"site_id": "111", "label": "honest_low_diligence", "f": null},
+    {"site_id": "112", "label": "gross_under", "f": 0.9},
+    {"site_id": "113", "label": "honest", "f": null},
+    {"site_id": "114", "label": "honest", "f": null},
+    {"site_id": "115", "label": "under_25", "f": 0.25},
+    {"site_id": "116", "label": "honest", "f": null},
+    {"site_id": "117", "label": "small_site", "f": null},
+    {"site_id": "118", "label": "honest", "f": null},
+    {"site_id": "119", "label": "honest", "f": null},
+    {"site_id": "120", "label": "honest", "f": null}
+  ],
+  "confusion": {
+    "discordance": {"watch": {"tp": 2, "fp": 0, "fn": 3, "tn": 15}, "look": {"tp": 4, "fp": 1, "fn": 1, "tn": 14}},
+    "rate_kri": {"watch": {"tp": 1, "fp": 0, "fn": 4, "tn": 15}, "look": {"tp": 2, "fp": 1, "fn": 3, "tn": 14}},
+    "simaerep_classic": {
+      "watch": {"tp": 1, "fp": 0, "fn": 4, "tn": 15}, "look": {"tp": 1, "fp": 1, "fn": 4, "tn": 14}
+    }
+  }
+}

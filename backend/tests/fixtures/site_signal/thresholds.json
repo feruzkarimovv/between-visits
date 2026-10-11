@@ -1,0 +1,16 @@
+{
+  "_about": "fixture, not a result", "data_origin": "SIMULATED", "sap_tag_commit": "0000000", "eval_seed": 0,
+  "code_commit": "0000000", "generated_at": "2026-10-11T00:00:00Z", "numpy_version": "0.0.0",
+  "scipy_version": "0.0.0", "r_null": 2000,
+  "discordance": {"look": -1.5, "watch": -3.5, "never_assigned": {"look": false, "watch": false}},
+  "rate_kri": {"look": -1.5, "watch": -3.5, "never_assigned": {"look": false, "watch": false}},
+  "simaerep_classic": {"look": 0.8, "watch": 0.9, "never_assigned": {"look": false, "watch": false}},
+  "ae_report_ratio": {"look": -1.5, "watch": -3.5, "never_assigned": {"look": false, "watch": false}},
+  "achieved": {
+    "discordance": {"look": {"rate": 0.0, "mc_se": 0.0}, "watch": {"rate": 0.0, "mc_se": 0.0}},
+    "rate_kri": {"look": {"rate": 0.0, "mc_se": 0.0}, "watch": {"rate": 0.0, "mc_se": 0.0}},
+    "simaerep_classic": {"look": {"rate": 0.0, "mc_se": 0.0}, "watch": {"rate": 0.0, "mc_se": 0.0}},
+    "ae_report_ratio": {"look": {"rate": 0.0, "mc_se": 0.0}, "watch": {"rate": 0.0, "mc_se": 0.0}}
+  },
+  "expected_false_look_flags_per_study": 1.0
+}
