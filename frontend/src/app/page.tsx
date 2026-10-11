@@ -21,10 +21,11 @@ import {
   Siren,
   Users,
 } from "lucide-react";
-import type { CreateCheckInResponse, ReplayResponse, ReplaySpeed, TodayRow, TodayStatus } from "@/lib/types";
+import type { CreateCheckInResponse, DemoScenario, ReplayResponse, ReplaySpeed, TodayRow, TodayStatus } from "@/lib/types";
 import { useApiMutation, useDrafts, useEscalations, useHealth, useSaeList, useScenarios, useTodayCheckins } from "@/lib/queries";
 import { DISPLAY_TZ, fullName, todayInTz } from "@/lib/format";
 import { saveWebSession } from "@/lib/webSession";
+import { startReplayAudio, stopReplayAudio } from "@/lib/replayAudio";
 import { useNow } from "@/lib/hooks";
 import { useIdentity } from "@/lib/role";
 import { Avatar, Button, Card, CardHeader, EmptyState, ErrorState, LoadingRows, Table, Td, Th, cn } from "@/components/ui/primitives";
@@ -141,7 +142,12 @@ export default function TodayPage() {
               speed={speed}
               onSpeed={setSpeed}
               pending={replay.isPending}
-              onReplay={() => replay.mutate({ scenarioId: selectedScenario, speed })}
+              onReplay={() => {
+                // start the sound inside the click (autoplay rules); the replay's t=0 follows within a request
+                const sc = scenarioList.find((s) => s.id === selectedScenario);
+                if (sc?.audio_url) startReplayAudio(sc.audio_url, { title: sc.title, speed });
+                replay.mutate({ scenarioId: selectedScenario, speed }, { onError: () => stopReplayAudio() });
+              }}
             />
           ) : null}
         </div>
@@ -219,7 +225,7 @@ function ReplayPanel({
   pending,
   onReplay,
 }: {
-  scenarios: { id: string; title: string; duration_s: number }[];
+  scenarios: DemoScenario[];
   selected: string;
   onSelect: (id: string) => void;
   speed: ReplaySpeed;
@@ -233,7 +239,7 @@ function ReplayPanel({
       <div className="relative">
         <div className="flex items-center gap-2 text-sm font-medium text-live">
           <Clapperboard className="size-4" aria-hidden />
-          Demo mode · recorded calls
+          Demo mode · scripted calls
         </div>
         <p className="mt-1 text-sm leading-5 text-rail-muted">Drives the same rules, paging and drafts as a live call.</p>
         <div className="mt-3 flex flex-col gap-2">
@@ -248,7 +254,7 @@ function ReplayPanel({
           >
             {scenarios.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.title} ({Math.round(s.duration_s / 60)} min)
+                {s.title} ({Math.round(s.duration_s / 60)} min{s.audio_url ? ", with voice" : ""})
               </option>
             ))}
           </select>

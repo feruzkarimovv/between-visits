@@ -105,10 +105,18 @@ def test_openapi_documents_the_audio_route(client) -> None:
     assert "404" in op["responses"]
 
 
-def test_committed_scenarios_never_ship_audio() -> None:
-    """Audio is gitignored and never committed (docs/03 §6.2); a scenario file only points at the path."""
-    gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
-    assert "scenarios/audio/*.mp3" in gitignore
+def test_committed_scenarios_never_ship_recorded_audio() -> None:
+    """Call audio is gitignored (docs/03 §6.2). The only exceptions, in .gitignore and .dockerignore alike, are the
+    synthesized voices of scripted scenarios (agent/synthesize_scenario.py); a recorded call's audio never is."""
+    for name in (".gitignore", ".dockerignore"):
+        lines = (ROOT / name).read_text(encoding="utf-8").splitlines()
+        assert "scenarios/audio/*" in lines, name
+        for line in lines:
+            if line.startswith("!scenarios/audio/"):
+                sid = line.removeprefix("!scenarios/audio/").removesuffix(".mp3")
+                assert line.endswith(".mp3") and "*" not in sid, line
+                doc = json.loads((SCENARIOS_DIR / f"{sid}.json").read_text(encoding="utf-8"))
+                assert doc.get("recorded") is not True, f"{name}: {line} is a recorded call"
     for path in SCENARIOS_DIR.glob("*.json"):
         doc = json.loads(path.read_text(encoding="utf-8"))
         assert doc.get("audio") in (None, f"scenarios/audio/{path.stem}.mp3"), path.name

@@ -14,6 +14,7 @@ ElevenLabs agent config as code (WS1). Exact API fields: `docs/04-voice-agent.md
 | `check_config_hash.py` | Offline CI check: the hashes of the config in git equal the snapshot, and the deployed LLM is the evaluated one |
 | `voice_check.py` | Logs one real call against the live backend as a row of `eval/results/voice_checks.json` (V10): disclosure, page and acknowledgment times, grade; fills the planned call's pending row; IDs cut to the last 4 characters |
 | `export_scenario.py` | Turns a real call into a recorded replay scenario `scenarios/<id>.json` (V11): whitelisted fields only, IDs cut to the last 4 characters; `--audio` saves the gitignored mp3 |
+| `synthesize_scenario.py` | Gives a scripted scenario a voice: ElevenLabs text-to-speech per transcript turn (the agent's own voice and pace speed, one voice per synthetic patient) joined into the committed `scenarios/audio/<id>.mp3`, and re-times the scenario's events to that audio. `--dry-run` counts characters; clips are cached in `scenarios/audio/.tts-cache/` |
 
 ## Agent sync
 

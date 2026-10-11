@@ -24,7 +24,11 @@ eval/results/**/*.local*
 **/*.db-journal
 **/*.db-wal
 **/*.db-shm
-scenarios/audio/
+scenarios/audio/*
+# except the synthesized voices of the scripted scenarios (same list as .gitignore)
+!scenarios/audio/rosa_es_urgent.mp3
+!scenarios/audio/walter_en_extra_time.mp3
+!scenarios/audio/ana_es_standard.mp3
 
 # Toolchains, caches and build output (each image installs and builds its own)
 **/node_modules

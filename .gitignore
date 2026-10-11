@@ -7,7 +7,12 @@ agent/agents.lock.json
 # runtime
 backend/data/*.db
 backend/data/*.db-journal
-scenarios/audio/*.mp3
+# call audio stays local (recorded calls: teammates' voices); only the synthesized voices of scripted
+# scenarios (agent/synthesize_scenario.py) are committed, each listed by name
+scenarios/audio/*
+!scenarios/audio/rosa_es_urgent.mp3
+!scenarios/audio/walter_en_extra_time.mp3
+!scenarios/audio/ana_es_standard.mp3
 
 # python
 __pycache__/

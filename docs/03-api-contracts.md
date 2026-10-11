@@ -717,7 +717,7 @@ A role-restricted action called with any other role now returns **403** `wrong_r
   "audio_url":"/api/demo/scenarios/rec_en_g3_flag/audio"}]
 ```
 
-`audio_url` is set only when `scenarios/audio/<scenario_id>.mp3` exists on the server. Audio is never committed (gitignored).
+`audio_url` is set only when `scenarios/audio/<scenario_id>.mp3` exists on the server. A recorded call's audio is never committed (gitignored); a scripted scenario's synthesized audio (`agent/synthesize_scenario.py`) is committed, each file listed by name in `.gitignore` and `.dockerignore`. The list is ordered by the scenario's optional `order` (the first is the demo default), then by file name.
 
 **New: `GET /api/demo/scenarios/{scenario_id}/audio`** (any role; demo only). Returns `audio/mpeg`.
 - Errors: 404 `demo_disabled`, `scenario_not_found` or `audio_not_found`.

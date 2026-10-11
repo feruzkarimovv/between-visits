@@ -1,0 +1,381 @@
+{
+  "_about": "SCRIPTED demo replay (not a real recording), written from the approved scripts and items; every agent line is the backend's `say` for that step. Voices are synthesized with ElevenLabs text-to-speech by agent/synthesize_scenario.py, which also re-times the events to the audio. Format: docs/04-voice-agent.md § Replay format. checkin_id is injected by the replay engine. Expected outcome: no red flag and no page; NAUSEA_FREQ often and FATIGUE_SEV mild go to review. Shows the extra-time agent: slower speech, a slow word-for-word repeat when asked, and every rated answer read back before it is recorded.",
+  "id": "walter_en_extra_time",
+  "title": "Walter, English, extra time, hard of hearing, nausea",
+  "order": 2,
+  "patient_id": "pat_walter",
+  "day_after_dose": 3,
+  "audio": "scenarios/audio/walter_en_extra_time.mp3",
+  "events": [
+    {
+      "t": 0.0,
+      "type": "call_started"
+    },
+    {
+      "t": 18.2,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "IDENTITY",
+        "option_code": "yes",
+        "verbatim_quote": "Yes... this is Walter."
+      }
+    },
+    {
+      "t": 51.1,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "CALL_CONSENT",
+        "option_code": "yes",
+        "verbatim_quote": "Oh, sure. Go ahead."
+      }
+    },
+    {
+      "t": 79.6,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "DIARRHEA_FREQ",
+        "option_code": "rarely",
+        "verbatim_quote": "Rarely."
+      }
+    },
+    {
+      "t": 108.6,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "NAUSEA_FREQ",
+        "option_code": "often",
+        "verbatim_quote": "Often, I'd say. Most mornings, after breakfast."
+      }
+    },
+    {
+      "t": 128.4,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "VOMITING_FREQ",
+        "option_code": "never",
+        "verbatim_quote": "Never. I haven't thrown up."
+      }
+    },
+    {
+      "t": 136.1,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "FEVER_CHILLS",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 148.9,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "SOB_SEV",
+        "option_code": "none",
+        "verbatim_quote": "None."
+      }
+    },
+    {
+      "t": 162.8,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "DIZZINESS_SEV",
+        "option_code": "none",
+        "verbatim_quote": "None. No dizziness."
+      }
+    },
+    {
+      "t": 186.3,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "FATIGUE_SEV",
+        "option_code": "mild",
+        "verbatim_quote": "A little tired. Mild."
+      }
+    },
+    {
+      "t": 193.7,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "FATIGUE_REST_HELPS",
+        "option_code": "yes",
+        "verbatim_quote": "Yes. A nap helps."
+      }
+    },
+    {
+      "t": 200.9,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "RASH_ANY",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 213.8,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "NEURO_CHANGE",
+        "option_code": "no",
+        "verbatim_quote": "No. My son would've told me."
+      }
+    },
+    {
+      "t": 228.3,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "MEDS_NEW",
+        "option_code": "no",
+        "verbatim_quote": "No. Same pills as always."
+      }
+    },
+    {
+      "t": 238.6,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "CARE_VISIT",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 246.2,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "ANYTHING_ELSE",
+        "option_code": "no",
+        "verbatim_quote": "No, that's all. Thank you."
+      }
+    },
+    {
+      "t": 255.6,
+      "type": "call_ended"
+    },
+    {
+      "t": 257.6,
+      "type": "post_call",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hello, this is an automated call from the Hillside research team. I'm an AI assistant, not a person, and you can ask to speak with a person at any time. May I speak with Walter?",
+          "t_s": 0.0
+        },
+        {
+          "role": "user",
+          "text": "Hello? Yes... this is Walter.",
+          "t_s": 14.4
+        },
+        {
+          "role": "agent",
+          "text": "Thank you. I'm calling for your check-in about how you've been feeling since your last study visit. It takes about five minutes. Is now a good time?",
+          "t_s": 19.0
+        },
+        {
+          "role": "user",
+          "text": "Sorry, could you say that again? My hearing isn't so good.",
+          "t_s": 30.0
+        },
+        {
+          "role": "agent",
+          "text": "Let me ask that again. I'm calling for your check-in about how you've been feeling since your last study visit. It takes about five minutes. Is now a good time?",
+          "t_s": 36.4
+        },
+        {
+          "role": "user",
+          "text": "Oh, sure. Go ahead.",
+          "t_s": 49.0
+        },
+        {
+          "role": "agent",
+          "text": "Thank you. I'll ask about some common symptoms. For each one, tell me the answer that fits best. In the past 7 days, how often have you had loose or watery bowel movements? Would you say never, rarely, sometimes, often, or almost all the time?",
+          "t_s": 51.9
+        },
+        {
+          "role": "user",
+          "text": "Rarely.",
+          "t_s": 71.6
+        },
+        {
+          "role": "agent",
+          "text": "I understood: rarely. Is that right?",
+          "t_s": 73.6
+        },
+        {
+          "role": "user",
+          "text": "That's right.",
+          "t_s": 78.3
+        },
+        {
+          "role": "agent",
+          "text": "In the past 7 days, how often have you felt sick to your stomach, as if you might throw up? Would you say never, rarely, sometimes, often, or almost all the time?",
+          "t_s": 80.4
+        },
+        {
+          "role": "user",
+          "text": "Hmm. Often, I'd say. Most mornings, after breakfast.",
+          "t_s": 95.1
+        },
+        {
+          "role": "agent",
+          "text": "I understood: often, most mornings after breakfast. Is that right?",
+          "t_s": 101.0
+        },
+        {
+          "role": "user",
+          "text": "Yes.",
+          "t_s": 107.3
+        },
+        {
+          "role": "agent",
+          "text": "In the past 7 days, how often have you thrown up? Would you say never, rarely, sometimes, often, or almost all the time?",
+          "t_s": 109.4
+        },
+        {
+          "role": "user",
+          "text": "Never. I haven't thrown up.",
+          "t_s": 119.6
+        },
+        {
+          "role": "agent",
+          "text": "I understood: never. Is that right?",
+          "t_s": 123.3
+        },
+        {
+          "role": "user",
+          "text": "Right.",
+          "t_s": 127.2
+        },
+        {
+          "role": "agent",
+          "text": "In the past 7 days, have you had a fever, chills, or shaking?",
+          "t_s": 129.2
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 134.9
+        },
+        {
+          "role": "agent",
+          "text": "In the past 7 days, how much shortness of breath have you had? Would you say none, mild, moderate, severe, or very severe?",
+          "t_s": 136.9
+        },
+        {
+          "role": "user",
+          "text": "None.",
+          "t_s": 147.8
+        },
+        {
+          "role": "agent",
+          "text": "In the past 7 days, how much dizziness have you had? Would you say none, mild, moderate, severe, or very severe?",
+          "t_s": 149.7
+        },
+        {
+          "role": "user",
+          "text": "None. No dizziness.",
+          "t_s": 160.5
+        },
+        {
+          "role": "agent",
+          "text": "In the past 7 days, how much tiredness or lack of energy have you had? Would you say none, mild, moderate, severe, or very severe?",
+          "t_s": 163.6
+        },
+        {
+          "role": "user",
+          "text": "A little tired. Mild.",
+          "t_s": 176.6
+        },
+        {
+          "role": "agent",
+          "text": "I understood: mild. Is that right?",
+          "t_s": 180.1
+        },
+        {
+          "role": "user",
+          "text": "Yes, mild.",
+          "t_s": 184.8
+        },
+        {
+          "role": "agent",
+          "text": "Does resting make the tiredness better?",
+          "t_s": 187.1
+        },
+        {
+          "role": "user",
+          "text": "Yes. A nap helps.",
+          "t_s": 191.3
+        },
+        {
+          "role": "agent",
+          "text": "In the past 7 days, have you had a new skin rash?",
+          "t_s": 194.5
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 199.8
+        },
+        {
+          "role": "agent",
+          "text": "Have you or your family noticed any new confusion, trouble finding words, or unusual sleepiness?",
+          "t_s": 201.7
+        },
+        {
+          "role": "user",
+          "text": "No. My son would've told me.",
+          "t_s": 211.1
+        },
+        {
+          "role": "agent",
+          "text": "Since your last study visit, have you started, stopped, or changed any medicines, including ones from the pharmacy or vitamins?",
+          "t_s": 214.6
+        },
+        {
+          "role": "user",
+          "text": "No. Same pills as always.",
+          "t_s": 225.5
+        },
+        {
+          "role": "agent",
+          "text": "Since your last study visit, have you gone to an emergency room, urgent care, or another doctor?",
+          "t_s": 229.1
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 237.4
+        },
+        {
+          "role": "agent",
+          "text": "Is there anything else you would like the nurse to know?",
+          "t_s": 239.4
+        },
+        {
+          "role": "user",
+          "text": "No, that's all. Thank you.",
+          "t_s": 244.0
+        },
+        {
+          "role": "agent",
+          "text": "Thank you, Walter. The research team will review your answers. If this is an emergency, hang up and call 9-1-1. Goodbye.",
+          "t_s": 247.0
+        }
+      ]
+    }
+  ],
+  "summary_en": "Scripted demo: Walter (hard of hearing) asked for the consent question to be repeated. He reports nausea often, most mornings after breakfast, no vomiting, and mild tiredness that a nap helps. No red flags; no page."
+}

@@ -25,6 +25,7 @@ import { USE_FIXTURES } from "@/lib/api";
 import { useNow } from "@/lib/hooks";
 import { DISPLAY_TZ } from "@/lib/format";
 import { EscalationBanner } from "../EscalationBanner";
+import { ReplayAudioBar } from "../ReplayAudioBar";
 import { RoleSwitch } from "../RoleSwitch";
 import { BrandMark } from "../BrandMark";
 import { cn } from "../ui/primitives";
@@ -118,6 +119,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <MobileNav pathname={pathname} />
+      <ReplayAudioBar />
     </div>
   );
 }

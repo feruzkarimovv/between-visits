@@ -2,6 +2,7 @@
   "_about": "SCRIPTED demo replay built from the approved scripts and items (not a real recording). WS1 replaces it with a real Rosa call (same format) once one is recorded. Format: docs/04-voice-agent.md § Replay format. checkin_id is injected by the replay engine. Expected outcome: Diarrhea provisional grade 3 + RF_DIARRHEA_SEVERE (urgent page at ~89.5 s), RF_DEHYDRATION added to the same escalation, acknowledged at 113 s, CM draft loperamide, AE drafts Diarrhea (G3) and Dizziness. translations_en: English translations of the scripted quotes, used only by the fake translator in DEMO_MODE (labeled 'AI translation, verify' like real ones).",
   "id": "rosa_es_urgent",
   "title": "Rosa, Spanish, extra time, urgent diarrhea",
+  "order": 1,
   "patient_id": "pat_rosa",
   "day_after_dose": 3,
   "audio": "scenarios/audio/rosa_es_urgent.mp3",
@@ -11,7 +12,7 @@
       "type": "call_started"
     },
     {
-      "t": 9.0,
+      "t": 20.0,
       "type": "tool",
       "tool": "record_answer",
       "body": {
@@ -21,7 +22,7 @@
       }
     },
     {
-      "t": 21.5,
+      "t": 34.7,
       "type": "tool",
       "tool": "record_answer",
       "body": {
@@ -31,7 +32,7 @@
       }
     },
     {
-      "t": 63.5,
+      "t": 88.4,
       "type": "tool",
       "tool": "record_answer",
       "body": {
@@ -41,7 +42,7 @@
       }
     },
     {
-      "t": 89.5,
+      "t": 107.7,
       "type": "tool",
       "tool": "record_answer",
       "body": {
@@ -52,7 +53,7 @@
       }
     },
     {
-      "t": 104.5,
+      "t": 136.8,
       "type": "tool",
       "tool": "report_red_flag",
       "body": {
@@ -61,13 +62,13 @@
       }
     },
     {
-      "t": 113.0,
+      "t": 143.6,
       "type": "page_ack",
       "by": "RN on call",
       "method": "push_button"
     },
     {
-      "t": 118.5,
+      "t": 155.9,
       "type": "tool",
       "tool": "record_answer",
       "body": {
@@ -77,7 +78,7 @@
       }
     },
     {
-      "t": 130.5,
+      "t": 165.3,
       "type": "tool",
       "tool": "record_medication_change",
       "body": {
@@ -86,7 +87,7 @@
       }
     },
     {
-      "t": 142.5,
+      "t": 178.0,
       "type": "tool",
       "tool": "record_answer",
       "body": {
@@ -96,7 +97,7 @@
       }
     },
     {
-      "t": 152.5,
+      "t": 186.5,
       "type": "tool",
       "tool": "record_answer",
       "body": {
@@ -106,12 +107,12 @@
       }
     },
     {
-      "t": 162.0,
+      "t": 197.2,
       "type": "call_ended",
       "termination_reason": "end_call tool was called."
     },
     {
-      "t": 166.0,
+      "t": 199.2,
       "type": "post_call",
       "transcript": [
         {
@@ -122,122 +123,122 @@
         {
           "role": "user",
           "text": "Sí, soy yo.",
-          "t_s": 8.5
+          "t_s": 18.4
         },
         {
           "role": "agent",
           "text": "Gracias. Le llamo para su seguimiento sobre cómo se ha sentido desde su última visita del estudio. Toma unos cinco minutos. ¿Es un buen momento?",
-          "t_s": 11.0
+          "t_s": 20.8
         },
         {
           "role": "user",
           "text": "Sí, está bien.",
-          "t_s": 21.0
+          "t_s": 33.3
         },
         {
           "role": "agent",
           "text": "Gracias. Le voy a preguntar sobre algunos síntomas comunes. Para cada uno, dígame la respuesta que mejor describa cómo se ha sentido. En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
-          "t_s": 23.5
+          "t_s": 35.5
         },
         {
           "role": "user",
           "text": "¿Cómo?",
-          "t_s": 38.0
+          "t_s": 61.3
         },
         {
           "role": "agent",
           "text": "En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
-          "t_s": 40.0
+          "t_s": 63.4
         },
         {
           "role": "user",
           "text": "Casi todo el tiempo, la verdad.",
-          "t_s": 55.0
+          "t_s": 79.6
         },
         {
           "role": "agent",
           "text": "Entendí: casi todo el tiempo. ¿Es correcto?",
-          "t_s": 58.0
+          "t_s": 82.6
         },
         {
           "role": "user",
           "text": "Sí.",
-          "t_s": 63.0
+          "t_s": 87.3
         },
         {
           "role": "agent",
           "text": "Gracias. En su peor día, ¿cuántas veces fue al baño a evacuar, más o menos?",
-          "t_s": 66.0
+          "t_s": 89.2
         },
         {
           "role": "user",
           "text": "Como siete u ocho veces... normalmente voy una.",
-          "t_s": 80.0
+          "t_s": 96.1
         },
         {
           "role": "agent",
           "text": "Entendí: ocho veces en su peor día. ¿Es correcto?",
-          "t_s": 84.0
+          "t_s": 100.6
         },
         {
           "role": "user",
           "text": "Sí, más o menos.",
-          "t_s": 89.0
+          "t_s": 106.0
         },
         {
           "role": "agent",
           "text": "Gracias por decírmelo. Voy a pedirle a la enfermera de guardia que le llame ahora mismo. Si es una emergencia, cuelgue y llame al 9-1-1. Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?",
-          "t_s": 93.0
+          "t_s": 108.5
         },
         {
           "role": "user",
           "text": "Ay... y esta mañana me mareé al levantarme.",
-          "t_s": 104.0
+          "t_s": 133.2
         },
         {
           "role": "agent",
           "text": "Gracias. Lo agregué a mi mensaje para la enfermera. Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?",
-          "t_s": 107.0
+          "t_s": 137.6
         },
         {
           "role": "user",
           "text": "Sí, ayer tomé Imodium de la farmacia.",
-          "t_s": 118.0
+          "t_s": 153.1
         },
         {
           "role": "agent",
           "text": "Gracias. ¿Qué medicamento fue y cuándo lo empezó o lo cambió?",
-          "t_s": 121.0
+          "t_s": 156.7
         },
         {
           "role": "user",
           "text": "El Imodium, lo empecé ayer.",
-          "t_s": 130.0
+          "t_s": 162.8
         },
         {
           "role": "agent",
           "text": "Gracias. Desde su última visita del estudio, ¿ha ido a una sala de emergencias, a una clínica de urgencias o a otro médico?",
-          "t_s": 133.0
+          "t_s": 166.1
         },
         {
           "role": "user",
           "text": "No.",
-          "t_s": 142.0
+          "t_s": 176.9
         },
         {
           "role": "agent",
           "text": "Gracias. ¿Hay algo más que le gustaría que supiera la enfermera?",
-          "t_s": 144.0
+          "t_s": 178.8
         },
         {
           "role": "user",
           "text": "No, nada más. Gracias.",
-          "t_s": 152.0
+          "t_s": 184.3
         },
         {
           "role": "agent",
           "text": "Gracias, Rosa. La enfermera le llamará muy pronto. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós.",
-          "t_s": 155.0
+          "t_s": 187.3
         }
       ]
     }

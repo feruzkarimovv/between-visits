@@ -50,7 +50,8 @@ def resolve_speed(requested: float | None = None) -> float:
 
 
 def audio_path(scenario_id: str) -> Path | None:
-    """`scenarios/audio/<id>.mp3` (gitignored, never committed), or None for an ID that is not a plain slug."""
+    """`scenarios/audio/<id>.mp3`, or None for an ID that is not a plain slug. Recorded calls' audio is gitignored and
+    never committed; scripted scenarios' synthesized audio (agent/synthesize_scenario.py) is committed."""
     if not _SAFE_ID.match(scenario_id):
         return None
     return SCENARIOS_DIR / "audio" / f"{scenario_id}.mp3"
@@ -106,7 +107,8 @@ def provenance(scenario_id: str, sc: dict[str, Any]) -> dict[str, Any]:
 
 
 def list_scenarios() -> list[dict[str, Any]]:
-    out = []
+    """Scenarios by their optional `order` (the first is the demo default), then by file name."""
+    found = []
     for p in sorted(SCENARIOS_DIR.glob("*.json")):
         try:
             d = json.loads(p.read_text(encoding="utf-8"))
@@ -115,10 +117,11 @@ def list_scenarios() -> list[dict[str, Any]]:
         if not isinstance(d, dict) or "events" not in d:
             continue
         sid = d.get("id", p.stem)
-        out.append({"id": sid, "title": d.get("title", sid), "patient_id": d["patient_id"],
-                    "duration_s": max((e.get("t", 0) for e in d["events"]), default=0),
-                    **provenance(sid, d)})
-    return out
+        order = d.get("order") if isinstance(d.get("order"), int) else 1_000
+        found.append((order, {"id": sid, "title": d.get("title", sid), "patient_id": d["patient_id"],
+                              "duration_s": max((e.get("t", 0) for e in d["events"]), default=0),
+                              **provenance(sid, d)}))
+    return [s for _, s in sorted(found, key=lambda x: x[0])]
 
 
 def load(scenario_id: str) -> dict[str, Any]:

@@ -1,0 +1,343 @@
+{
+  "_about": "SCRIPTED demo replay (not a real recording), written from the approved scripts and items; every agent line is the backend's `say` for that step. Voices are synthesized with ElevenLabs text-to-speech by agent/synthesize_scenario.py, which also re-times the events to the audio. Format: docs/04-voice-agent.md § Replay format. checkin_id is injected by the replay engine. Expected outcome: no red flag and no page; NAUSEA_FREQ rarely and FATIGUE_SEV moderate (rest does not help) go to review. Shows the standard-pace Spanish agent: natural speed, no read-back for rated answers. translations_en: English translations of the scripted quotes, used only by the fake translator in DEMO_MODE (labeled 'AI translation, verify' like real ones).",
+  "id": "ana_es_standard",
+  "title": "Ana, Spanish, standard pace, tiredness",
+  "order": 3,
+  "patient_id": "pat_ana",
+  "day_after_dose": 7,
+  "audio": "scenarios/audio/ana_es_standard.mp3",
+  "events": [
+    {
+      "t": 0.0,
+      "type": "call_started"
+    },
+    {
+      "t": 15.8,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "IDENTITY",
+        "option_code": "yes",
+        "verbatim_quote": "Sí, soy yo, Ana."
+      }
+    },
+    {
+      "t": 27.1,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "CALL_CONSENT",
+        "option_code": "yes",
+        "verbatim_quote": "Sí, claro."
+      }
+    },
+    {
+      "t": 50.1,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "DIARRHEA_FREQ",
+        "option_code": "never",
+        "verbatim_quote": "Nunca."
+      }
+    },
+    {
+      "t": 65.1,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "NAUSEA_FREQ",
+        "option_code": "rarely",
+        "verbatim_quote": "Rara vez. Un poquito el primer día."
+      }
+    },
+    {
+      "t": 76.9,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "VOMITING_FREQ",
+        "option_code": "never",
+        "verbatim_quote": "Nunca."
+      }
+    },
+    {
+      "t": 83.8,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "FEVER_CHILLS",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 94.8,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "SOB_SEV",
+        "option_code": "none",
+        "verbatim_quote": "Nada."
+      }
+    },
+    {
+      "t": 106.0,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "DIZZINESS_SEV",
+        "option_code": "none",
+        "verbatim_quote": "Nada."
+      }
+    },
+    {
+      "t": 121.7,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "FATIGUE_SEV",
+        "option_code": "moderate",
+        "verbatim_quote": "Moderado. Estoy bastante cansada por las tardes."
+      }
+    },
+    {
+      "t": 126.7,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "FATIGUE_REST_HELPS",
+        "option_code": "no",
+        "verbatim_quote": "No mucho, la verdad."
+      }
+    },
+    {
+      "t": 133.6,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "RASH_ANY",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 142.0,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "NEURO_CHANGE",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 152.3,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "MEDS_NEW",
+        "option_code": "no",
+        "verbatim_quote": "No, ninguno."
+      }
+    },
+    {
+      "t": 161.4,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "CARE_VISIT",
+        "option_code": "no",
+        "verbatim_quote": "No."
+      }
+    },
+    {
+      "t": 166.9,
+      "type": "tool",
+      "tool": "record_answer",
+      "body": {
+        "item_code": "ANYTHING_ELSE",
+        "option_code": "no",
+        "verbatim_quote": "No, eso es todo. Gracias."
+      }
+    },
+    {
+      "t": 176.3,
+      "type": "call_ended"
+    },
+    {
+      "t": 178.3,
+      "type": "post_call",
+      "transcript": [
+        {
+          "role": "agent",
+          "text": "Hola, esta es una llamada automática del equipo de investigación de Hillside. Soy un asistente de inteligencia artificial, no una persona, y puede pedir hablar con una persona en cualquier momento. ¿Puedo hablar con Ana?",
+          "t_s": 0.0
+        },
+        {
+          "role": "user",
+          "text": "Sí, soy yo, Ana.",
+          "t_s": 14.1
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. Le llamo para su seguimiento sobre cómo se ha sentido desde su última visita del estudio. Toma unos cinco minutos. ¿Es un buen momento?",
+          "t_s": 16.1
+        },
+        {
+          "role": "user",
+          "text": "Sí, claro.",
+          "t_s": 25.9
+        },
+        {
+          "role": "agent",
+          "text": "Gracias. Le voy a preguntar sobre algunos síntomas comunes. Para cada uno, dígame la respuesta que mejor describa cómo se ha sentido. En los últimos 7 días, ¿con qué frecuencia ha tenido diarrea, es decir, evacuaciones sueltas o aguadas? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
+          "t_s": 27.4
+        },
+        {
+          "role": "user",
+          "text": "Nunca.",
+          "t_s": 49.0
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿con qué frecuencia ha tenido náuseas, como si fuera a vomitar? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
+          "t_s": 50.4
+        },
+        {
+          "role": "user",
+          "text": "Rara vez. Un poquito el primer día.",
+          "t_s": 62.2
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿con qué frecuencia ha vomitado? ¿Diría que nunca, rara vez, a veces, a menudo o casi todo el tiempo?",
+          "t_s": 65.4
+        },
+        {
+          "role": "user",
+          "text": "Nunca.",
+          "t_s": 75.8
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿ha tenido fiebre, escalofríos o temblores?",
+          "t_s": 77.2
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 82.9
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿qué tanta falta de aire ha tenido? ¿Diría que nada, leve, moderada, fuerte o muy fuerte?",
+          "t_s": 84.1
+        },
+        {
+          "role": "user",
+          "text": "Nada.",
+          "t_s": 93.5
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿qué tan fuerte ha sido el mareo? ¿Diría que nada, leve, moderado, fuerte o muy fuerte?",
+          "t_s": 95.1
+        },
+        {
+          "role": "user",
+          "text": "Nada.",
+          "t_s": 104.8
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿qué tan fuerte ha sido el cansancio o la falta de energía? ¿Diría que nada, leve, moderado, fuerte o muy fuerte?",
+          "t_s": 106.3
+        },
+        {
+          "role": "user",
+          "text": "Moderado. Estoy bastante cansada por las tardes.",
+          "t_s": 118.1
+        },
+        {
+          "role": "agent",
+          "text": "¿El cansancio mejora cuando descansa?",
+          "t_s": 122.0
+        },
+        {
+          "role": "user",
+          "text": "No mucho, la verdad.",
+          "t_s": 125.0
+        },
+        {
+          "role": "agent",
+          "text": "En los últimos 7 días, ¿le ha salido algún sarpullido o erupción nueva en la piel?",
+          "t_s": 127.0
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 132.7
+        },
+        {
+          "role": "agent",
+          "text": "¿Usted o su familia han notado confusión nueva, dificultad para encontrar las palabras o sueño fuera de lo normal?",
+          "t_s": 133.9
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 141.1
+        },
+        {
+          "role": "agent",
+          "text": "Desde su última visita del estudio, ¿ha empezado, dejado o cambiado algún medicamento, incluidos los de la farmacia o vitaminas?",
+          "t_s": 142.3
+        },
+        {
+          "role": "user",
+          "text": "No, ninguno.",
+          "t_s": 150.9
+        },
+        {
+          "role": "agent",
+          "text": "Desde su última visita del estudio, ¿ha ido a una sala de emergencias, a una clínica de urgencias o a otro médico?",
+          "t_s": 152.6
+        },
+        {
+          "role": "user",
+          "text": "No.",
+          "t_s": 160.5
+        },
+        {
+          "role": "agent",
+          "text": "¿Hay algo más que le gustaría que supiera la enfermera?",
+          "t_s": 161.7
+        },
+        {
+          "role": "user",
+          "text": "No, eso es todo. Gracias.",
+          "t_s": 165.1
+        },
+        {
+          "role": "agent",
+          "text": "Gracias, Ana. El equipo de investigación revisará sus respuestas. Si es una emergencia, cuelgue y llame al 9-1-1. Adiós.",
+          "t_s": 167.2
+        }
+      ]
+    }
+  ],
+  "summary_en": "Scripted demo: Ana reports rare nausea on the first day and moderate tiredness in the afternoons that rest does not help much. No new medicines, no care visits, no red flags; no page.",
+  "translations_en": {
+    "Sí, soy yo, Ana.": "Yes, it's me, Ana.",
+    "Sí, claro.": "Yes, of course.",
+    "Nunca.": "Never.",
+    "Rara vez. Un poquito el primer día.": "Rarely. A little on the first day.",
+    "No.": "No.",
+    "Nada.": "None.",
+    "Moderado. Estoy bastante cansada por las tardes.": "Moderate. I'm pretty tired in the afternoons.",
+    "No mucho, la verdad.": "Not much, honestly.",
+    "No, ninguno.": "No, none.",
+    "No, eso es todo. Gracias.": "No, that's all. Thank you."
+  }
+}

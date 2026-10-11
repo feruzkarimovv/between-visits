@@ -150,7 +150,7 @@ def test_replay_at_4x_takes_a_quarter_of_real_time(demo_mode, client, session, v
         assert kinds == ["AE", "AE", "CM"]
     assert elapsed[1] == pytest.approx(ROSA_DURATION_S)
     assert elapsed[4] == pytest.approx(ROSA_DURATION_S / 4)
-    assert elapsed[4] <= 45  # drafts appear within about 45 s at 4x
+    assert elapsed[4] <= 50  # drafts appear within about 50 s at 4x (synthesized extra-time speech)
     assert len(session.exec(select(DraftEntry)).all()) >= 6
     assert len(fake_pager.sent) == 2  # one urgent page per replay
 
@@ -164,10 +164,39 @@ def test_scenarios_carry_provenance(demo_mode, client) -> None:
     items = r.json()
     assert items and all(set(it) == SCENARIO_KEYS for it in items)
     rosa = next(it for it in items if it["id"] == ROSA)
-    has_audio = (SCENARIOS_DIR / "audio" / f"{ROSA}.mp3").is_file()  # gitignored; present only on a demo laptop
     assert rosa["recorded"] is False and rosa["recorded_at"] is None and rosa["label"] == "Scripted"
-    assert rosa["audio_url"] == (f"/api/demo/scenarios/{ROSA}/audio" if has_audio else None)
+    assert rosa["audio_url"] == f"/api/demo/scenarios/{ROSA}/audio"  # synthesized voices, committed
     assert rosa["duration_s"] == ROSA_DURATION_S and rosa["patient_id"] == "pat_rosa"
+
+
+SCRIPTED = [ROSA, "walter_en_extra_time", "ana_es_standard"]
+
+
+def test_scripted_scenarios_in_order_with_committed_audio(demo_mode, client) -> None:
+    """Rosa stays first (the demo default); every scripted scenario ships its synthesized audio."""
+    items = client.get("/api/demo/scenarios").json()
+    assert [it["id"] for it in items][: len(SCRIPTED)] == SCRIPTED
+    for sid in SCRIPTED:
+        assert (SCENARIOS_DIR / "audio" / f"{sid}.mp3").read_bytes()[:3] in (b"ID3", b"\xff\xfb", b"\xff\xf3")
+        r = client.get(f"/api/demo/scenarios/{sid}/audio")
+        assert r.status_code == 200 and r.headers["content-type"] == "audio/mpeg"
+
+
+@pytest.mark.parametrize(("sid", "patient", "language", "pace", "terms"), [
+    ("walter_en_extra_time", "pat_walter", "en", "extra_time", {"Nausea", "Fatigue"}),
+    ("ana_es_standard", "pat_ana", "es", "standard", {"Nausea", "Fatigue"}),
+])
+def test_personalized_scenarios_replay_without_a_page(demo_mode, client, virtual_clock, fake_pager,
+                                                      sid, patient, language, pace, terms) -> None:
+    """Walter (English, extra time) and Ana (Spanish, standard) run end to end in their own language and pace;
+    neither reports a red flag, so nothing is paged."""
+    r = client.post(f"/api/demo/replay/{sid}", params={"speed": 4})
+    assert r.status_code == 200, r.text
+    detail = client.get(f"/api/checkins/{r.json()['checkin_id']}").json()
+    c = detail["checkin"]
+    assert (c["patient_id"], c["language"], c["pace"], c["status"]) == (patient, language, pace, "completed")
+    assert terms <= {f["term"] for f in detail["findings"]}
+    assert fake_pager.sent == [] and detail["escalations"] == []
 
 
 def _scenario(sid: str, **extra: object) -> dict:
