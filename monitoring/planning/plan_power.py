@@ -576,12 +576,13 @@ def analyze(prep: Prepared, m: Model, f_site: np.ndarray | None = None) -> Analy
     lk = prep.latent_link[linked]
     a_l = aest[linked]
     outside = (a_l < eps.lower[lk] - m.lower_tol) | (a_l > eps.date[lk] + m.window_days)
-    # site rows in the log at the data cut; aeseq orders each subject's rows by AESTDTC
+    # site rows in the log at the data cut; aeseq orders each subject's rows by AESTDTC, then entered_on, then
+    # latent start day, then generation order (docs/11 §11.2 step 7; the planning model has no other-AE rows)
     rows = np.flatnonzero(in_log)
     row_series = prep.ep_pat[rows] * T + prep.ep_term[rows]
     row_aest = aest[rows]
     aeseq = np.empty(rows.size, np.int64)
-    aeseq[np.lexsort((rows, row_aest, prep.ep_pat[rows]))] = np.arange(rows.size)
+    aeseq[np.lexsort((rows, prep.ep_start[rows], entered[rows], row_aest, prep.ep_pat[rows]))] = np.arange(rows.size)
     matched = match_episodes(eps, row_series, row_aest, aeseq, lower_tol=m.lower_tol, window_days=m.window_days)
     # analysis set A_s, leave-one-site-out expected capture (§6, §8.1)
     A = prep.evaluable & ~prep.paged

@@ -431,6 +431,21 @@ def test_code_commit_is_the_last_commit_touching_an_analysis_input(tmp_path: Pat
     git(repo, "add", "-A")
     git(repo, "commit", "-qm", "params")
     assert s.code_commit(repo) == git(repo, "rev-parse", "HEAD")
+    # the active red-flag list and the item logic are analysis inputs too (docs/11 §15 rule 7)
+    for rel in ("data/plan.json", "data/symptom_items.json"):
+        (repo / rel).parent.mkdir(exist_ok=True)
+        (repo / rel).write_text("{}\n")
+        git(repo, "add", "-A")
+        git(repo, "commit", "-qm", rel)
+        assert s.code_commit(repo) == git(repo, "rev-parse", "HEAD")
+    assert {"data/plan.json", "data/symptom_items.json"} <= set(s.ANALYSIS_INPUTS)
+
+
+def test_analysis_inputs_are_the_sap_section_15_rule_7_list() -> None:
+    sap = (REPO_ROOT / s.SAP_REL).read_text(encoding="utf-8")
+    m = re.search(r"`git log -1 --format=%H -- ([^`]+)`", sap)
+    assert m, "docs/11 §15 rule 7 names the code_commit command"
+    assert tuple(m.group(1).split()) == s.ANALYSIS_INPUTS
 
 
 def test_the_real_run_log_is_not_created_before_the_tag() -> None:
@@ -448,8 +463,21 @@ def _canon(obj: object) -> str:
 def test_frozen_hashes_follow_the_sap_definition() -> None:
     rf = json.loads((REPO_ROOT / "data/red_flags.json").read_text())["red_flags"]
     ct = json.loads((REPO_ROOT / "data/ctcae_rules.json").read_text())["rules"]
+    plan = json.loads((REPO_ROOT / "data/plan.json").read_text())
+    items = json.loads((REPO_ROOT / "data/symptom_items.json").read_text())
+    terms = json.loads((REPO_ROOT / "data/signal_rules.json").read_text())["primary_terms"]
     got = s.frozen_inputs()
-    assert got["red_flags_rule_level_sha256"] == _canon([{"level": e["level"], "rule": e["rule"]} for e in rf])
+    assert list(got) == list(s.FROZEN_KEYS)
+    assert got["red_flags_id_rule_level_sha256"] == _canon([{"id": e["id"], "level": e["level"], "rule": e["rule"]} for e in rf])
+    assert got["plan_red_flag_ids_sha256"] == _canon(plan["red_flag_ids"])
+    logic_items = {c: {k: it.get(k) for k in ("kind", "term", "scale", "unit", "followups")}
+                   for c, it in items["items"].items() if it.get("term") in terms}
+    logic_scales = {n: {k: items["scales"][n].get(k) for k in ("options", "numeric", "units")}
+                    for n in {it["scale"] for it in logic_items.values()}}
+    assert got["symptom_items_logic_sha256"] == _canon({"items": logic_items, "scales": logic_scales})
+    # the primary-term items: the gates and graded items of params.yaml answer_generation, and STOOL_BLOOD
+    graded = s.load_params()["answer_generation"]["grading_items"]
+    assert {c for g in graded.values() for c in g.values()} | {"STOOL_BLOOD"} <= set(logic_items)
     assert got["ctcae_rules_sha256"] == _canon(ct)
     assert got["rules_py_sha256"] == hashlib.sha256((REPO_ROOT / s.RULES_PY_REL).read_bytes()).hexdigest()
     ep = REPO_ROOT / s.EPISODES_PY_REL
@@ -458,23 +486,63 @@ def test_frozen_hashes_follow_the_sap_definition() -> None:
 
 
 def _copy_inputs(dst: Path) -> Path:
-    for rel in (s.PARAMS_REL, s.SAP_REL, s.SIGNAL_RULES_REL, s.RED_FLAGS_REL, s.CTCAE_RULES_REL, s.RULES_PY_REL):
+    for rel in (s.PARAMS_REL, s.SAP_REL, s.SIGNAL_RULES_REL, s.RED_FLAGS_REL, s.CTCAE_RULES_REL, s.RULES_PY_REL,
+                s.PLAN_REL, s.SYMPTOM_ITEMS_REL):
         (dst / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO_ROOT / rel, dst / rel)
     return dst
 
 
-def test_red_flag_hash_ignores_sources_but_not_rules_or_levels(tmp_path: Path) -> None:
+def _edit_json(path: Path, edit) -> None:
+    doc = json.loads(path.read_text())
+    edit(doc)
+    path.write_text(json.dumps(doc))
+
+
+def test_red_flag_hash_ignores_sources_but_not_ids_rules_or_levels(tmp_path: Path) -> None:
     repo = _copy_inputs(tmp_path)
-    base = s.frozen_inputs(repo)["red_flags_rule_level_sha256"]
-    doc = json.loads((repo / s.RED_FLAGS_REL).read_text())
-    doc["red_flags"][0]["sources"] = ["a corrected citation"]
-    doc["red_flags"][0]["label_en"] = "edited label"
-    (repo / s.RED_FLAGS_REL).write_text(json.dumps(doc))
-    assert s.frozen_inputs(repo)["red_flags_rule_level_sha256"] == base
-    doc["red_flags"][0]["level"] = "emergency"
-    (repo / s.RED_FLAGS_REL).write_text(json.dumps(doc))
-    assert s.frozen_inputs(repo)["red_flags_rule_level_sha256"] != base
+    key = "red_flags_id_rule_level_sha256"
+    base = s.frozen_inputs(repo)[key]
+    _edit_json(repo / s.RED_FLAGS_REL, lambda d: d["red_flags"][0].update(sources=["a corrected citation"], label_en="edited label"))
+    assert s.frozen_inputs(repo)[key] == base
+    _edit_json(repo / s.RED_FLAGS_REL, lambda d: d["red_flags"][0].update(level="emergency"))
+    assert s.frozen_inputs(repo)[key] != base
+    repo2 = _copy_inputs(tmp_path / "ids")
+    _edit_json(repo2 / s.RED_FLAGS_REL, lambda d: d["red_flags"][0].update(id="RF_RENAMED"))  # rules.red_flags() filters by id
+    assert s.frozen_inputs(repo2)[key] != base
+
+
+def test_dropping_an_active_red_flag_from_the_plan_fails_the_frozen_check(tmp_path: Path,
+                                                                          capsys: pytest.CaptureFixture[str]) -> None:
+    """Paging, and so the analysis set, depends on data/plan.json red_flag_ids (review B4)."""
+    repo = _copy_inputs(tmp_path)
+    shutil.copy2(REPO_ROOT / s.EPISODES_PY_REL, repo / s.EPISODES_PY_REL)
+    assert s.main(["--check-frozen"], repo=repo) == 0
+    _edit_json(repo / s.PLAN_REL, lambda d: d["red_flag_ids"].remove("RF_DEHYDRATION"))
+    capsys.readouterr()
+    assert s.main(["--check-frozen"], repo=repo) == 1
+    assert "MISMATCH  plan_red_flag_ids_sha256" in capsys.readouterr().out
+
+
+def test_item_logic_hash_ignores_wording_but_not_domains_or_followups(tmp_path: Path) -> None:
+    repo = _copy_inputs(tmp_path)
+    key = "symptom_items_logic_sha256"
+    base = s.frozen_inputs(repo)[key]
+
+    def wording(d: dict) -> None:
+        d["items"]["DIARRHEA_FREQ"]["options_say"] = {"en": "edited", "es": "editado"}
+        d["items"]["NAUSEA_FREQ"]["followups"] = [{"when": {"in": ["often"]}, "item": "FLUIDS_KEPT_DOWN"}]  # not a primary term
+
+    _edit_json(repo / s.SYMPTOM_ITEMS_REL, wording)
+    assert s.frozen_inputs(repo)[key] == base
+    for name, edit in [
+        ("followup", lambda d: d["items"]["DIARRHEA_FREQ"]["followups"][0]["when"]["in"].append("rarely")),
+        ("scale options", lambda d: d["scales"]["severity"]["options"].pop()),
+        ("item scale", lambda d: d["items"]["SOB_SEV"].update(scale="frequency")),
+    ]:
+        other = _copy_inputs(tmp_path / name.replace(" ", "_"))
+        _edit_json(other / s.SYMPTOM_ITEMS_REL, edit)
+        assert s.frozen_inputs(other)[key] != base, name
 
 
 def test_write_frozen_keeps_comments_and_check_frozen_needs_a_section_17_row(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

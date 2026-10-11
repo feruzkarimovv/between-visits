@@ -270,10 +270,17 @@ provenance:
 signal_rules_sha256: "e121686b8555d9f79dbd0473115706a82daaf8213b84ba33709f2484b8dca275"   # sha256 of data/signal_rules.json at the tag (docs/11 §11.3); `python -m bvsignal.seed --write-frozen`
 
 frozen_inputs:                    # docs/11 §11.3; `python -m bvsignal.seed --write-frozen` fills these, `--check-frozen` verifies them
-  # sha256 of json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8"), where obj is
-  # [{"level": entry["level"], "rule": entry["rule"]} for each entry of data/red_flags.json "red_flags", in file order]
-  red_flags_rule_level_sha256: "ddefb23551b1d8977e47733a2d08b70350d1f02564d80e531f74df2dba3372d3"
-  # sha256 of json.dumps(data/ctcae_rules.json["rules"], sort_keys=True, separators=(",", ":")).encode("utf-8")
+  # canonical JSON = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8"); each hash is its sha256.
+  # obj = [{"id": entry["id"], "level": entry["level"], "rule": entry["rule"]} for each entry of data/red_flags.json
+  # "red_flags", in file order] (sources, labels, examples and citations excluded)
+  red_flags_id_rule_level_sha256: "25fc814b19b36275dd59864d6ca304a2f40de5366ad9d7e882ecff07e3fd1e81"
+  # obj = data/plan.json["red_flag_ids"]: the active red flags passed to rules.red_flags(active_ids=...), which decide paging (docs/11 §11.2 step 6)
+  plan_red_flag_ids_sha256: "3a2486c62d4875b4c63a6aa204b5e12429adb45f6c508d03a14af17398352cc4"
+  # obj = {"items": {code: {kind, term, scale, unit, followups} for each data/symptom_items.json item whose term is in
+  # data/signal_rules.json primary_terms}, "scales": {name: {options, numeric, units} for each scale those items use}}
+  # (missing fields as null; wording excluded): answer domains, follow-up structure and mapping-error adjacency
+  symptom_items_logic_sha256: "571537ffc352527edc6ee705d448b8476200543b5b0f9a3b6ef217eee549eb16"
+  # obj = data/ctcae_rules.json["rules"]
   ctcae_rules_sha256: "199d23700776bfbd09f433a7efe812bfd2b3fe685bd39c4bbe3158a3025120a5"
   rules_py_sha256: "ea97d075cbae3ff593d94d9d621257a13ba7428f84d7535c7f99668ce3d1103f"      # file sha256 of backend/app/services/rules.py
-  episodes_py_sha256: "ba509b4eb7cdf03b915f1a1facbcff4be8a42db8e196cd3d0364d28196255abe" # file sha256 of backend/app/services/episodes.py (B16)
+  episodes_py_sha256: "d26a4cabed4a96c90a91c13100ccfd3ee341c9966c93faa5a8a44099d448e512" # file sha256 of backend/app/services/episodes.py (B16)

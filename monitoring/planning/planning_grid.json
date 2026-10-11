@@ -286,13 +286,15 @@
     "numpy_version": "2.5.4",
     "scipy_version": "1.18.1",
     "python_version": "3.12.12",
-    "plan_power_sha256": "9e47dffe15672c13196f652530c1a8559e84e527638ad997905366a1e9d53b5b",
+    "plan_power_sha256": "613c0f72bf32747b3f1d9c5e02cd5e74a957e826c1253b33d291855fa860c0b6",
     "signal_rules_sha256": "e121686b8555d9f79dbd0473115706a82daaf8213b84ba33709f2484b8dca275",
     "frozen_inputs": {
-      "red_flags_rule_level_sha256": "ddefb23551b1d8977e47733a2d08b70350d1f02564d80e531f74df2dba3372d3",
+      "red_flags_id_rule_level_sha256": "25fc814b19b36275dd59864d6ca304a2f40de5366ad9d7e882ecff07e3fd1e81",
+      "plan_red_flag_ids_sha256": "3a2486c62d4875b4c63a6aa204b5e12429adb45f6c508d03a14af17398352cc4",
+      "symptom_items_logic_sha256": "571537ffc352527edc6ee705d448b8476200543b5b0f9a3b6ef217eee549eb16",
       "ctcae_rules_sha256": "199d23700776bfbd09f433a7efe812bfd2b3fe685bd39c4bbe3158a3025120a5",
       "rules_py_sha256": "ea97d075cbae3ff593d94d9d621257a13ba7428f84d7535c7f99668ce3d1103f",
-      "episodes_py_sha256": "ba509b4eb7cdf03b915f1a1facbcff4be8a42db8e196cd3d0364d28196255abe"
+      "episodes_py_sha256": "d26a4cabed4a96c90a91c13100ccfd3ee341c9966c93faa5a8a44099d448e512"
     }
   }
 }

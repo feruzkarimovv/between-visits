@@ -51,11 +51,24 @@ SAP_REL = "docs/11-site-signal-sap.md"
 SIGNAL_RULES_REL = "data/signal_rules.json"
 RED_FLAGS_REL = "data/red_flags.json"
 CTCAE_RULES_REL = "data/ctcae_rules.json"
+PLAN_REL = "data/plan.json"
+SYMPTOM_ITEMS_REL = "data/symptom_items.json"
 RULES_PY_REL = "backend/app/services/rules.py"
 EPISODES_PY_REL = "backend/app/services/episodes.py"
 PENDING_EPISODES = "pending-B16"
 BEACON_KEYS = ("source", "round", "randomness", "url", "fetched_at", "selection", "attempts")
-FROZEN_KEYS = ("red_flags_rule_level_sha256", "ctcae_rules_sha256", "rules_py_sha256", "episodes_py_sha256")
+FROZEN_KEYS = (
+    "red_flags_id_rule_level_sha256",
+    "plan_red_flag_ids_sha256",
+    "symptom_items_logic_sha256",
+    "ctcae_rules_sha256",
+    "rules_py_sha256",
+    "episodes_py_sha256",
+)
+# docs/11 §11.3 `symptom_items_logic_sha256`: the logic fields of the primary-term items and of their scales
+# (the answer domains, follow-up structure and mapping-error adjacency); wording is excluded.
+ITEM_LOGIC_FIELDS = ("kind", "term", "scale", "unit", "followups")
+SCALE_LOGIC_FIELDS = ("options", "numeric", "units")
 
 # docs/11 §15 rule 7: `code_commit` is the last commit that changed an analysis input.
 ANALYSIS_INPUTS = (
@@ -65,6 +78,8 @@ ANALYSIS_INPUTS = (
     "data/signal_rules.json",
     "data/ctcae_rules.json",
     "data/red_flags.json",
+    "data/plan.json",
+    "data/symptom_items.json",
     "backend/app/services/episodes.py",
     "backend/app/services/rules.py",
 )
@@ -524,14 +539,32 @@ def signal_rules_sha256(repo: Path = REPO_ROOT) -> str:
     return file_sha256(repo / SIGNAL_RULES_REL)
 
 
+def symptom_items_logic(items_doc: dict[str, Any], primary_terms: Iterable[str]) -> dict[str, Any]:
+    """The hashed part of data/symptom_items.json (docs/11 §11.3): for every item whose `term` is a primary
+    term, its ITEM_LOGIC_FIELDS, and for every scale those items use, its SCALE_LOGIC_FIELDS (absent = None)."""
+    terms = set(primary_terms)
+    items = {code: {k: it.get(k) for k in ITEM_LOGIC_FIELDS}
+             for code, it in items_doc["items"].items() if it.get("term") in terms}
+    scales = {name: {k: items_doc["scales"][name].get(k) for k in SCALE_LOGIC_FIELDS}
+              for name in sorted({it["scale"] for it in items.values()})}
+    return {"items": items, "scales": scales}
+
+
 def frozen_inputs(repo: Path = REPO_ROOT) -> dict[str, str]:
-    """The four `frozen_inputs` hashes of params.yaml, recomputed from the working tree."""
-    red_flags = json.loads((repo / RED_FLAGS_REL).read_text(encoding="utf-8"))["red_flags"]
-    ctcae = json.loads((repo / CTCAE_RULES_REL).read_text(encoding="utf-8"))["rules"]
+    """The `frozen_inputs` hashes of params.yaml (FROZEN_KEYS, docs/11 §11.3), recomputed from the working tree."""
+
+    def load(rel: str) -> Any:
+        return json.loads((repo / rel).read_text(encoding="utf-8"))
+
+    red_flags = load(RED_FLAGS_REL)["red_flags"]
+    primary_terms = load(SIGNAL_RULES_REL)["primary_terms"]
     episodes = repo / EPISODES_PY_REL
     return {
-        "red_flags_rule_level_sha256": canonical_json_sha256([{"level": e["level"], "rule": e.get("rule")} for e in red_flags]),
-        "ctcae_rules_sha256": canonical_json_sha256(ctcae),
+        "red_flags_id_rule_level_sha256": canonical_json_sha256(
+            [{"id": e["id"], "level": e["level"], "rule": e.get("rule")} for e in red_flags]),
+        "plan_red_flag_ids_sha256": canonical_json_sha256(load(PLAN_REL)["red_flag_ids"]),
+        "symptom_items_logic_sha256": canonical_json_sha256(symptom_items_logic(load(SYMPTOM_ITEMS_REL), primary_terms)),
+        "ctcae_rules_sha256": canonical_json_sha256(load(CTCAE_RULES_REL)["rules"]),
         "rules_py_sha256": file_sha256(repo / RULES_PY_REL),
         "episodes_py_sha256": file_sha256(episodes) if episodes.exists() else PENDING_EPISODES,
     }
