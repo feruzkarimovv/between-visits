@@ -113,7 +113,7 @@ Details in `docs/11` §1.2–§1.3.
 2. From the tag on, `main` is never rebased or force-pushed. Commits that add evaluation outputs are made on a checkout of `main` after rebasing and are never rebased afterwards.
 3. No commit before the tag contains a file under `monitoring/out/` or `validation/site_signal/`. Before the tag only the S1 files (`seed.py`, `_backend.py`, `plan_power.py`, project skeleton) and B16 (episode builder and its table tests) may be written; simulation and analysis code (`simulate`, `match`, `indicators`, `calibrate`, `run`, `validate`, `blind`) is written after the tag.
 4. The tag sha is published externally within 10 minutes; the evaluation seed is derived from the tag commit and the first public beacon round 10 minutes after the tag. The dev seed (20261011) is used only for development and the pre-tag planning grid. Every evaluation-seed run is logged in `validation/site_signal/run_log.jsonl`.
-5. After the tag, `params.yaml`, `data/signal_rules.json`, the `frozen_inputs` (red-flag ids, rules and levels, the plan's active red flags, the primary-term item logic, grading rules, `rules.py`, `episodes.py`) and the SAP text change only with an entry in docs/11 "Deviations" (commit and reason).
+5. After the tag, `params.yaml`, `data/signal_rules.json`, the `frozen_inputs` (red-flag ids, rules and levels, the plan's active red flags, the primary-term item logic, grading rules, `rules.py`, `content.py`, `episodes.py`) and the SAP text change only with an entry in docs/11 "Deviations" (commit and reason).
 6. REQ-022 (`monitoring/tests/test_sap_order.py`) checks the order, the seed and the run log in CI (checkout with `fetch-depth: 0` and tags).
 
 ### Working method

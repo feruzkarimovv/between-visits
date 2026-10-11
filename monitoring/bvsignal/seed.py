@@ -54,6 +54,7 @@ CTCAE_RULES_REL = "data/ctcae_rules.json"
 PLAN_REL = "data/plan.json"
 SYMPTOM_ITEMS_REL = "data/symptom_items.json"
 RULES_PY_REL = "backend/app/services/rules.py"
+CONTENT_PY_REL = "backend/app/content.py"  # the loader through which rules.py selects items, grading rules and red flags
 EPISODES_PY_REL = "backend/app/services/episodes.py"
 PENDING_EPISODES = "pending-B16"
 BEACON_KEYS = ("source", "round", "randomness", "url", "fetched_at", "selection", "attempts")
@@ -63,6 +64,7 @@ FROZEN_KEYS = (
     "symptom_items_logic_sha256",
     "ctcae_rules_sha256",
     "rules_py_sha256",
+    "content_py_sha256",
     "episodes_py_sha256",
 )
 # docs/11 §11.3 `symptom_items_logic_sha256`: the logic fields of the primary-term items and of their scales
@@ -82,6 +84,8 @@ ANALYSIS_INPUTS = (
     "data/symptom_items.json",
     "backend/app/services/episodes.py",
     "backend/app/services/rules.py",
+    "backend/app/content.py",
+    "backend/app/config.py",
 )
 
 _HEX40 = re.compile(r"[0-9a-f]{40}")
@@ -566,6 +570,7 @@ def frozen_inputs(repo: Path = REPO_ROOT) -> dict[str, str]:
         "symptom_items_logic_sha256": canonical_json_sha256(symptom_items_logic(load(SYMPTOM_ITEMS_REL), primary_terms)),
         "ctcae_rules_sha256": canonical_json_sha256(load(CTCAE_RULES_REL)["rules"]),
         "rules_py_sha256": file_sha256(repo / RULES_PY_REL),
+        "content_py_sha256": file_sha256(repo / CONTENT_PY_REL),
         "episodes_py_sha256": file_sha256(episodes) if episodes.exists() else PENDING_EPISODES,
     }
 

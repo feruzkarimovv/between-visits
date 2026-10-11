@@ -86,7 +86,7 @@ site_capture:
 patient_stream:
   call_completion: {dist: beta, mean: 0.85, kappa: 20}   # ASSUMPTION (docs/11 §9.1, §11.3): pi_i ~ Beta(17, 3) per patient
   mapping_error_per_answer: {dist: beta, a: 2, b: 38}    # ASSUMPTION (docs/11 §11.3), mean 0.05, same in both languages; the text-mode evaluation (n = 20) is too small to estimate error by language
-  mapping_error_step: {ordinal_options: 1, yes_no: flip, stools_per_day: 1, temperature_c: 0.5}   # ASSUMPTION (docs/11 §11.2 step 5, §11.3)
+  mapping_error_step: {ordinal_options: 1, yes_no: flip, stools_per_day: 1, temperature_c: 0.5, p_up: 0.5, at_scale_end: only_neighbour}   # ASSUMPTION (docs/11 §11.2 step 5, §11.3): each recorded primary-term answer independently; ordinal: next option up with p_up, else down, or the only adjacent option at either end of the scale; stools +1 at 0, else +1 with p_up, else -1; temperature +0.5 with p_up, else -0.5
 
 calibration: {r_null: 2000, r_validation: 2000, r_quick: 200}   # precision (docs/11 §11.3, §12.8)
 
@@ -120,18 +120,18 @@ sensitivity:                      # docs/11 §11.3, §12.6
     SE4: {mapping_error_multiplier: 4, language: en}
     SE5: {mapping_error_multiplier: 2, language: es}
     SE6: {mapping_error_multiplier: 4, language: es}
-    SE7: {call_completion_mean: 0.60}
-    SE8: {call_completion_mean: 0.95}
-    SE9: {between_site_sd_logit: 0.2, thresholds: sap-v1}     # misspecified null
-    SE10: {between_site_sd_logit: 0.5, thresholds: sap-v1}
-    SE11: {between_site_sd_logit: 0.6, thresholds: sap-v1}
+    SE7: {call_completion_mean: 0.60, kappa: 20, low_coverage_mean: 0.50}     # docs/11 §12.6: kappa unchanged; the low_coverage site keeps its mean
+    SE8: {call_completion_mean: 0.95, kappa: 20, low_coverage_mean: 0.50}
+    SE9: {between_site_sd_logit: 0.2, thresholds: sap-v1, low_diligence_offset: scaled}    # misspecified null; honest_low_diligence u_s := u_s_between_site_sds x the scenario SD
+    SE10: {between_site_sd_logit: 0.5, thresholds: sap-v1, low_diligence_offset: scaled}
+    SE11: {between_site_sd_logit: 0.6, thresholds: sap-v1, low_diligence_offset: scaled}
     SE12: {patient_re_sd_logit: 0.0, thresholds: sap-v1}
     SE13: {patient_re_sd_logit: 1.0, thresholds: sap-v1}
     SE14: {paged_rule: page_proximal}                         # proximity from data/signal_rules.json paged.proximity_days (7)
     SE15: {capture_boost_logit: 1.0, within_days: 7, n_sites_highest_paging: 5, paging_rate: share_completed_calls_urgent_or_emergency, anchor: latent_start_day, boost_paged: true}   # docs/11 §12.6: sites ranked per simulated study (no completed calls = share 0; ties: lower site id); boost when |latent start day - day of an urgent or emergency call of the same subject| <= within_days
     SE16: {copula: gaussian, corr_v_pi: 0.5, corr_v_neg_eps: 0.5, corr_pi_neg_eps: 0.25}   # docs/11 §12.6: (z_v, z_pi, z_eps) ~ N(0, Sigma), normal-scale correlations; v = patient_re_sd_logit * z_v, pi = completion Beta inverse CDF at Phi(z_pi), eps = Beta(2, 38) inverse CDF at 1 - Phi(z_eps); marginals unchanged
-    SE17: {entry_lag_mean_days: 25, n_honest_sites: 1}
-    SE18: {site_mapping_error: {dist: beta, a: 2, b: 18}, n_random_sites: 3}
+    SE17: {entry_lag_mean_days: 25, entry_lag_shape: 2, n_sites: 1, eligible: non_101_label_honest}   # docs/11 §12.6: drawn uniformly from the replicate's generator (null study: all non-101 sites); symptomatic and other-AE rows
+    SE18: {site_mapping_error: {dist: beta, a: 2, b: 18}, n_random_sites: 3, eligible: non_101_any_label, draw: one_per_site_replaces_patient_eps}   # docs/11 §12.6: drawn uniformly without replacement from the replicate's generator; one eps_s per site replaces eps_i of every patient there
     SE19: {casemix_sd_log: 0.6}
     SE20: {next_visit_plus_days: 19}                          # 95th percentile of the entry-lag Gamma
     SE21: {overdispersion: multiplicative}                    # z / sqrt(phi) instead of additive tau^2 (docs/11 §8.2)
@@ -292,4 +292,5 @@ frozen_inputs:                    # docs/11 §11.3; `python -m bvsignal.seed --w
   # obj = data/ctcae_rules.json["rules"]
   ctcae_rules_sha256: "199d23700776bfbd09f433a7efe812bfd2b3fe685bd39c4bbe3158a3025120a5"
   rules_py_sha256: "ea97d075cbae3ff593d94d9d621257a13ba7428f84d7535c7f99668ce3d1103f"      # file sha256 of backend/app/services/rules.py
+  content_py_sha256: "81928d7128ef28f1b902f1bfccad7df76ba2c6c73eacb6f5820f146b4c1e64c1"    # file sha256 of backend/app/content.py (the loader through which rules.py selects items, grading rules and red flags)
   episodes_py_sha256: "d26a4cabed4a96c90a91c13100ccfd3ee341c9966c93faa5a8a44099d448e512" # file sha256 of backend/app/services/episodes.py (B16)

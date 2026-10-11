@@ -20,6 +20,7 @@ import re
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -77,10 +78,17 @@ def _fmt(xs: list[float] | str) -> str:
     return "[" + ", ".join(str(int(x)) if float(x).is_integer() else f"{x:g}" for x in xs) + "]"
 
 
+def _fraction(x: float) -> list[int]:
+    """A probability as the SAP writes it, numerator and denominator (0.5 -> [1, 2], read from "1/2")."""
+    q = Fraction(x).limit_denominator(1000)
+    return [q.numerator, q.denominator]
+
+
 def checks_11_3(p: dict[str, Any]) -> list[tuple[str, Callable[[], list[float]], Callable[[str], bool] | None]]:
     """(SAP key cell, params numbers in the order the SAP writes them, optional extra text check)."""
     d, r, ep, ag, sc, ps = p["design"], p["roster"], p["episodes"], p["answer_generation"], p["site_capture"], p["patient_stream"]
     sec = ag["secondary"]
+    mes = ps["mapping_error_step"]
     sev_order = ("mild", "moderate", "severe", "very_severe")
     sp = r["spanish_share_by_site"]
     return [
@@ -128,9 +136,13 @@ def checks_11_3(p: dict[str, Any]) -> list[tuple[str, Callable[[], list[float]],
         ("`patient_stream.call_completion`", lambda: [ps["call_completion"]["mean"], ps["call_completion"]["kappa"]],
          lambda _: ps["call_completion"]["dist"] == "beta"),
         ("`patient_stream.mapping_error_per_answer`", lambda: [ps["mapping_error_per_answer"]["a"], ps["mapping_error_per_answer"]["b"]], None),
-        ("`patient_stream.mapping_error_step`", lambda: [ps["mapping_error_step"]["ordinal_options"], ps["mapping_error_step"]["stools_per_day"],
-                                                        ps["mapping_error_step"]["temperature_c"]],
-         lambda _: ps["mapping_error_step"]["yes_no"] == "flip"),
+        # ordinal ±1 option, up or down with p_up written as a fraction (1/2), the only neighbour at a scale end; stools ±1 with
+        # +1 at the bottom of the stools domain (0); temperature ±0.5 °C; signs with p_up (1/2)
+        ("`patient_stream.mapping_error_step`", lambda: [mes["ordinal_options"], *_fraction(mes["p_up"]), mes["stools_per_day"],
+                                                        mes["stools_per_day"], ag["numeric_domains"]["DIARRHEA_STOOLS_PER_DAY"]["min"],
+                                                        mes["temperature_c"], *_fraction(mes["p_up"])],
+         lambda cell: mes["yes_no"] == "flip" and mes["at_scale_end"] == "only_neighbour" and "only neighbour" in cell
+         and math.isclose(mes["p_up"], 0.5)),
         ("`calibration`", lambda: [p["calibration"]["r_null"], p["calibration"]["r_validation"], p["calibration"]["r_quick"]], None),
         # §12.2: the sap-v1 design row runs every grid f, so the headline gross-f row exists only if gross f is a grid value
         ("`grid`", lambda: [*p["grid"]["n_sites"], *p["grid"]["patients_per_site"], *p["grid"]["f"], *p["grid"]["mu"],

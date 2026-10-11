@@ -102,7 +102,7 @@ Never: re-seed, re-tag, move the tag, choose among several evaluation runs, comm
 | `validation/site_signal/report.md`, `funnel.svg` | `report.py` | humans; README link |
 | `validation/site_signal/run_log.jsonl` | every eval-seed run | `test_sap_order.py` (REQ-022) |
 
-Every output carries `sap_tag_commit`, `eval_seed` and `code_commit` (SAP §15). `code_commit` is the last commit that changed an analysis input (`git log -1 --format=%H -- monitoring/bvsignal monitoring/params.yaml monitoring/uv.lock data/signal_rules.json data/ctcae_rules.json data/red_flags.json data/plan.json data/symptom_items.json backend/app/services/episodes.py backend/app/services/rules.py`), and `generated_at` is that commit's time, so committing outputs does not change them.
+Every output carries `sap_tag_commit`, `eval_seed` and `code_commit` (SAP §15). `code_commit` is the last commit that changed an analysis input (`git log -1 --format=%H -- monitoring/bvsignal monitoring/params.yaml monitoring/uv.lock data/signal_rules.json data/ctcae_rules.json data/red_flags.json data/plan.json data/symptom_items.json backend/app/services/episodes.py backend/app/services/rules.py backend/app/content.py backend/app/config.py`), and `generated_at` is that commit's time, so committing outputs does not change them.
 
 ## Tasks
 

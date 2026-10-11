@@ -431,14 +431,15 @@ def test_code_commit_is_the_last_commit_touching_an_analysis_input(tmp_path: Pat
     git(repo, "add", "-A")
     git(repo, "commit", "-qm", "params")
     assert s.code_commit(repo) == git(repo, "rev-parse", "HEAD")
-    # the active red-flag list and the item logic are analysis inputs too (docs/11 §15 rule 7)
-    for rel in ("data/plan.json", "data/symptom_items.json"):
-        (repo / rel).parent.mkdir(exist_ok=True)
+    # the active red-flag list, the item logic and the loader rules.py grades through are analysis inputs too
+    # (docs/11 §15 rule 7)
+    for rel in ("data/plan.json", "data/symptom_items.json", "backend/app/content.py", "backend/app/config.py"):
+        (repo / rel).parent.mkdir(parents=True, exist_ok=True)
         (repo / rel).write_text("{}\n")
         git(repo, "add", "-A")
         git(repo, "commit", "-qm", rel)
         assert s.code_commit(repo) == git(repo, "rev-parse", "HEAD")
-    assert {"data/plan.json", "data/symptom_items.json"} <= set(s.ANALYSIS_INPUTS)
+    assert {"data/plan.json", "data/symptom_items.json", "backend/app/content.py", "backend/app/config.py"} <= set(s.ANALYSIS_INPUTS)
 
 
 def test_analysis_inputs_are_the_sap_section_15_rule_7_list() -> None:
@@ -480,6 +481,7 @@ def test_frozen_hashes_follow_the_sap_definition() -> None:
     assert {c for g in graded.values() for c in g.values()} | {"STOOL_BLOOD"} <= set(logic_items)
     assert got["ctcae_rules_sha256"] == _canon(ct)
     assert got["rules_py_sha256"] == hashlib.sha256((REPO_ROOT / s.RULES_PY_REL).read_bytes()).hexdigest()
+    assert got["content_py_sha256"] == hashlib.sha256((REPO_ROOT / "backend/app/content.py").read_bytes()).hexdigest()
     ep = REPO_ROOT / s.EPISODES_PY_REL
     assert got["episodes_py_sha256"] == (hashlib.sha256(ep.read_bytes()).hexdigest() if ep.exists() else "pending-B16")
     assert s.signal_rules_sha256() == hashlib.sha256((REPO_ROOT / "data/signal_rules.json").read_bytes()).hexdigest()
@@ -487,7 +489,7 @@ def test_frozen_hashes_follow_the_sap_definition() -> None:
 
 def _copy_inputs(dst: Path) -> Path:
     for rel in (s.PARAMS_REL, s.SAP_REL, s.SIGNAL_RULES_REL, s.RED_FLAGS_REL, s.CTCAE_RULES_REL, s.RULES_PY_REL,
-                s.PLAN_REL, s.SYMPTOM_ITEMS_REL):
+                s.CONTENT_PY_REL, s.PLAN_REL, s.SYMPTOM_ITEMS_REL):
         (dst / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPO_ROOT / rel, dst / rel)
     return dst
@@ -522,6 +524,19 @@ def test_dropping_an_active_red_flag_from_the_plan_fails_the_frozen_check(tmp_pa
     capsys.readouterr()
     assert s.main(["--check-frozen"], repo=repo) == 1
     assert "MISMATCH  plan_red_flag_ids_sha256" in capsys.readouterr().out
+
+
+def test_a_change_to_the_content_loader_fails_the_frozen_check(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """rules.py selects items, grading rules and red flags through backend/app/content.py (review R4-B3)."""
+    repo = _copy_inputs(tmp_path)
+    shutil.copy2(REPO_ROOT / s.EPISODES_PY_REL, repo / s.EPISODES_PY_REL)
+    assert "content_py_sha256" in s.FROZEN_KEYS
+    assert s.main(["--check-frozen"], repo=repo) == 0
+    loader = repo / s.CONTENT_PY_REL
+    loader.write_text(loader.read_text() + "\n# changed\n")
+    capsys.readouterr()
+    assert s.main(["--check-frozen"], repo=repo) == 1
+    assert "MISMATCH  content_py_sha256" in capsys.readouterr().out
 
 
 def test_item_logic_hash_ignores_wording_but_not_domains_or_followups(tmp_path: Path) -> None:
