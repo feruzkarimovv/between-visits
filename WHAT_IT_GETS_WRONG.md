@@ -21,7 +21,7 @@ The `sap-v1` design has 20 sites, 40 to 80 patients per site, and an assumed 1.5
 
 The pre-tag planning grid used a simplified model. Its value for the gross row at Watch was 0.72 (planning, simplified); the final value is the one in the table.
 
-The Look tier catches more, at a price. Under the pre-registered null, a study with no problems is expected to show about 0.75 false Look flags (MC SE 0.015). The calibration estimate of the same quantity, shown in the `/sites` footer, is 0.8 (`thresholds.json`).
+The Look tier catches more, at a price. Under the pre-registered null, a study with no problems is expected to show about 0.75 false Look flags (MC SE 0.015). The calibration estimate of the same quantity, shown in the `/sites` footer, is 0.77 (`thresholds.json`).
 
 This heading was written before any result existed (`docs/10` §10.2), with the rule that the heading is corrected, not the numbers, if they disagree. The Watch column bears it out: most 25% and 50% gaps go unflagged at Watch.
 
@@ -216,7 +216,7 @@ Rendered by `validation/render_numbers.py` from `validation/site_signal/ and mon
 | 18 | `WHAT_IT_GETS_WRONG.md`:22 | `0.72` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].planning_power` | `p2` | `first` |
 | 19 | `WHAT_IT_GETS_WRONG.md`:24 | `0.75` | `validation/site_signal/summary.json` | `null.look_per_study.rate` | `f2` | `first` |
 | 20 | `WHAT_IT_GETS_WRONG.md`:24 | `0.015` | `validation/site_signal/summary.json` | `null.look_per_study.mc_se` | `f3` | `first` |
-| 21 | `WHAT_IT_GETS_WRONG.md`:24 | `0.8` | `monitoring/out/thresholds.json` | `expected_false_look_flags_per_study` | `f1` | `first` |
+| 21 | `WHAT_IT_GETS_WRONG.md`:24 | `0.77` | `monitoring/out/thresholds.json` | `expected_false_look_flags_per_study` | `f2` | `first` |
 | 22 | `WHAT_IT_GETS_WRONG.md`:32 | `0.19` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
 | 23 | `WHAT_IT_GETS_WRONG.md`:32 | `0.023` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
 | 24 | `WHAT_IT_GETS_WRONG.md`:32 | `0.02` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
@@ -444,7 +444,7 @@ Rendered by `validation/render_numbers.py` from `validation/site_signal/ and mon
 | 246 | `README.md`:164 | `0.15` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.rate` | `p2` | `first` |
 | 247 | `README.md`:164 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.mc_se` | `f3` | `first` |
 | 248 | `deck.html`:261 | `14` | `monitoring/out/signal_run.json` | `run.n_computed_sites` | `int` | `first` |
-| 249 | `deck.html`:261 | `0.8` | `monitoring/out/thresholds.json` | `expected_false_look_flags_per_study` | `f1` | `first` |
+| 249 | `deck.html`:261 | `0.77` | `monitoring/out/thresholds.json` | `expected_false_look_flags_per_study` | `f2` | `first` |
 | 250 | `deck.html`:298 | `0.15` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
 | 251 | `deck.html`:298 | `0.021` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
 | 252 | `deck.html`:298 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
