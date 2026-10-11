@@ -6,6 +6,11 @@ placeholders and dash-written emergency numbers; tool option enum == all scale o
 prompt lists every option; personas reference real flags/terms; 2x2 persona grid; no licensed content
 (PRO-CTCAE claims in item text, MedDRA-style codes). WS4 owns this file; extend it, don't weaken it.
 
+Grade bands (D9): per term in ctcae_rules.json the grades are consecutive and the bands are contiguous and do
+not overlap (numeric bands meet exactly, or at the next whole number on a count input; option bands are runs of
+the item's scale in grade order, with no option in two grades). data/mutation_probe.py and
+backend/tests/test_rule_boundaries.py pin each threshold itself.
+
 Site Signal files (D11, frozen by the sap-v1 tag): data/signal_rules.json and data/site_queries.json have
 exactly the docs/02 schemas (key names, types); every primary term has G2 and G3 rules in ctcae_rules.json;
 synonyms lower-case, trimmed and unique across terms; every not_computed reason and every answer-key key
@@ -161,6 +166,108 @@ for r in rf["red_flags"]:
 for ru in rules["rules"]:
     walk(ru["when"], ru["id"])
     if ru["term"] not in rules["terms"]: fail(f"{ru['id']}: term missing from catalog")
+
+# ---------------------------------------------------------------------------------------------------------
+# Grade-band contiguity (D9): per term, the grade bands are contiguous and do not overlap, so a value gets at
+# most one grade and nothing between two graded bands is left ungraded. A term's grades are consecutive.
+# Numeric bands (each rule one gte/gt/lte/lt leaf, all on one input): consecutive grades meet exactly
+# (lte t then gt t, or lt t then gte t); on a count input, whose answers are whole numbers, lte a then gte a+1
+# also meets. Option bands (each rule one eq/in leaf, all on one item): no option in two grades, and each
+# grade's options are a run of the item's scale that follows the previous grade's run.
+# ---------------------------------------------------------------------------------------------------------
+DISCRETE_SCALES = frozenset({"count"})  # whole-number answers
+W_RULES = "ctcae_rules.json"
+
+
+def _leaf_items(leaf) -> set:
+    """Items a numeric leaf reads (a derived input: the item codes named in `derived_inputs`)."""
+    if "item" in leaf: return {leaf["item"]}
+    return {c for c in re.findall(r"\b[A-Z][A-Z0-9_]+\b", rules["derived_inputs"].get(leaf["derived"], "")) if c in I}
+
+
+def _numeric_band(where: str, w: dict, discrete: bool):
+    """(low, low inclusive, high, high inclusive), None for an open end; count bands become closed integer
+    ranges. Returns None (after failing) for a malformed band."""
+    lo = hi = None; lo_in = hi_in = True
+    for op in ("gte", "gt", "lte", "lt"):
+        if op not in w: continue
+        t = w[op]
+        if isinstance(t, bool) or not isinstance(t, (int, float)):
+            fail(f"{W_RULES}: {where}: {op} must be a number"); return None
+        if discrete and not isinstance(t, int):
+            fail(f"{W_RULES}: {where}: {op} {t} on a count input must be a whole number"); return None
+        if op in ("gte", "gt"):
+            if lo is not None: fail(f"{W_RULES}: {where}: two lower edges"); return None
+            lo, lo_in = t, op == "gte"
+        else:
+            if hi is not None: fail(f"{W_RULES}: {where}: two upper edges"); return None
+            hi, hi_in = t, op == "lte"
+    if discrete:  # closed integer range
+        if lo is not None and not lo_in: lo, lo_in = lo + 1, True
+        if hi is not None and not hi_in: hi, hi_in = hi - 1, True
+    if lo is not None and hi is not None and (lo > hi or (lo == hi and not (lo_in and hi_in))):
+        fail(f"{W_RULES}: {where}: empty band"); return None
+    return lo, lo_in, hi, hi_in
+
+
+def _edge(v, inclusive: bool) -> str:
+    return f"{v} ({'inclusive' if inclusive else 'exclusive'})"
+
+
+def check_grade_bands() -> int:
+    """Fail on any term whose grade bands overlap, leave a gap, or skip a grade; returns the number of terms."""
+    by_term: dict = {}
+    for ru in rules["rules"]: by_term.setdefault(ru["term"], []).append(ru)
+    for term, rs in by_term.items():
+        rs = sorted(rs, key=lambda r: r["grade"])
+        grades = [r["grade"] for r in rs]
+        if len(set(grades)) != len(grades): fail(f"{W_RULES}: {term}: two rules for one grade {grades}"); continue
+        if grades != list(range(grades[0], grades[0] + len(grades))):
+            fail(f"{W_RULES}: {term}: grades {grades} are not consecutive (a band is missing)"); continue
+        whens = [r["when"] for r in rs]
+        numeric = all(any(op in w for op in ("gte", "gt", "lte", "lt")) and ("item" in w or "derived" in w)
+                      and not {"eq", "in", "any", "all"} & set(w) for w in whens)
+        options = all(set(w) in ({"item", "eq"}, {"item", "in"}) for w in whens)
+        if numeric and len({(w.get("item"), w.get("derived")) for w in whens}) == 1:
+            items_read = _leaf_items(whens[0])
+            discrete = bool(items_read) and all(I[c]["scale"] in DISCRETE_SCALES for c in items_read)
+            bands = [_numeric_band(r["id"], r["when"], discrete) for r in rs]
+            if None in bands: continue
+            for g, (_, _, a_hi, a_hi_in), (b_lo, b_lo_in, _, _) in zip(grades, bands, bands[1:]):
+                ga, gb = f"G{g}", f"G{g + 1}"
+                if a_hi is None or b_lo is None:
+                    fail(f"{W_RULES}: {term}: {ga} and {gb} bands overlap ({ga} has no upper edge or {gb} no lower edge)")
+                    continue
+                span = f"({ga} up to {_edge(a_hi, a_hi_in)}, {gb} from {_edge(b_lo, b_lo_in)})"
+                if a_hi > b_lo or (a_hi == b_lo and a_hi_in and b_lo_in):
+                    fail(f"{W_RULES}: {term}: {ga} and {gb} bands overlap {span}")
+                elif not (b_lo == a_hi + 1 if discrete else a_hi == b_lo and a_hi_in != b_lo_in):
+                    fail(f"{W_RULES}: {term}: gap between the {ga} and {gb} bands {span}")
+        elif options and len({w["item"] for w in whens}) == 1:
+            item = whens[0]["item"]
+            scale_opts = scales.get(I[item]["scale"], {}).get("options", []) if item in I else []
+            runs, owner = [], {}
+            for r in rs:
+                opts = [r["when"]["eq"]] if "eq" in r["when"] else list(r["when"]["in"])
+                for o in opts:
+                    if o in owner:
+                        fail(f"{W_RULES}: {term}: option {o!r} of {item} is in G{owner[o]} and G{r['grade']} (bands overlap)")
+                    owner[o] = r["grade"]
+                idx = sorted(scale_opts.index(o) for o in opts if o in scale_opts)  # unknown options: walk() reports them
+                if idx and idx != list(range(idx[0], idx[0] + len(idx))):
+                    fail(f"{W_RULES}: {term}: the G{r['grade']} options of {item} are not a run of its scale")
+                runs.append((r["grade"], idx))
+            for (ga, ia), (gb, ib) in zip(runs, runs[1:]):
+                if ia and ib and ib[0] != ia[-1] + 1:
+                    fail(f"{W_RULES}: {term}: the G{gb} options of {item} do not follow the G{ga} options on its scale "
+                         f"(gap between the bands, or bands out of order)")
+        else:
+            fail(f"{W_RULES}: {term}: cannot check contiguity: each rule must be one numeric leaf on the same input, "
+                 f"or one eq/in leaf on the same item (extend data/validate_data.py for other shapes)")
+    return len(by_term)
+
+
+n_band_terms = check_grade_bands()
 
 props = tools["tools"][0]["api_schema"]["request_body_schema"]["properties"]
 enum = set(props["option_code"]["enum"])
@@ -531,6 +638,19 @@ def _self_test() -> int:
         term = read(d, "signal_rules.json")["primary_terms"][-1]
         c["rules"] = [ru for ru in c["rules"] if not (ru["term"] == term and ru["grade"] == 3)]
 
+    def shift_upper_edge(by: int):  # the first grading rule with an `lte` edge (a band with a higher grade above it)
+        def shift(c, d) -> None:
+            w = next(ru["when"] for ru in c["rules"] if "lte" in ru["when"])
+            w["lte"] += by
+        return edit("ctcae_rules.json", shift)
+
+    def option_in_two_grades(c, d) -> None:  # the next grade of an option-graded term takes the previous grade's option
+        terms: dict = {}
+        for ru in c["rules"]:
+            if set(ru["when"]) == {"item", "eq"}: terms.setdefault(ru["term"], []).append(ru)
+        rs = sorted(next(v for v in terms.values() if len(v) > 1), key=lambda ru: ru["grade"])
+        rs[1]["when"]["eq"] = rs[0]["when"]["eq"]
+
     reason, ak_key = NOT_COMPUTED_REASONS[-1], ANSWER_KEY_HONEST[-2]
     cases = [  # (description, mutation, expected exit code, expected text in the output)
         ("unmodified copy", None, 0, "site signal OK"),
@@ -554,6 +674,9 @@ def _self_test() -> int:
         ("a synonym shared by two terms", edit("signal_rules.json", synonym_shared), 1, "unique across terms"),
         ("a primary term without a G3 rule in ctcae_rules.json", edit("ctcae_rules.json", drop_g3_rule), 1,
          "has no G3 rule"),
+        ("a gap between two grade bands (an upper edge one unit lower)", shift_upper_edge(-1), 1, "gap between the"),
+        ("two grade bands overlapping (an upper edge one unit higher)", shift_upper_edge(1), 1, "bands overlap"),
+        ("one option graded in two grades", edit("ctcae_rules.json", option_in_two_grades), 1, "(bands overlap)"),
     ]
     # Product-name guard: the denylist is swapped for the hash of a random dummy token (never a real name).
     dummy = "zqx" + secrets.token_hex(5)
@@ -621,6 +744,7 @@ if ARGS.data_dir is None:  # the guard covers the repository, so it runs on the 
 if errors:
     print("\n".join("FAIL: " + e for e in errors)); sys.exit(1)
 print(f"data OK: {len(I)} items, {len(rf_ids)} red flags, {len(rules['rules'])} grading rules, {len(personas['personas'])} personas")
+print(f"grade bands OK: {n_band_terms} terms, bands contiguous and non-overlapping, grades consecutive")
 print(f"site signal OK: {len(sr.primary_terms)} primary terms with G2 and G3 rules, {n_synonyms} synonyms, "
       f"{len(NOT_COMPUTED_REASONS)} not_computed reasons and {len(ANSWER_KEY_PLANTED + ANSWER_KEY_HONEST)} answer-key "
       f"keys labelled, {len(sq.templates)} query template(s), {len(sq.response_codes)} response codes, "
