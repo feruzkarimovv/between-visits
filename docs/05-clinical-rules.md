@@ -9,7 +9,7 @@ Everything clinical lives in `data/` as data, never in code. This doc explains w
 | **NCI PRO-CTCAE** item wording | NCI holds all rights; terms forbid modifying, translating or redistributing items without NCI's written consent, and it is not intended for diagnostic or therapeutic use on individual patients | **Not included.** Our questions in `data/symptom_items.json` are our own wording (MIT). A site that registered its study with NCI can load the official items locally into `data/local/symptom_items.local.json` (gitignored, same item codes); the backend uses that wording when present and the agent still says it verbatim. Never call our questions "PRO-CTCAE". |
 | **NCI CTCAE v5.0** | U.S. government publication, reusable with credit | Grade text in `data/ctcae_rules.json` is verbatim from NCI's v5.0 workbook, credited. |
 | **MedDRA** codes, hierarchy, SOC columns | Licensed; may not be redistributed or exposed to non-subscribers, including open-source repos | **Not included.** CTCAE term names are used as the AE term; SDTM `AEDECOD`/`AEBODSYS` are left empty with a note "coded downstream by licensed sponsor". |
-| Medication Guides (Libtayo) | Manufacturer copyright | Red-flag symptoms are condensed in our own words, with the source named. |
+| US Medication Guide of an approved anti-PD-1 antibody (class only) | Manufacturer copyright | Red-flag symptoms are condensed in our own words, with the source named by drug class. |
 | Example study NCT02760498 | Public registry and posted protocol | Registry facts and protocol page references only; all patients and events are synthetic. |
 
 How to say it in the pitch: "standard symptom questions, graded with the National Cancer Institute's CTCAE, and ready to plug in NCI's official PRO-CTCAE items once a study registers." That is accurate.
@@ -155,6 +155,8 @@ The narrative draft (Gemini) may use only facts present in the payload and evide
 ## 8. Exports (SDTM-style CSV, confirmed drafts only)
 
 **AE:** `STUDYID, DOMAIN ("AE"), USUBJID, AESEQ, AESPID (check-in ID), AETERM (CTCAE term), AEDECOD (empty: coded downstream by licensed sponsor), AEBODSYS (empty), AETOXGR ("1"–"5", provisional or clinician-confirmed), AESER (Y/N), AESDTH, AESLIFE, AESHOSP, AESDISAB, AESCONG, AESMIE (Y/N), AEREL (NOT RELATED / UNLIKELY RELATED / POSSIBLY RELATED / PROBABLY RELATED / RELATED), AEOUT (RECOVERED/RESOLVED, RECOVERING/RESOLVING, NOT RECOVERED/NOT RESOLVED, RECOVERED/RESOLVED WITH SEQUELAE, FATAL, UNKNOWN), AESTDTC, AEENDTC` (ISO 8601). Add a header comment line with `# CTCAE v5.0; synthetic data`.
+
+*Planned change (B14, `docs/03` §6.5): the `#` line is removed so the header row is line 1; the note moves to the `X-BV-Note` response header (exact strings in `docs/03` §6.5); ae.csv gains a trailing, sponsor-defined `ORIGIN` column (`between_visits`; SUPPAE QNAM `ORIGIN` in a real submission); `AEOUT` comes from the shared `outcome_of()` helper so it agrees with the SAE report. B14 rewrites this paragraph when it lands.*
 
 **CM:** `STUDYID, DOMAIN ("CM"), USUBJID, CMSEQ, CMTRT (as reported), CMDECOD (empty: WHODrug is licensed), CMINDC, CMDOSE, CMDOSU, CMDOSFRQ, CMROUTE (ORAL, INTRAVENOUS, ... UNKNOWN), CMSTDTC, CMENDTC`.
 

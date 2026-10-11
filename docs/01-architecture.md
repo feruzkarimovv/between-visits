@@ -40,6 +40,16 @@ flowchart LR
 
 Public HTTPS reaches the laptop through an **ngrok static domain** (`PUBLIC_BASE_URL`). ElevenLabs server tools, the ElevenLabs post-call webhook and Twilio callbacks all point at it.
 
+### Site Signal (planned, Sun Oct 11; `docs/10`, `docs/11`)
+
+| Component | Where | Boundary |
+|---|---|---|
+| Statistics package | `monitoring/` (separate uv project; numpy and scipy live only here) | Simulates the study, matches episodes, computes indicators and thresholds, validates; writes committed JSON to `monitoring/out/` and `validation/site_signal/`. Imports `rules.py` and the stdlib `episodes.py` from `backend/` through `bvsignal/_backend.py`; no LLM, no database. |
+| Episode builder | `backend/app/services/episodes.py` (stdlib only) | One implementation shared by `monitoring/` and the backend. |
+| Read API, site queries, blind runs | `backend/app/routers/site_signal.py`, `services/site_signal.py`, `services/site_queries.py` | Reads `monitoring/out/*.json` (mtime-checked cache); computes no statistic and imports no numpy. Shells out to `python -m bvsignal.blind` (argument list, no shell, timeout) only for the demo-only blind run. |
+
+The safety path (agent tools, rules, paging, post-call pipeline) never reads Site Signal data, so nothing in it can delay a page.
+
 ## Key flows
 
 ### Flow A · Live check-in call with a red flag
@@ -87,13 +97,13 @@ Safety property: the backend pages the nurse **as soon as the rule fires**, inde
 
 ### Flow D · Demo mode (no external keys)
 
-`DEMO_MODE=1` disables outbound calls and Gemini. `POST /api/demo/replay/{scenario_id}` replays a recorded scenario from `scenarios/*.json` through the **same** service functions (tool calls, page, acknowledgment, post-call payload) with the recorded timing. Optional recorded audio plays in the browser. The dashboard cannot tell the difference, which makes the demo robust to bad Wi-Fi and lets judges run the repo without accounts.
+`DEMO_MODE=1` disables outbound calls and Gemini. `POST /api/demo/replay/{scenario_id}` replays a recorded scenario from `scenarios/*.json` through the **same** service functions (tool calls, page, acknowledgment, post-call payload) with the recorded timing. Optional recorded audio plays in the browser. The dashboard cannot tell the difference, which makes the demo robust to bad Wi-Fi and lets reviewers run the repo without accounts.
 
 ## Technology choices
 
 | Concern | Choice | Why |
 |---|---|---|
-| Voice agent | ElevenLabs Agents, LLM = Gemini Flash | Sponsor prize, low-latency voice, Spanish, Twilio native integration, server tools, post-call webhooks |
+| Voice agent | ElevenLabs Agents, LLM = Gemini Flash (the deployed model is pinned and recorded in `agent/deployed_snapshot.json`, task V9) | Low-latency voice, Spanish, Twilio native integration, server tools, post-call webhooks |
 | Telephony | Twilio (native ElevenLabs integration) for patient calls; browser calls as fallback | Real phone calls are the demo's best moment |
 | Paging | ntfy.sh push with an Acknowledge button (default); Twilio "press 1" call optional | No account approval needed; works tonight |
 | Backend | Python 3.12, FastAPI, SQLModel, SQLite, httpx, `google-genai`, `twilio` | Fast to build, Pydantic schemas double as OpenAPI contract |
@@ -108,7 +118,7 @@ Safety property: the backend pages the nurse **as soon as the rule fires**, inde
 ```
 between-visits/
   CLAUDE.md                 project rules for Claude Code (everyone)
-  README.md                 judge-facing readme (WS4 finalizes)
+  README.md                 reader-facing README (WS4 finalizes)
   LICENSE                   MIT
   .env.example              all configuration (WS2 owns)
   Makefile                  dev commands (WS2)
@@ -132,7 +142,7 @@ All configuration is in `.env` (copy from `.env.example`). Real phone numbers li
 ## Cross-cutting rules
 
 - **Time:** store UTC ISO-8601 (`2026-10-11T03:12:45Z`); display in `America/New_York`.
-- **IDs:** prefixed random IDs: `pat_`, `ci_`, `ans_`, `esc_`, `dr_`, `sae_`, `aud_` + 10 base32 chars. Study subject IDs look like `101-007`.
+- **IDs:** prefixed random IDs: `pat_`, `ci_`, `ans_`, `fnd_`, `esc_`, `dr_`, `sae_`, `aud_` + 10 base32 chars; planned: `sq_` (SiteQuery, B18) and `sr_` (SignalRun, B19). Study subject IDs look like `101-007`.
 - **Idempotency:** tool calls carry `checkin_id` and the backend upserts answers by `(checkin_id, item_code)`. Post-call webhooks are idempotent by `conversation_id`. A page is sent once per escalation unless re-paged by the timer.
 - **Security:** agent tools require header `X-BV-Tool-Secret: $TOOL_SHARED_SECRET`. ElevenLabs webhooks are HMAC-verified. Twilio callbacks are signature-verified (skip only when `APP_ENV=dev` and the request comes through the tunnel with a clear log line). CORS allows only `CORS_ORIGINS`.
 - **Logging:** one structured log line per tool call, page, acknowledgment and webhook, including `checkin_id` and `escalation_id`.

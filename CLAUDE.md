@@ -3,11 +3,11 @@
 Voice agent that phones cancer-trial patients between clinic visits (English or Spanish, standard or extra-time pace), asks plain-language symptom questions (our own wording; NCI's official PRO-CTCAE items can be loaded locally by registered studies), grades answers with fixed CTCAE v5 rules, pages an on-call nurse for red flags, and turns calls into draft AE/medication entries with verbatim evidence for human review, plus a sponsor serious-event handoff with a 24-hour clock. Built at HackRU Fall 2026 for Regeneron's clinical-trial challenge. Synthetic data only. Not a medical device.
 
 Specs live in `docs/`. Read the relevant ones before changing anything:
-`00-overview` (scope, rules) · `01-architecture` · `02-data-model` · `03-api-contracts` (source of truth for every interface) · `04-voice-agent` · `05-clinical-rules` · `06-frontend` · `07-eval-and-validation` · `08-demo-and-pitch` · `09-timeline-and-workstreams` · `workstreams/WS1..WS4`.
+`00-overview` (scope, rules) · `01-architecture` · `02-data-model` · `03-api-contracts` (source of truth for every interface) · `04-voice-agent` · `05-clinical-rules` · `06-frontend` · `07-eval-and-validation` · `08-demo-and-pitch` · `09-timeline-and-workstreams` (current plan and checkpoints) · `10-site-signal` (Site Signal PRD) · `11-site-signal-sap` (Site Signal statistical analysis plan) · `workstreams/WS0..WS5` · `KICKOFF` (prompt for the implementing session). Background: `decisions/ADR-001-site-signal`, `research/site-signal-methods`, `research/synthea`, `backlog` (not-built items, source for GitHub issues).
 
 ## Non-negotiable rules (check every change against these)
 
-1. **The LLM listens, rules grade, humans decide.** No grade, red-flag decision or escalation level may come from an LLM at runtime. LLMs map speech to enums/numbers; `backend/app/services/rules.py` decides, driven only by `data/ctcae_rules.json` and `data/red_flags.json`.
+1. **The LLM listens, rules grade, humans decide.** No grade, red-flag decision or escalation level may come from an LLM at runtime. LLMs map speech to enums/numbers; `backend/app/services/rules.py` decides, driven only by `data/ctcae_rules.json` and `data/red_flags.json`. Statistical site flags (Site Signal) come only from pre-specified code (`monitoring/`, `backend/app/services/site_signal.py`, `episodes.py`) driven by `data/signal_rules.json` and the `sap-v1` parameters, with no LLM anywhere on that path, and a human decides whether to act.
 2. **Approved words only.** Anything clinical the agent says is assembled by the backend from `data/scripts.json` and `data/symptom_items.json` (or the gitignored local override `data/local/symptom_items.local.json`) in the call's language. Never hard-code clinical text or thresholds in code. Never machine-translate clinical questions at runtime.
 3. **No medical advice** anywhere: agent, page messages, UI copy, generated narratives.
 4. **Disclose and offer a human** in the agent's first turn, every call, every language.
@@ -27,6 +27,8 @@ Specs live in `docs/`. Read the relevant ones before changing anything:
 | `data/` | WS4 | clinical content + seed data (single source of truth) |
 | `eval/`, `validation/` | WS4 | simulated-patient evaluation, requirement traceability |
 | `scenarios/` | WS1+WS2 | recorded replays for demo mode |
+| `monitoring/`, `validation/site_signal/` | WS5 | Site Signal statistics (planned, `docs/10`, `docs/11`): separate uv project (params, simulate, match, indicators, calibrate, simaerep classic, validate, blind run); committed outputs in `monitoring/out/`. numpy/scipy live only here. |
+| repo-root infra (`Dockerfile`s, `render.yaml`, `docker-compose.prod.yml`, `.gitleaks.toml`, `SECURITY.md`, `e2e/`) | WS0 | Readiness (planned, `docs/workstreams/WS0-readiness.md`): secret scan, toolchain pins, deploy, security docs, end-to-end smoke |
 
 Only edit your workstream's folders unless your task says otherwise.
 
@@ -45,6 +47,20 @@ make eval         # run the 20-persona evaluation -> eval/results/latest.json
 make validate     # build validation/traceability.md + summary.json
 make demo         # DEMO_MODE=1: no external keys, replay scenarios
 ```
+
+Planned (Sun Oct 11, `docs/09`); not in the Makefile until the named task lands, then move each line into the block above:
+
+```bash
+make secret-scan           # R1: gitleaks over full history + real-number grep
+make up                    # R5: production images (docker-compose.prod.yml), no Next dev badge
+make planning-grid         # S1: pre-tag planning grid (dev seed); picks the gross planted capture loss
+make site-signal           # S6: regenerate monitoring/out/* + validation/site_signal/report.md from the sap-v1 seed (< 60 s)
+make site-signal-validate  # S7: operating characteristics (background, <= 45 min); ARGS="--quick --check" in CI
+make blind-run SEED=...    # S8: command-line blind run; ARGS=--precompute writes the fallback seeds
+make cohort                # S10 (optional): Synthea roster, language/age mix only
+```
+
+Planned changes to existing targets: `make setup` uses `npm ci` and syncs `monitoring/` (R2, S1); `make test` adds the monitoring suite (S6); `/api/demo/*` only under `make demo` (R4); `make demo DEMO_PROD=1` serves the production frontend build (R5).
 
 ## Conventions
 
@@ -76,5 +92,6 @@ The task's acceptance check in its workstream file passes and its output is show
 
 - **Sat Oct 10, 4:30 PM ET:** specs, contracts, clinical data, agent config, personas, requirements and replay fixtures complete.
 - **Sat Oct 10, ~6:30 PM ET (solo build, one Claude Code session):** backend B0–B10 implemented (`backend/`, 82 tests, `make validate` 15/15 requirements); `agent/sync_agent.py` (dry-run verified, not yet run against the real API); eval harness `eval/run_eval.py` + `eval/score.py` + `eval/judge.py` (needs `GEMINI_API_KEY`); `validation/build_traceability.py`; Makefile, docker-compose, CI. Contract additions are in `docs/03-api-contracts.md` § 4. Frontend (`frontend/`, Next.js 16, all pages F0–F8) built and verified against the real backend: typecheck, lint, build pass; full replay → review → SAE → sponsor chain works. Not yet done: real ElevenLabs browser call (needs keys), protocol-to-plan stretch, `/sae` list page, 125% zoom pass and screenshots, phone-width polish. `.env` exists locally with generated `TOOL_SHARED_SECRET` and ntfy topics; API keys still empty.
-- Human setup still pending: ElevenLabs key + voice IDs, Twilio upgrade + number + Primary Compliance Profile, Gemini billing, ngrok domain, nurse phone subscribed to `NTFY_TOPIC`, real numbers in `data/patients.local.json`.
+- **Sat Oct 10, ~11:30 PM ET (planning only, no code changed):** a real ElevenLabs browser call works (confirmed by the team lead; not yet re-verified against a deployed backend, task V10). Direction decided: **Between Visits + Site Signal** (sponsor-side capture-discordance layer on simulated multi-site data, pre-registered under the `sap-v1` tag). Plan: `docs/10-site-signal.md`, `docs/11-site-signal-sap.md`, `docs/09-timeline-and-workstreams.md` (Checkpoints SAP 02:45, A 03:30, B 06:15, C 07:30 freeze, packaging to 09:30). Kickoff prompt for the implementing session: `docs/KICKOFF.md`. The repository stays private; changing visibility is a later human decision.
+- Human setup still pending (updated Sat Oct 10 late; times in `docs/09` § Human actions): confirm ElevenLabs key, voice IDs, `ANTHROPIC_API_KEY` and `NTFY_TOPIC` in `.env`; nurse phone subscribed to `NTFY_TOPIC` and `NTFY_BACKUP_TOPIC`; agent LLM pin decision (V9); Render account, GitHub access and live secrets (R6); SAP review before the `sap-v1` tag. Phone calling through Twilio is not connected for the hackathon (browser calls only).
 - Run locally: `make setup && make seed && make dev`; tests: `make test`; replay without keys: `make demo` → Today → Replay scenario.

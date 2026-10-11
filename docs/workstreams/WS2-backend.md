@@ -103,3 +103,174 @@ backend/
 
 ### B11 · Stretch: protocol-to-plan
 - `POST /api/plan/propose` with Gemini PDF input and a Pydantic schema whose item codes and red-flag IDs are enums built from `data/`. Return citations with page numbers. `POST /api/plan/{id}/approve`.
+
+---
+
+## Site Signal plan (Sat Oct 10, late)
+
+Added in the planning round on Sat Oct 10, late. Tasks B0–B11 above are the original Saturday plan and stay as history. This section continues the B series. Times are Sun Oct 11, ET. Checkpoints and cut rules: `docs/09-timeline-and-workstreams.md`.
+
+Contracts are already written: `docs/03-api-contracts.md` §5 (Site Signal routes, payloads, errors, audit actions) and §6 (readiness changes at Checkpoint A); tables and file-backed models in `docs/02-data-model.md` § Site Signal; statistics in `docs/11-site-signal-sap.md`, which wins on any statistical detail. The safety path is not touched: `rules.py`, `interview.py`, `escalation.py`, `postcall.py` and the agent tools keep their behavior, and nothing in Site Signal can delay a page.
+
+Shared files: WS0 edits `backend/` in R3 (local dates), R4 (startup guard, demo-only routes), R5 (commit fallback) and R6 (`AGENTS_LOCK_JSON`, dashboard token); WS1 V11 adds the scenario audio route in `routers/demo.py`. Agree on the order in the team chat before two agents touch the same file.
+
+New rules for this section:
+- **No numpy or scipy in `backend/`.** The backend reads `monitoring/out/*.json` and shells out to the `monitoring/` CLI only for the blind run. `services/episodes.py` is stdlib only because `monitoring/` imports it.
+- **No LLM** in `services/site_signal.py`, `episodes.py` or `site_queries.py` (REQ-021 import scan).
+- **No thresholds computed in the backend**; tiers and thresholds are read from `monitoring/out/`. No numeric threshold literal in `site_signal.py` (REQ-023).
+- **Fail safe:** any load or schema error on Site Signal data returns 503 `site_signal_unavailable`; the UI renders every site grey, never green (REQ-025).
+- **One `require_role(*roles)` helper** gates every restricted route; wrong role is 403 `wrong_role`.
+- **Requirements:** add each REQ to `validation/requirements.yaml` only in the commit that adds its passing test.
+
+### Kickoff prompt for this section
+
+> You are continuing workstream WS2 (backend) of Between Visits. Read CLAUDE.md, docs/03-api-contracts.md §5 and §6, docs/02-data-model.md § Site Signal and § AuditEvent, docs/11-site-signal-sap.md §2–§8 and §13, and the section "Site Signal plan (Sat Oct 10, late)" at the end of docs/workstreams/WS2-backend.md. Implement B12–B15 for Checkpoint A (Sun 03:30 ET), and B16 and B16b as soon as D11 lands (B16 may land before the sap-v1 tag), then B17–B20 for Checkpoint B (06:15), then B21. Use plan mode for each task, then implement it with tests tagged @pytest.mark.req. After each task, run its acceptance check, show the output, run `make test`, and commit as "WS2-Bn: <summary>". Do not change rules.py, interview.py, escalation.py, postcall.py or agent_tools.py behavior. If a contract in docs/03 seems wrong, stop and ask instead of changing it.
+
+### B12 · 403 for wrong role, and the `cra` role (target 02:20, Checkpoint A)
+Contract: `docs/03` §6.1.
+- `require_role(*roles)` dependency in `backend/app/routers/api.py`; `POST /api/drafts/{id}/investigator`, `PATCH /api/sae/{id}` and `POST /api/sae/{id}/sign` return 403 `wrong_role` (was 409) for any role but `investigator`. Missing or unknown `X-BV-Role` still means `coordinator`.
+- Role enum in `backend/app/schemas.py` adds `cra`; `AuditEvent.role` accepts it.
+- `backend/tests/test_roles.py`: a parametrized `(method, path, role) → status` table, tagged REQ-018. Site Signal rows are added to the same table in B17–B19 as those routes land. Add REQ-018 to `requirements.yaml` in this commit.
+- **Files:** `backend/app/routers/api.py`, `backend/app/schemas.py`, `backend/tests/test_roles.py`, `validation/requirements.yaml`.
+- **Accept:**
+  ```bash
+  cd backend && uv run pytest -q tests/test_roles.py
+  ```
+  Passes: coordinator → `POST /api/drafts/{id}/investigator` is 403 with `error.code == "wrong_role"`; investigator → 200.
+
+### B13 · Audit hash chain and verify endpoint (target 02:45, Checkpoint A)
+Contract: `docs/03` §6.6.
+- `AuditEvent` gains `seq` (unique, contiguous from 1), `prev_hash` (64 zeros for the first event) and `hash` = sha256(`prev_hash` + canonical JSON exactly as written in §6.6).
+- `write_audit` assigns all three under one process-wide lock; a `seq` collision is retried, never raised, so a safety-path write can never fail or wait on the chain (rule 5). Still append-only; the database is reseeded, so no migration.
+- `GET /api/audit` returns the new fields ordered by `seq` descending. New `GET /api/audit/verify` (any role, always 200): `{ok, n_events, head_hash, first_bad_id, first_bad_seq}`.
+- `backend/tests/test_audit_chain.py` (REQ-019): write 5 events, verify `ok:true`; change one row's `note` through raw SQL, verify returns `ok:false` with that event's ID and `seq`; empty log is `ok:true` with a zero head hash.
+- **Files:** `backend/app/models.py`, `backend/app/audit.py`, `backend/app/routers/api.py`, `backend/app/schemas.py`, `backend/tests/test_audit_chain.py`, `validation/requirements.yaml`.
+- **Accept:**
+  ```bash
+  cd backend && uv run pytest -q tests/test_audit_chain.py
+  make demo        # replay rosa_es_urgent from Today, confirm a draft, then:
+  curl -s localhost:8000/api/audit/verify | jq -e .ok
+  ```
+  Tests pass; the last command prints `true`.
+
+### B14 · Export and narrative fixes, CAPA-001 (target 03:00, Checkpoint A)
+Contract: `docs/03` §6.5.
+- `services/export.py`: no `#` line, header on line 1; the note moves to the `X-BV-Note` response header (CORS exposes `X-BV-Note` and `Content-Disposition`); ae.csv gains the trailing `ORIGIN` column (`between_visits`); `AEOUT` from a shared `outcome_of(payload)` helper.
+- `services/sae.py` uses `outcome_of()` for `reaction.outcome`; the narrative template has no doubled periods, no ".;" and no nested parentheses in the drug-class string.
+- `DraftOut` gains the computed `origin: "between_visits"` (`backend/app/serialize.py`).
+- `backend/tests/test_exports.py` (REQ-020): `csv.DictReader` yields `STUDYID` as the first field; `AEOUT` equals the SAE outcome for the same draft; `ORIGIN` on every row; the narrative contains none of `..`, `.;` or `((`. Add REQ-020 and CAPA-001 (`validation/capa.md`: found, root cause, correction, prevention test ID, commit).
+- `docs/05-clinical-rules.md` §8: replace the planned-change note with the shipped behavior: header row first; the note in `X-BV-Note` (exact strings in `docs/03` §6.5); the trailing sponsor-defined `ORIGIN` column (SUPPAE QNAM `ORIGIN` in a real submission); `AEOUT` from `outcome_of()`.
+- **Files:** `backend/app/services/export.py`, `backend/app/services/sae.py`, `backend/app/routers/api.py`, `backend/app/main.py` (CORS `expose_headers`), `backend/app/serialize.py`, `backend/tests/test_exports.py`, `validation/capa.md`, `validation/requirements.yaml`, `docs/05-clinical-rules.md` (§8).
+- **Accept:**
+  ```bash
+  cd backend && uv run pytest -q tests/test_exports.py
+  curl -s -D - -o ae.csv localhost:8000/api/export/ae.csv | grep -i '^x-bv-note'
+  python3 -c "import csv; r=csv.DictReader(open('ae.csv')); print(r.fieldnames[0], r.fieldnames[-1])"
+  ```
+  Tests pass; the header line prints; the last command prints `STUDYID ORIGIN`. (Run the curl in a scratch directory; do not commit the file.)
+
+### B15 · Replay speed, scenario provenance, health.site_signal, voice-checks route (target 03:15, Checkpoint A)
+Contract: `docs/03` §6.2, §6.7, §6.11.
+- `POST /api/demo/replay/{scenario_id}?speed=1|2|4`: precedence query parameter, then `REPLAY_SPEED`, then 2 in demo mode; anything else 422 `validation_error`.
+- `GET /api/demo/scenarios` items add `recorded`, `recorded_at`, `label` and `audio_url` (`audio_url` only when `scenarios/audio/<id>.mp3` exists). The audio route itself is WS1 V11.
+- `GET /api/health` adds `site_signal: {available, sap_tag_commit, generated_at, data_origin: "SIMULATED"}`; `available` is false until `monitoring/out/signal_run.json` exists and loads.
+- New `GET /api/eval/voice-checks` (any role): `eval/results/voice_checks.json` plus `data_origin: "MEASURED"`; 404 `no_voice_checks` when the file is absent.
+- `backend/tests/test_demo_contract.py`.
+- **Files:** `backend/app/routers/demo.py`, `backend/app/services/replay.py`, `backend/app/schemas.py`, `backend/app/routers/api.py`, `backend/tests/test_demo_contract.py`.
+- **Depends on:** R4.
+- **Accept:**
+  ```bash
+  cd backend && uv run pytest -q tests/test_demo_contract.py
+  make demo     # then:
+  time curl -s -XPOST 'localhost:8000/api/demo/replay/rosa_es_urgent?speed=4'
+  curl -s localhost:8000/api/demo/scenarios | jq '.[0]|{recorded, label, audio_url}'
+  curl -s localhost:8000/api/health | jq .site_signal.available
+  ```
+  The replay returns a `checkin_id` and finishes in about a quarter of the 1x time (drafts appear within about 45 s); scenario items carry the three fields; `false` before Checkpoint B.
+
+### B16 · Pure episode builder shared with monitoring (target 03:55, Checkpoint B)
+SAP §4–§6. B16 is the one piece of analysis code that may be written before the `sap-v1` tag: it implements §4–§6 exactly and touches no simulated study (SAP §1.2).
+- `backend/app/services/episodes.py`, stdlib only: `build_episodes(calls, cfg)` (new or worsened grade ≥ 2 episodes of the primary terms; gap 21 days; a higher grade opens a new `worsened` episode; repeats at the same grade fold in; episode date = `DISPLAY_TZ` local date of the first call), `match(episodes, calls, site_aes, cfg)` (same subject, term through `term_synonyms`, AESTDTC in [*L_e* − `lower_tolerance_days`, episode date + `window_days`] where *L_e* is the subject's last completed call before the episode with a grade for the term below the episode's band, else episode date − `gap_days`; one-to-one greedy by distance to [*L_e*, episode date], then episode date, then `aeseq`; `origin = between_visits` and `entered_on` after the data cut excluded; SAP §5), evaluability and pending, the paged stratum, and status precedence (`paged`, `pending`, `not_evaluated`, `matched`/`unmatched`; `not_evaluated` is set by the caller that knows the leave-one-site-out rates). Every constant from `data/signal_rules.json`.
+- `backend/app/content.py`: `signal_rules()` and `site_queries()` loaders.
+- `backend/tests/test_episodes.py`, table-driven (≥ 14 rows): dedup across day 1/3/7 calls, worsened opens new, the gap closes an episode, incomplete calls contribute nothing, origin exclusion, `entered_on` after cut, paged beats pending, pending boundary, upper window edge (+7 matches, +8 does not), lower window edge (previous negative call − 2 matches, − 3 does not), no previous negative call (episode date − 21), worsened episode anchored on the last lower-grade call. Tag REQ-024.
+- WS5 reviews the test table against the SAP; `monitoring/` imports this module and must not re-implement it.
+- **Files:** `backend/app/services/episodes.py`, `backend/app/content.py`, `backend/tests/test_episodes.py`.
+- **Depends on:** D11.
+- **Accept:**
+  ```bash
+  cd backend && uv run pytest -q tests/test_episodes.py
+  uv run python -c "import ast,sys; t=ast.parse(open('app/services/episodes.py').read()); print(sorted({(n.module or '').split('.')[0] for n in ast.walk(t) if isinstance(n, ast.ImportFrom)} | {a.name.split('.')[0] for n in ast.walk(t) if isinstance(n, ast.Import) for a in n.names}))"
+  ```
+  ≥ 14 rows pass; the import list contains only standard-library modules and `app` (`app.content`, `app.services.rules`).
+
+### B16b · Site Signal fixtures for development (target 04:05, Checkpoint B)
+- Hand-write `backend/tests/fixtures/site_signal/{signal_run,episodes,site_ae,answer_key,equity,thresholds}.json` and `summary.json` in exactly the shapes of `docs/03` §5.3 and `docs/02` § Files behind Site Signal: 20 sites, at least one `watch` site with ≥ 2 `unmatched` episodes (one Spanish quote with `translation_is_ai: true`), one `pending` and one `paged` episode, the `low_coverage` and `small_site` grey sites, and site 101 honest. Every file carries `"_about": "fixture, not a result"` and placeholder numbers only (zeros or round values); none is ever quoted.
+- B17's tests run against these (`MONITORING_OUT=backend/tests/fixtures/site_signal`, `SITE_SIGNAL_SUMMARY=backend/tests/fixtures/site_signal/summary.json`, `docs/03` §6.9), and WS3 develops against them by starting `make demo` with the same two variables until WS5 commits `monitoring/out/` (~05:10). WS5 reviews the shapes.
+- **Files:** `backend/tests/fixtures/site_signal/*.json`.
+- **Depends on:** D11 (label keys).
+- **Accept:** `python3 -c "import json,glob; [json.load(open(f)) for f in glob.glob('backend/tests/fixtures/site_signal/*.json')]; print('ok')"` prints `ok`; `grep -L 'fixture, not a result' backend/tests/fixtures/site_signal/*.json` prints nothing.
+
+### B17 · Site Signal service and read router (target 05:25, Checkpoint B)
+Contract: `docs/03` §5.1–5.3, §6.1.
+- `backend/app/services/site_signal.py`: load `monitoring/out/{signal_run,episodes,site_ae,answer_key,equity}.json` and `validation/site_signal/summary.json` with `lru_cache` plus an mtime check; validate against Pydantic models (for `summary.json`, typed top-level keys from SAP §12.9 and nested blocks passed through as dicts); on any error raise the 503 path. `answer_key.json` already holds the confusion counts; the backend counts nothing. For site 101, build **MEASURED** episodes from DB Findings and Escalations through `episodes.py` (data cut = the request's local date) and list them on top of the drill-down; they never enter any statistic and never pool with simulated episodes.
+- `backend/app/routers/site_signal.py`: `GET /api/sites`, `GET /api/sites/{site_id}`, `GET /api/site-signal/answer-key`, `GET /api/site-signal/validation`, `GET /api/site-signal/equity`, with roles from §6.1 and labels passed through from `data/signal_rules.json` (`labels`, including the footer template and the answer-key display labels; `en` strings flattened). Include the router in `main.py`; `monitoring_out` and `site_signal_summary` settings (`MONITORING_OUT`, `SITE_SIGNAL_SUMMARY`).
+- Until WS5 commits `monitoring/out/` (about 05:10), develop and test against the B16b fixtures (`MONITORING_OUT=backend/tests/fixtures/site_signal`). Never commit dev-seed outputs.
+- `backend/tests/test_site_signal_api.py`: REQ-021 (import scan of the three services), REQ-023 (`test_no_threshold_literals`: an AST check that `site_signal.py` has no numeric literal other than 0, 1 and −1), REQ-025 (missing outputs → 503; small and low-coverage sites `not_computed`; tier enum), REQ-026 (every Look or Watch row has ≥ 1 unmatched evaluable episode with a non-empty `evidence.quote`, `quote_lang`, date, `source` in {`live_call`, `replay`, `synthetic`}), REQ-030 (schema walk: `data_origin` on every object; live 101 episodes are MEASURED); role rows added to `test_roles.py`.
+- **Files:** `backend/app/services/site_signal.py`, `backend/app/routers/site_signal.py`, `backend/app/main.py`, `backend/app/config.py`, `backend/app/schemas.py`, `backend/tests/test_site_signal_api.py`, `backend/tests/test_roles.py`.
+- **Depends on:** B12, B16, B16b (development and tests); S6 (acceptance on the committed outputs).
+- **Accept:**
+  ```bash
+  make demo     # then:
+  curl -s -H 'X-BV-Role: cra' localhost:8000/api/sites | jq -e '.run.data_origin=="SIMULATED" and (.sites|length)==20'
+  curl -s -o /dev/null -w '%{http_code}\n' -H 'X-BV-Role: coordinator' localhost:8000/api/sites
+  ```
+  `true`, then `403`. After a Rosa replay, `GET /api/sites/101` (as `cra`) contains a MEASURED episode with status `pending` or `paged`. With `MONITORING_OUT` pointing at a missing directory, `GET /api/sites` returns 503 `site_signal_unavailable`. `cd backend && uv run pytest -q tests/test_site_signal_api.py` passes.
+
+### B18 · Site query flow (target 05:25, Checkpoint B)
+Contract: `docs/03` §5.4, §5.6, §5.7.
+- `SiteQuery` table (`docs/02`); `sq_` and `sr_` documented in `backend/app/ids.py`.
+- `backend/app/services/site_queries.py`: render from `data/site_queries.json` (no unfilled placeholder); episodes must be evaluable, unmatched and at that site (422 `episode_not_eligible`); only `sr_committed` is queryable (422 `run_not_queryable`); PATCH text is rejected with 422 `contains_identifier` when it contains any seeded patient's first or last name, and 422 `banned_phrase` for any entry of `banned_phrases_en`; state machine draft → sent (approve) → answered (coordinator) → closed (CRA); each step calls `write_audit` with the §5.7 action and before/after.
+- Routes in `routers/site_signal.py`: `POST/GET /api/site-queries`, `GET/PATCH /api/site-queries/{id}`, `/approve`, `/respond`, `/close`. A coordinator sees `sent`, `answered` and `closed` queries at every site (the mock inbox stands in for the queried site's coordinator, `docs/03` §5.4), with an optional `site_id` filter; a draft requested by a coordinator is 404.
+- `backend/tests/test_site_queries.py` (REQ-027): the full flow writes exactly `site_query.drafted`, `.edited`, `.approved`, `.answered`, `.closed`; coordinator list excludes drafts and includes a sent query for site 112; an unmatched episode at a `low_coverage` site can be cited, a `pending` one cannot (422 `episode_not_eligible`); PATCH containing "Rosa" → 422 `contains_identifier`; rendered text has no `{` and no banned phrase.
+- **Files:** `backend/app/models.py`, `backend/app/ids.py`, `backend/app/services/site_queries.py`, `backend/app/routers/site_signal.py`, `backend/tests/test_site_queries.py`, `backend/tests/test_roles.py`.
+- **Depends on:** B17, D11.
+- **Accept:** `cd backend && uv run pytest -q tests/test_site_queries.py tests/test_roles.py` passes.
+- **Cut rule (05:25):** if Checkpoint B is behind, stop here; the query flow goes to `NOT_BUILT.md` and `/sites` ships read-only.
+
+### B19 · Blind run endpoints (target 05:40, Checkpoint B)
+Contract: `docs/03` §5.5; SAP §13.
+- `SignalRun` table. `run_blind(seed_label)`: if the label matches a precomputed seed, serve that file (`source: "precomputed"`); otherwise run `MONITORING_CMD --seed-label <label> --json` as an argument list (no shell) with `BLIND_RUN_TIMEOUT_S`; on failure or timeout 503 `blind_run_unavailable` with `precomputed_seeds`. `BLIND_RUN_TIMEOUT_S=0` disables the subprocess. Never build a file path from user input.
+- Store the answer key, planted count and confusion from the `blind.py` output; never serialize them before reveal. Reveal is idempotent and writes `signal.blind_run.revealed` once; create writes `signal.blind_run.created`.
+- Routes `POST /api/site-signal/blind-run`, `GET .../blind-run/{run_id}`, `POST .../{run_id}/reveal`, `GET /api/site-signal/blind-run-seeds`: the `DEMO_MODE` check comes before the role check (404 `demo_disabled` otherwise).
+- `backend/Dockerfile`: `uv sync --project monitoring --frozen` so the image can run the CLI.
+- `backend/tests/test_blind_run.py` (REQ-029): subprocess mocked; one real smoke run marked `slow`; `DEMO_MODE=0` → 404; POST response has `planted_count: null`; GET before reveal hides the key; second reveal adds no audit row.
+- **Files:** `backend/app/models.py`, `backend/app/services/site_signal.py`, `backend/app/routers/site_signal.py`, `backend/app/config.py`, `backend/Dockerfile`, `backend/tests/test_blind_run.py`.
+- **Depends on:** S8, B17.
+- **Accept:**
+  ```bash
+  make demo     # then:
+  time curl -s -XPOST -H 'X-BV-Role: cra' -H 'Content-Type: application/json' -d '{"seed_label":"demo-42"}' localhost:8000/api/site-signal/blind-run | jq -e '.planted_count==null'
+  ```
+  `true` in under 10 s locally (`demo-42` is not a precomputed label, so this exercises the subprocess); reveal returns `answer_key` and per-indicator `confusion`; with `DEMO_MODE=0` the route returns 404; `uv run pytest -q tests/test_blind_run.py` passes.
+
+### B20 · Types, contract conformance and REQ entries (target 06:00, Checkpoint B)
+- `make types` regenerates `frontend/src/lib/api-types.ts` (never hand-edited).
+- `backend/tests/test_contract_routes.py`: every route listed in `docs/03` §5.2 and §6 exists in `/openapi.json` with the documented method.
+- REQ-021..030 are in `validation/requirements.yaml`, each added in the commit of its first passing test. Requirements whose only tests are in `monitoring/tests/` wait for WS4 D12.
+- **Files:** `frontend/src/lib/api-types.ts`, `backend/tests/test_contract_routes.py`, `validation/requirements.yaml`.
+- **Depends on:** B17, B18, B19.
+- **Accept:**
+  ```bash
+  make types && git diff --stat frontend/src/lib/api-types.ts
+  cd backend && uv run pytest -q tests/test_contract_routes.py
+  cd .. && make validate ARGS=--check
+  ```
+  The diff shows the new schemas; the contract test passes; the traceability check exits 0.
+
+### B21 · Days before next visit, MEASURED (target 06:50, Checkpoint C)
+Contract: `docs/03` §5.8.
+- `GET /api/checkins/{id}` adds `days_before_next_visit` and `site_aware_basis`: next dose date after the call minus the `DISPLAY_TZ` local date the site was made aware (first acknowledgment of an escalation on this check-in, else call end). Null when the call did not complete or no later dose date is known.
+- `backend/tests/test_days_before_visit.py`.
+- **Files:** `backend/app/serialize.py`, `backend/app/services/checkins.py`, `backend/app/schemas.py`, `backend/tests/test_days_before_visit.py`.
+- **Depends on:** R3.
+- **Accept:** `cd backend && uv run pytest -q tests/test_days_before_visit.py` passes: for Rosa's replay (dose dates from the seed) the value equals the hand-computed value in the test with `site_aware_basis: "page_ack"`; a call without acknowledgment uses `call_end`; an incomplete call gives null.
