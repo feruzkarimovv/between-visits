@@ -78,3 +78,11 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | P | V10CODE real-call verification tooling (pending rows) | done (human step pending) | 692b1bd | python3 agent/test_voice_check.py 27 tests OK; voice_checks.json 3 rows, statuses all pending, every measurement null, header run_at null / backend pending / agent_llm claude-sonnet-5-5; scratch :8090 GET /api/eval/voice-checks MEASURED, 3 pending, grades null; report card :3090 "Real voice calls ... pending: no real calls logged yet", model line "evaluated agent model equals the deployed one: claude-sonnet-5-5"; make test exit 0 (ruff, 448 pytest, product names 0 hits in 272 files, agent 29 + export 18 + voice_check 27 OK, tsc+eslint); monitoring ruff clean, 342 passed 3 skipped; gitleaks 2 commits no leaks, numbers 0 hits; no frozen inputs, monitoring/out or validation/site_signal files touched | Make, log and commit the 3 real calls (HUMAN_TODO 10), then V11 export (HUMAN_TODO 8) and the V12 hero call (HUMAN_TODO 11) |
 | P | V10 real calls against the live backend | todo | | | HUMAN_TODO 10 |
 | P | V12 hero call | todo | | | |
+
+## Final review fixes (FINALFIX)
+
+Blocking findings of the final adversarial review. Commit = the fix commit (`git log --grep 'final review fix'`).
+
+| Finding | Area | Fix | Result |
+|---|---|---|---|
+| Secret scan red since f040644 (`leaks found: 3`, generic-api-key: sha256 digests in `validation/site_signal/run_log.jsonl` at 0c9dd43 and d70cb6e, the ID `sq_2YXWU7W3TZ` in `PROGRESS.md` at 78de1f2; all false positives) | WS0-R1 | `.gitleaks.toml`: two allowlists (64-hex digests only in the run log, AND condition; record IDs of the `app/ids.py` shape); header comment and `validation/secret-scan.md` § Re-run after the final review updated | `make secret-scan` exit=0: gitleaks 8.30.1 `159 commits scanned.` `no leaks found` (before: `leaks found: 3`); `numbers: 0 hits (159 commits, 213081 added lines; 9887 lockfile lines not checked; 15 fictional 555 matches ignored; 5 allowlisted)`; scratch check: a 64-hex digest outside the run log is still reported |

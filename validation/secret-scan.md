@@ -9,7 +9,7 @@ private; changing its visibility is a human decision, made only after a fresh sc
 |---|---|
 | Date and time | 2026-10-11 01:51 EDT (05:51 UTC) |
 | Secret scanner | gitleaks **8.30.1** (`gitleaks version`). Local run: the Homebrew build of 8.30.1 on macOS arm64. CI job `gitleaks`: the official release binary `gitleaks_8.30.1_linux_x64.tar.gz` (sha256 `551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb`), checked against the release's `gitleaks_8.30.1_checksums.txt` before use. |
-| gitleaks config | `.gitleaks.toml`: the default rule set (`[extend] useDefault = true`) plus an allowlist for the documented placeholders only (`+1XXXXXXXXXX`, `+1555…` numbers, `change-me…` strings, `bv-change-me…` topics), each matched against the whole detected secret. |
+| gitleaks config | `.gitleaks.toml`: the default rule set (`[extend] useDefault = true`) plus an allowlist for the documented placeholders only (`+1XXXXXXXXXX`, `+1555…` numbers, `change-me…` strings, `bv-change-me…` topics), each matched against the whole detected secret. Two more allowlists were added after the final review, for 3 false positives: § Re-run after the final review. |
 | Number scanner | `validation/scan_numbers.py` (standard library only): every added line of `git log -p --all`, plus commit messages and changed paths, against the US number pattern in `docs/workstreams/WS0-readiness.md` R1; 555-exchange matches ignored. |
 | Command | `make secret-scan` = `gitleaks git --redact --log-opts="--all" -v . && python3 validation/scan_numbers.py` |
 | Refs scanned | `--all` in the build machine's clone after `git fetch origin`: every remote-tracking branch on `origin` (`main`, `site-signal-build`, `claude/vibrant-fermi-6vwzie`) and every local branch, including the in-progress agent worktree branches. |
@@ -99,6 +99,29 @@ clone with every branch fetched, and add the result here.
 | gitleaks 8.30.1 | **0**: `102 commits scanned.` `no leaks found` |
 | Number findings | **0**: `numbers: 0 hits (102 commits, 74025 added lines; 9809 lockfile lines not checked; 15 fictional 555 matches ignored; 5 allowlisted)` |
 | Self-test | PASS (above) |
+
+## Re-run after the final review
+
+From f040644 on, `make secret-scan` and the CI job `gitleaks` failed with `leaks found: 3`, all from the default
+`generic-api-key` rule and all false positives, so a real leak would have been lost in a red job. The hits are in
+history, so editing the files would not remove them; `.gitleaks.toml` gained two allowlists instead, each matched
+against the whole detected secret:
+
+| Hit (commit, file, line) | What it is | Allowlist |
+|---|---|---|
+| 0c9dd43, `validation/site_signal/run_log.jsonl`, line 2 | sha256 digest of a committed output file (`output_sha256`) in the evaluation run log | "sha256 output digests in the evaluation run log": `condition = "AND"`, the path `^validation/site_signal/run_log\.jsonl$` and the secret `^[0-9a-f]{64}$` must both match, so a 64-hex value in any other file is still reported |
+| d70cb6e, `validation/site_signal/run_log.jsonl`, line 3 | the same, for the determinism re-run | the same |
+| 78de1f2, `PROGRESS.md`, line 62 | the site-query ID `sq_2YXWU7W3TZ` of a synthetic demo row, after the text "API after the run:" | "app IDs from app/ids.py": the secret `^(sq\|sr\|ci\|pat\|ans\|fnd\|esc\|dr\|sae\|aud)_[A-Z0-9]{10}$`, the record-ID shape of `backend/app/ids.py` (prefix plus 10 base32 characters), which is a random row identifier, not a credential |
+
+A scratch-directory check (`gitleaks dir` with this config) still reports a 64-hex digest after the same
+`answer_key.json` key in a file outside the run log.
+
+| Field | Value |
+|---|---|
+| Date and time | 2026-10-11 10:47 EDT (14:47 UTC) |
+| Scanned | `--all` in the implementing session's agent worktree: `origin/site-signal-build` at `5767cd0` plus the local and remote-tracking branches present there, with this change's `.gitleaks.toml` in the working tree (the commit that adds it differs from the scanned history only by this change). |
+| gitleaks 8.30.1 | **0**: `159 commits scanned.` `no leaks found` (before this change: `leaks found: 3`) |
+| Number findings | **0**: `numbers: 0 hits (159 commits, 213081 added lines; 9887 lockfile lines not checked; 15 fictional 555 matches ignored; 5 allowlisted)` |
 
 ## When the scan finds something
 
