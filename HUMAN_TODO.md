@@ -171,3 +171,38 @@ Steps that need a person. Everything around them is done; each item says exactly
      git add README.md docs/deploy.md && git commit -m "README: public demo URL" && git push origin site-signal-build
      ```
    - The demo video and deck lines (`_TODO_ (added at submission)`, README lines 9 and 11) are filled by D16 at submission, not here.
+
+10. **Export the real V10 calls as recorded replay scenarios (V11; after V10).** V11 is integrated on `site-signal-build`: `agent/export_scenario.py` and the demo-only route `GET /api/demo/scenarios/{id}/audio`. No recorded scenario exists yet (the demo lists 0 recorded scenarios until this item is done).
+   1. **Consent first.** Confirm that the teammate who played each synthetic patient agrees to the call being recorded and exported as a transcript. Use `--audio` only with that consent. Serving the audio from the public demo also needs their written consent; without it, ship transcript-only (leave out `--audio`, or keep the mp3 off the public instance).
+   2. **Setup.** After the V10 calls are logged in `eval/results/voice_checks.json`, work from the main checkout root and take each call's `conversation_id` and `checkin_id` from that file. `ELEVENLABS_API_KEY` must be in `.env`. If the live instance uses a dashboard token, `BV_DASHBOARD_TOKEN` must be set in `.env` or the shell.
+      ```bash
+      export LIVE_API=<live API base URL the calls ran against>   # falls back to PUBLIC_BASE_URL
+      ```
+   3. **Call 1** (en-standard, James, grade 2, no page):
+      ```bash
+      uv run --project backend python agent/export_scenario.py --conversation-id <conv_ of call 1> --checkin-id <ci_ of call 1> --id rec_en_g2 --title "James, English, standard, grade 2 diarrhea (recorded)"
+      ```
+   4. **Call 3** (es-extra_time, Rosa, red flag). Leave out `--audio` if there is no consent:
+      ```bash
+      uv run --project backend python agent/export_scenario.py --conversation-id <conv_ of call 3> --checkin-id <ci_ of call 3> --id rec_es_g3_flag --title "Rosa, Spanish, extra time, urgent diarrhea (recorded)" --audio
+      ```
+      If call 3 failed, export call 2 instead with `--id rec_en_g3_flag --title "James, English, standard, urgent diarrhea (recorded)"`.
+   5. **Read every warning the script prints.** "link check" or "no whitelisted argument left" means stop and investigate. Do not pass `--skip-link-check` unless you are sure the conversation and the check-in are the same call.
+   6. **RULE: a person reviews before `git add`.** Read the whole transcript (`events[-1].transcript`) and every tool argument (`events[].body`) in each `scenarios/<id>.json`, looking for a real name, phone number or other identifier spoken off-script. If one appears, do not commit the file as is: re-record the call, or replace the words with `[redacted]` and say so in the commit message. Do not edit the file in any other way.
+   7. **Verify.**
+      ```bash
+      python3 agent/test_export_scenario.py      # also checks every committed recorded scenario against the whitelist
+      make demo                                  # then, in another terminal:
+      curl -s localhost:8000/api/demo/scenarios | jq '[.[]|select(.recorded)]|length'   # expect 2
+      ```
+   8. **Fidelity check** for each exported scenario (example for `rec_es_g3_flag`; repeat with `rec_en_g2`):
+      ```bash
+      cid=$(curl -s -X POST 'localhost:8000/api/demo/replay/rec_es_g3_flag?speed=4' | jq -r .checkin_id)
+      # wait for the replay to finish, then:
+      curl -s localhost:8000/api/checkins/$cid | jq '[.findings[]|{term,provisional_grade,rule_id}]'
+      ```
+      The result must equal the grade and `rule_id` of that call in `eval/results/voice_checks.json`.
+   9. **Commit** only `scenarios/rec_*.json`, then push. Never commit `scenarios/audio/*.mp3` (gitignored); copy the mp3 to the demo machine's `scenarios/audio/` by hand.
+      ```bash
+      git add scenarios/rec_*.json && git commit -m "WS1-V11: recorded scenarios rec_en_g2 rec_es_g3_flag" && git push origin site-signal-build
+      ```
