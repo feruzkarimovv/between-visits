@@ -53,7 +53,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | B | B18 site query flow | todo | | | |
 | B | B19 blind run endpoints | todo | | | |
 | B | B20 types, contract conformance | todo | | | |
-| B | F11 CRA role and nav | todo | | | |
+| B | F11 CRA role and nav | done | bcb122e | typecheck + lint + next build exit 0 (12/12 static pages); TierBadge.tsx color grep (green, success, red, amber) prints nothing (exit 1); X-BV-Role: cra verified on demo backend :8090 (scratch DB, DEMO_MODE=1) + next dev :3090 in the built-in browser: RoleSwitch offers "CRA (sponsor) · Sam Rivera", a fetch header logger after switching from Coordinator recorded only cra / Sam Rivera on /api/study, /api/escalations, /api/checkins, /api/health; stored role survives reload; 375 px: page scrollWidth 375, bottom nav scrolls inside (880) with Sites + Site inbox; make test exit 0 (ruff, 446 pytest, data + self-test 19/19, product names 0 hits in 268 files, agent OK, tsc+eslint); monitoring ruff clean, 342 passed 3 skipped; frontend-only diff (6 files), no keys, phone numbers or drug names. /sites and /site-inbox 404 until F12/F14; Site Signal types hand-written in types.ts until B20 `make types` | |
 | B | F12 /sites overview | todo | | | |
 | B | F13 /sites/[id] drill-down | todo | | | |
 | B | F14 /site-inbox | todo | | | |
