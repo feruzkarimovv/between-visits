@@ -1,6 +1,6 @@
 # 02 · Data model
 
-SQLModel tables in `backend/app/models.py`, SQLite file at `backend/data/app.db`. JSON columns use SQLAlchemy `JSON`. All timestamps are UTC ISO-8601. IDs are prefixed strings (see `01-architecture.md`). *Planned (§ Site Signal): new random prefixes `sq_` and `sr_` from `app/ids.py`; deterministic file-backed IDs `ep_` and `ae_`. Values that are dates rather than timestamps (check-in day, timeline dates, AESTDTC and SAE onset fallbacks) use the `DISPLAY_TZ` local date of the call (`docs/03` §6.4).*
+SQLModel tables in `backend/app/models.py`, SQLite file at `backend/data/app.db`. JSON columns use SQLAlchemy `JSON`. All timestamps are UTC ISO-8601. IDs are prefixed strings (see `01-architecture.md`). *Added (§ Site Signal): new random prefix `sq_` from `app/ids.py` (`sr_`, for blind runs, is not built (blind run cut, NOT_BUILT.md #21)); deterministic file-backed IDs `ep_` and `ae_`. Values that are dates rather than timestamps (check-in day, timeline dates, AESTDTC and SAE onset fallbacks) use the `DISPLAY_TZ` local date of the call (`docs/03` §6.4).*
 
 Seed data comes from `data/*.json` via `make seed`, which drops and recreates the database. Real phone numbers are merged at seed time from `data/patients.local.json` (gitignored).
 
@@ -30,7 +30,7 @@ erDiagram
 | drug_class | str | "anti-PD-1 monoclonal antibody (immunotherapy)" (never a product name) |
 | masking | str | `open_label` |
 | site_id / site_name | str | `101` / "Hillside Cancer Center (fictional)" |
-| study_team_name | JSON | `{"en": "the Hillside research team", "es": "equipo de investigación de Hillside"}`. *Planned change (D8): `es` drops the leading article, and the Spanish templates in `data/scripts.json` say `del {study_team_name}`, which fixes "de el equipo". Before: `"el equipo de investigación de Hillside"`.* |
+| study_team_name | JSON | `{"en": "the Hillside research team", "es": "equipo de investigación de Hillside"}`. *Changed (D8): `es` drops the leading article, and the Spanish templates in `data/scripts.json` say `del {study_team_name}`, which fixes "de el equipo". Before: `"el equipo de investigación de Hillside"`.* |
 | active_plan_id | str | FK CheckInPlan |
 
 ### CheckInPlan
@@ -153,7 +153,7 @@ Output of the rules engine for one term in one check-in. Recomputed whenever an 
 | evidence | JSON list | `[{"quote":"...","quote_lang":"es","translation_en":"...","translation_label":"AI translation, verify","t_s":52.1,"turn_index":7,"source":"live_tool"}]` |
 | reviewed_by / reviewed_at / review_note | | coordinator action |
 | investigator | JSON? | `{"is_serious": true, "seriousness_criteria": ["hospitalization"], "relatedness": "possibly_related", "signed_by": "Dr. Patel", "signed_at": "..."}` |
-| origin | (computed, API only) | *Planned (B14):* `DraftOut.origin` is always `"between_visits"`. Not stored. It becomes the `ORIGIN` column of ae.csv, and Site Signal uses it to exclude these rows from matching. |
+| origin | (computed, API only) | *Added (B14):* `DraftOut.origin` is always `"between_visits"`. Not stored. It becomes the `ORIGIN` column of ae.csv, and Site Signal uses it to exclude these rows from matching. |
 
 Payloads:
 
@@ -183,23 +183,23 @@ Payloads:
 | id | str | `aud_...` |
 | ts | datetime | |
 | actor | str | user name from `X-BV-User` header, or `agent` / `system` |
-| role | str | `coordinator` \| `investigator` \| `nurse` \| `sponsor` \| `agent` \| `system`. *Planned: adds `cra`.* |
-| action | str | dotted verb, e.g. `answer.recorded`, `finding.updated`, `escalation.paged`, `escalation.acknowledged`, `draft.confirmed`, `draft.edited`, `sae.signed`, `sae.sent`. *Planned: `site_query.drafted`, `site_query.edited`, `site_query.approved`, `site_query.answered`, `site_query.closed`, `signal.blind_run.created`, `signal.blind_run.revealed` (`docs/03` §5.7).* |
-| entity_type / entity_id | str | *Planned: new entity types `SiteQuery`, `SignalRun`.* |
+| role | str | `coordinator` \| `investigator` \| `nurse` \| `sponsor` \| `agent` \| `system`. *Added: `cra`.* |
+| action | str | dotted verb, e.g. `answer.recorded`, `finding.updated`, `escalation.paged`, `escalation.acknowledged`, `draft.confirmed`, `draft.edited`, `sae.signed`, `sae.sent`. *Added: `site_query.drafted`, `site_query.edited`, `site_query.approved`, `site_query.answered`, `site_query.closed`; `signal.blind_run.created` and `signal.blind_run.revealed` are not built (blind run cut, NOT_BUILT.md #21) (`docs/03` §5.7).* |
+| entity_type / entity_id | str | *Added: entity type `SiteQuery`; `SignalRun` is not built (blind run cut, NOT_BUILT.md #21).* |
 | checkin_id | str? | convenience filter. Already in the model; documented here because the hash covers it. |
 | before / after | JSON? | |
 | note | str? | |
-| seq | int | *Planned (B13):* unique, contiguous from 1, assigned as max + 1 under a process-wide lock when the event staged by `write_audit` is written (flushed); `docs/03` §6.6 |
-| prev_hash | str | *Planned (B13):* the previous event's `hash`; 64 zeros for `seq` 1 |
-| hash | str | *Planned (B13):* lowercase hex `sha256(prev_hash + canonical JSON)` of `id, seq, ts, actor, role, action, entity_type, entity_id, checkin_id, before, after, note`. The exact canonical form is in `docs/03` §6.6. |
+| seq | int | *Added (B13):* unique, contiguous from 1, assigned as max + 1 under a process-wide lock when the event staged by `write_audit` is written (flushed); `docs/03` §6.6 |
+| prev_hash | str | *Added (B13):* the previous event's `hash`; 64 zeros for `seq` 1 |
+| hash | str | *Added (B13):* lowercase hex `sha256(prev_hash + canonical JSON)` of `id, seq, ts, actor, role, action, entity_type, entity_id, checkin_id, before, after, note`. The exact canonical form is in `docs/03` §6.6. |
 
-Audit rows are append-only. No endpoint updates or deletes them. *Planned (B13, REQ-019): the rows form a hash chain, and `GET /api/audit/verify` reports the first event that no longer matches. Chain assignment must never fail or delay a safety-path write: a `seq` collision is retried, never raised. The database is reseeded, so there is no migration.*
+Audit rows are append-only. No endpoint updates or deletes them. *Added (B13, REQ-019): the rows form a hash chain, and `GET /api/audit/verify` reports the first event that no longer matches. Chain assignment must never fail or delay a safety-path write: a `seq` collision is retried, never raised. The database is reseeded, so there is no migration.*
 
 ## Demo identity
 
 There is no authentication. The UI has a visible "Demo role" switch that sends `X-BV-User` (e.g. "Jess Kim") and `X-BV-Role` (`coordinator`, `investigator`, `sponsor`) on every request. The backend uses them only for audit attribution and to gate investigator-only actions (409 if the role is wrong).
 
-*Planned change (B12, F11; `docs/03` §6.1):*
+*Changed (B12, F11; `docs/03` §6.1):*
 - The wrong role returns **403** `wrong_role` instead of 409.
 - A fourth role, `cra`, is added.
 - Gating covers the CRA-only, coordinator-only and cra/sponsor-only Site Signal routes as well as the investigator-only actions.
@@ -210,25 +210,25 @@ There is no authentication. The UI has a visible "Demo role" switch that sends `
 | `coordinator` | Jess Kim | Coordinator |
 | `investigator` | Dr. Patel | Investigator |
 | `sponsor` | Sponsor safety (mock) | Sponsor |
-| `cra` (planned) | Sam Rivera | CRA (sponsor) |
+| `cra` | Sam Rivera | CRA (sponsor) |
 
 ---
 
-## Site Signal (planned, Sun Oct 11)
+## Site Signal (Sun Oct 11)
 
-**Status: planned, not built.** This section defines the data behind the sponsor-side Site Signal layer.
+**Status: built, except SignalRun and the signal.blind_run.* actions (blind run cut, NOT_BUILT.md #21).** This section defines the data behind the sponsor-side Site Signal layer.
 - Product: `10-site-signal.md`.
 - Statistics (what an episode, a match, evaluability and O/E mean): `11-site-signal-sap.md`.
 - Endpoints and payloads: `03-api-contracts.md` §5.
 
-Only two new tables live in the app database. Everything else is file-backed: either the committed simulated study written by `make site-signal` into `monitoring/out/`, or values built at request time from existing tables (site 101 only). The backend never imports numpy or scipy and never computes a threshold.
+Two new tables were specified for the app database: `SiteQuery` (built) and `SignalRun` (not built, blind run cut). Everything else is file-backed: either the committed simulated study written by `make site-signal` into `monitoring/out/`, or values built at request time from existing tables (site 101 only). The backend never imports numpy or scipy and never computes a threshold.
 
 | Model | Kind | Source | Served by |
 |---|---|---|---|
 | `SiteQuery` | SQLModel table | app DB | `/api/site-queries*` |
-| `SignalRun` | SQLModel table (blind runs only) | app DB | `/api/site-signal/blind-run*` |
+| `SignalRun` (not built (blind run cut, NOT_BUILT.md #21)) | SQLModel table (blind runs only) | app DB | `/api/site-signal/blind-run*` |
 | `Site` | Pydantic, file-backed | `monitoring/out/signal_run.json` `sites` | `/api/sites*` |
-| `SiteSignalRow` | Pydantic | `monitoring/out/signal_run.json` `rows`, or `SignalRun.results` | `/api/sites*`, blind run |
+| `SiteSignalRow` | Pydantic | `monitoring/out/signal_run.json` `rows`, or `SignalRun.results` (not built) | `/api/sites*`, blind run (not built) |
 | `Episode` | Pydantic | `monitoring/out/episodes.json` (simulated), or built at request time from `Finding` + `CheckIn` (site 101, `MEASURED`) | `/api/sites/{site_id}`, `/api/site-queries/{id}` |
 | `SiteAE` | Pydantic, file-backed | `monitoring/out/site_ae.json` | matching only (`Episode.matched_site_ae_id`) |
 
@@ -238,7 +238,7 @@ erDiagram
   Site ||--o{ SiteAE : "site AE log"
   Episode |o--o| SiteAE : "matched (one-to-one)"
   Site ||--|| SiteSignalRow : "per run"
-  SignalRun ||--o{ SiteSignalRow : "results (blind runs)"
+  SignalRun ||--o{ SiteSignalRow : "results (blind runs, not built)"
   Site ||--o{ SiteQuery : "queried"
   SiteQuery }o--o{ Episode : cites
   Finding ||--o{ Episode : "site 101 live bridge"
@@ -250,7 +250,7 @@ erDiagram
 | Prefix / form | Entity | How it is made |
 |---|---|---|
 | `sq_` + 10 base32 | SiteQuery | `app/ids.py` `new_id("sq")` |
-| `sr_` + 10 base32 | SignalRun (blind run) | `app/ids.py` `new_id("sr")` |
+| `sr_` + 10 base32 | SignalRun (blind run; not built (blind run cut, NOT_BUILT.md #21)) | `app/ids.py` `new_id("sr")` |
 | `sr_committed` | the committed study | reserved literal; never a database row |
 | `ep_{site}_{n}` | simulated Episode | deterministic, from `monitoring/` (e.g. `ep_112_17`) |
 | `ep_live_{checkin_id}_{term}` | live Episode, site 101 | deterministic; `checkin_id` is the episode's first reporting call (e.g. `ep_live_ci_8KD2QW7MZP_Diarrhea`) |
@@ -289,6 +289,8 @@ Text rules, enforced at runtime and by `data/validate_data.py`:
 - No patient first or last name may appear (identifier check against `Patient`, 422 `contains_identifier`).
 
 ### SignalRun (table)
+
+**Not built** (blind run cut for time, NOT_BUILT.md #21): there is no `SignalRun` model in `backend/app/models.py`. The specification below is kept for the roadmap.
 
 A blind run (`docs/03` §5.5). The committed study is not stored here. It is file-backed and addressed as `sr_committed`.
 
@@ -464,20 +466,20 @@ Placeholders are limited to `{site_id}`, `{episode_lines}`, `{subject_id}`, `{te
 
 ## Planned changes to existing entities and files
 
-Changes at Checkpoint A (Sun 03:30 ET) unless noted. Endpoint behavior is in `03-api-contracts.md` §6. Synthetic data only; no migration, because `make seed` recreates the database.
+Built at Checkpoint A (Sun Oct 11) unless marked not built. Endpoint behavior is in `03-api-contracts.md` §6. Synthetic data only; no migration, because `make seed` recreates the database.
 
 | Entity / file | Change | Task | Contract |
 |---|---|---|---|
-| `AuditEvent` | adds `seq`, `prev_hash`, `hash` (hash chain); role `cra`; new `site_query.*` and `signal.blind_run.*` actions | B13, B18, B19 | §6.6, §5.7 |
+| `AuditEvent` | adds `seq`, `prev_hash`, `hash` (hash chain); role `cra`; new `site_query.*` and `signal.blind_run.*` actions (`signal.blind_run.*`: not built (blind run cut, NOT_BUILT.md #21)) | B13, B18, B19 | §6.6, §5.7 |
 | Role (`X-BV-Role`) | adds `cra` (frontend `Role` union and `DEMO_IDENTITIES.cra` = Sam Rivera, "CRA (sponsor)"); wrong role → 403 `wrong_role` (was 409) | B12, F11 | §6.1 |
 | `DraftOut` | computed `origin: "between_visits"` | B14 | §6.5 |
 | AE export (`ae.csv`) | no `#` line; note in `X-BV-Note`; trailing `ORIGIN` column; `AEOUT` from the shared `outcome_of()`; `AESTDTC` fallback = local call date | B14, R3 | §6.4, §6.5 |
 | CM export (`cm.csv`) | no `#` line; note in `X-BV-Note` | B14 | §6.5 |
 | `SAEReport.payload` | `reaction.outcome` from `outcome_of()`; `reaction.onset_date` fallback = local call date | B14, R3 | §6.4, §6.5 |
-| `CheckInDetail` | adds `days_before_next_visit` (int?, `MEASURED`) and `site_aware_basis` (**Checkpoint C**) | B21 | §5.8 |
+| `CheckInDetail` | adds `days_before_next_visit` (int?, `MEASURED`) and `site_aware_basis` (**Checkpoint C**; not built, cut for time, NOT_BUILT.md #23) | B21 | §5.8 |
 | `ScenarioOut` | adds `recorded` (bool), `recorded_at` (date?), `label`, `audio_url` (str?; only when the mp3 exists on the server; audio never in git) | B15, V11 | §6.2 |
 | `Health` | adds `site_signal: {available, sap_tag_commit, generated_at, data_origin}` | B15 | §6.7 |
-| Settings (`config.py`) | `demo_controls_enabled` = `demo_mode` only; `assert_safe_startup()`; new `monitoring_out`, `site_signal_summary`, `monitoring_cmd`, `blind_run_timeout_s`, `agents_lock_json`, `dashboard_token`; `elevenlabs_llm` default = evaluated model | R4, R6, V9, B17, B19 | §6.3, §6.8, §6.9 |
+| Settings (`config.py`) | `demo_controls_enabled` = `demo_mode` only; `assert_safe_startup()`; new `monitoring_out`, `site_signal_summary`, `monitoring_cmd` and `blind_run_timeout_s` (these two not built (blind run cut, NOT_BUILT.md #21)), `agents_lock_json`, `dashboard_token`; `elevenlabs_llm` default = evaluated model | R4, R6, V9, B17, B19 | §6.3, §6.8, §6.9 |
 | `data/study.json` | `study_team_name.es` = `equipo de investigación de Hillside` (templates say `del {study_team_name}`); `registry_title`, which contains the product code, is removed or replaced with a class-only paraphrase. Not a model field. | D8 | §6.10 |
 | `data/red_flags.json` | source citations name the drug class only: "US Medication Guide of an approved anti-PD-1 antibody (class only)" | D8 | – |
 | `eval/results/latest.json` | each proportion metric `<m>` gains a sibling `<m>_ci95` (Clopper-Pearson) overall, `by_language`, `by_pace`, plus `passed_ci95` for the pass rate; new `zero_failure_n` | D10 | §6.11 |

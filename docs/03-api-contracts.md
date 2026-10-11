@@ -2,7 +2,7 @@
 
 Single source of truth for every HTTP interface. The backend implements these with Pydantic models in `backend/app/schemas.py`; the frontend generates TypeScript types from `GET /openapi.json` with `make types`. JSON is snake_case. Errors use `{"error": {"code": "string", "message": "string"}}` with a matching HTTP status.
 
-Headers sent by the dashboard on every request: `X-BV-User`, `X-BV-Role` (demo identity, see `02-data-model.md`). *Planned change (§6.1, §6.8): `X-BV-Role` also accepts `cra`; when `BV_DASHBOARD_TOKEN` is set, the dashboard also sends `X-BV-Token`.*
+Headers sent by the dashboard on every request: `X-BV-User`, `X-BV-Role` (demo identity, see `02-data-model.md`). *Changed (§6.1, §6.8): `X-BV-Role` also accepts `cra`; when `BV_DASHBOARD_TOKEN` is set, the dashboard also sends `X-BV-Token`.*
 
 ---
 
@@ -10,7 +10,7 @@ Headers sent by the dashboard on every request: `X-BV-User`, `X-BV-Role` (demo i
 
 ### Health and reference data
 
-`GET /api/health` → `{"ok": true, "demo_mode": false, "version": "0.1.0", "commit": "abc1234"}` *Planned change (§6.7): adds `site_signal`.*
+`GET /api/health` → `{"ok": true, "demo_mode": false, "version": "0.1.0", "commit": "abc1234"}` *Changed (§6.7): adds `site_signal`.*
 
 `GET /api/study`
 ```json
@@ -37,7 +37,7 @@ Stretch: `POST /api/plan/propose` (multipart `file`=protocol PDF) → a `draft` 
 
 `GET /api/patients/{patient_id}` → patient + `checkins` (newest first) + `timeline` (per term, one point per check-in: `{"term":"Diarrhea","points":[{"checkin_id":"...","date":"...","provisional_grade":3,"answer":"almost_always"}]}`) + `dose_dates`.
 
-`GET /api/checkins?date=2026-10-11` → check-ins scheduled or run that day, plus patients due that day without a check-in yet (`"status":"due"`). *Planned change (§6.4): "that day" is the `DISPLAY_TZ` local day, and timeline `date` values are local call dates; shapes unchanged.*
+`GET /api/checkins?date=2026-10-11` → check-ins scheduled or run that day, plus patients due that day without a check-in yet (`"status":"due"`). *Changed (§6.4): "that day" is the `DISPLAY_TZ` local day, and timeline `date` values are local call dates; shapes unchanged.*
 
 `POST /api/patients/{patient_id}/checkins`
 ```json
@@ -82,7 +82,7 @@ Errors: 409 `checkin_in_progress` if the patient already has a live check-in; 50
 
 `POST /api/drafts/{id}/reject` `{"reason":"Duplicate of earlier report"}` → `status:"rejected"`.
 
-`POST /api/drafts/{id}/investigator` (role must be `investigator`; draft must be a confirmed AE) *Planned change (§6.1): any other role gets 403 `wrong_role` (was 409).*
+`POST /api/drafts/{id}/investigator` (role must be `investigator`; draft must be a confirmed AE) *Changed (§6.1): any other role gets 403 `wrong_role` (was 409).*
 ```json
 {"is_serious":true,"seriousness_criteria":["hospitalization"],"relatedness":"possibly_related","sign":true}
 ```
@@ -93,7 +93,7 @@ Errors: 409 `checkin_in_progress` if the patient already has a live check-in; 50
 `GET /api/sae` · `GET /api/sae/{id}` → SAEReport with `seconds_until_due`.
 `PATCH /api/sae/{id}` `{"narrative_final":"...","payload":{...}}` (investigator).
 `POST /api/sae/{id}/sign` (investigator) → `status:"signed"`.
-*Planned change (§6.1): on both, any other role gets 403 `wrong_role` (was 409). The report's `reaction.outcome` and onset fallback follow §6.4 and §6.5.*
+*Changed (§6.1): on both, any other role gets 403 `wrong_role` (was 409). The report's `reaction.outcome` and onset fallback follow §6.4 and §6.5.*
 `POST /api/sae/{id}/send` → `status:"sent"`, sets `sent_at` and `sponsor_received_at` (same instant, mock).
 `GET /api/sponsor/inbox`
 ```json
@@ -105,18 +105,18 @@ Errors: 409 `checkin_in_progress` if the patient already has a live check-in; 50
 
 ### Exports, audit, evaluation, validation
 
-`GET /api/export/ae.csv` and `/api/export/cm.csv` → confirmed drafts only, SDTM-style columns (see `docs/05-clinical-rules.md`). *Planned change (§6.5): header row first (no `#` line), note in `X-BV-Note`, trailing `ORIGIN` column in ae.csv, `AEOUT` from `outcome_of()`.*
+`GET /api/export/ae.csv` and `/api/export/cm.csv` → confirmed drafts only, SDTM-style columns (see `docs/05-clinical-rules.md`). *Changed (§6.5): header row first (no `#` line), note in `X-BV-Note`, trailing `ORIGIN` column in ae.csv, `AEOUT` from `outcome_of()`.*
 `GET /api/export/sae/{id}.json` → CIOMS-style JSON.
-`GET /api/audit?entity_id=ci_...&limit=200` → newest first. *Planned change (§6.6): items add `seq`, `prev_hash`, `hash`, ordered by `seq` descending; new `GET /api/audit/verify`.*
+`GET /api/audit?entity_id=ci_...&limit=200` → newest first. *Changed (§6.6): items add `seq`, `prev_hash`, `hash`, ordered by `seq` descending; new `GET /api/audit/verify`.*
 `GET /api/eval/latest` → contents of `eval/results/latest.json` (404 `no_eval_run` if missing).
 `GET /api/validation/latest` → contents of `validation/summary.json`.
 
 ### Demo controls (enabled only when `DEMO_MODE=1`)
 
-*Planned change (§6.2): was "enabled when `DEMO_MODE=1` or `APP_ENV=dev`". `APP_ENV` no longer opens `/api/demo/*`; otherwise 404 `demo_disabled`. Local replay development uses `make demo`.*
+*Changed (§6.2): was "enabled when `DEMO_MODE=1` or `APP_ENV=dev`". `APP_ENV` no longer opens `/api/demo/*`; otherwise 404 `demo_disabled`. Local replay development uses `make demo`.*
 
-`GET /api/demo/scenarios` → `[{"id":"rosa_es_urgent","title":"Rosa, Spanish, extra time, urgent diarrhea","duration_s":140}]` *Planned change (§6.2): items add `recorded`, `recorded_at`, `label`, `audio_url`.*
-`POST /api/demo/replay/{scenario_id}` → `{"checkin_id":"ci_..."}`; the replay runs in the background through the same service functions. *Planned change (§6.2): optional `?speed=1|2|4`.*
+`GET /api/demo/scenarios` → `[{"id":"rosa_es_urgent","title":"Rosa, Spanish, extra time, urgent diarrhea","duration_s":140}]` *Changed (§6.2): items add `recorded`, `recorded_at`, `label`, `audio_url`.*
+`POST /api/demo/replay/{scenario_id}` → `{"checkin_id":"ci_..."}`; the replay runs in the background through the same service functions. *Changed (§6.2): optional `?speed=1|2|4`.*
 `POST /api/demo/reset` → reseeds the database.
 
 ---
@@ -229,14 +229,14 @@ Backward-compatible additions; `GET /openapi.json` is the exact schema (`make ty
 - `GET /api/patients/{id}` also returns `phone_on_file` (true when a real number came from `data/patients.local.json`), `baseline` and `notes`; never the phone number itself.
 - Sponsor inbox items also return `seconds_before_deadline` and the full `report` payload.
 - `POST /api/sae/{id}/send` requires a signed report (409 `not_signed`). Editing a signed report returns it to `draft` (re-sign needed).
-- `GET /api/demo/scenarios` items also return `patient_id`. Replay timing scales with env `REPLAY_SPEED` (default 1.0). *Planned change (§6.2): `?speed=` query parameter; default 2 when `DEMO_MODE=1`.* Scenario files may carry `translations_en` (scripted quote → English) used only by the fake translator in demo mode, and `summary_en`.
+- `GET /api/demo/scenarios` items also return `patient_id`. Replay timing scales with env `REPLAY_SPEED` (default 1.0). *Changed (§6.2): `?speed=` query parameter; default 2 when `DEMO_MODE=1`.* Scenario files may carry `translations_en` (scripted quote → English) used only by the fake translator in demo mode, and `summary_en`.
 - `POST /agent/tools/*` unknown or `"unknown"` `checkin_id`: `{"ok": false, "error": "unknown_checkin", "next": {"action": "close", "say": <wrong_person_close>}}`. Internal errors close with `fallback_error` and escalate (urgent + page for `report_red_flag` and symptom answers, callback otherwise).
 
 ---
 
 ## 5. Site Signal and readiness additions (planned, Sun Oct 11)
 
-**Status: planned, not built.** This is the interface contract for the sponsor-side Site Signal layer: router `backend/app/routers/site_signal.py`, services `backend/app/services/site_signal.py`, `episodes.py` and `site_queries.py` (tasks B16–B21 in `workstreams/WS2-backend.md`). Product requirements are in `10-site-signal.md`. Statistics (episode, match, evaluability, O/E, null model, thresholds, blind-run design) are in `11-site-signal-sap.md`, which wins on any statistical detail. Tables and file-backed models are in `02-data-model.md` § Site Signal. The new readiness routes (`GET /api/audit/verify`, `GET /api/eval/voice-checks`, scenario audio) and the changes to existing endpoints at Checkpoint A are in §6. `backend/tests/test_contract_routes.py` (B20) checks that every built route in §5.2 and §6 exists in `/openapi.json` with the documented method; the rows marked not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)) are not checked, and the blind-run routes among them must be absent.
+**Status: built (B16-B18, B20, Sun Oct 11), except the rows marked not built: the blind run (§5.5; S8, B19, F15) and the timeliness fields (§5.8; B21, F18), cut for time (NOT_BUILT.md #21, #23).** This is the interface contract for the sponsor-side Site Signal layer: router `backend/app/routers/site_signal.py`, services `backend/app/services/site_signal.py`, `episodes.py` and `site_queries.py` (tasks B16–B21 in `workstreams/WS2-backend.md`). Product requirements are in `10-site-signal.md`. Statistics (episode, match, evaluability, O/E, null model, thresholds, blind-run design) are in `11-site-signal-sap.md`, which wins on any statistical detail. Tables and file-backed models are in `02-data-model.md` § Site Signal. The new readiness routes (`GET /api/audit/verify`, `GET /api/eval/voice-checks`, scenario audio) and the changes to existing endpoints at Checkpoint A are in §6. `backend/tests/test_contract_routes.py` (B20) checks that every built route in §5.2 and §6 exists in `/openapi.json` with the documented method; the rows marked not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)) are not checked, and the blind-run routes among them must be absent.
 
 ### 5.1 Conventions
 
@@ -249,14 +249,14 @@ Backward-compatible additions; `GET /openapi.json` is the exact schema (`make ty
 - **Threshold direction.** Discordance and the rate KRI flag a site when `z_adj` ≤ the tier threshold. simaerep classic flags a site when `prob` ≥ the tier threshold. Every site at `watch` also passes the `look` threshold.
 - **Where numbers come from.**
   - The committed study is file-backed in `monitoring/out/*.json`, written by `make site-signal`, and addressed as run `sr_committed`.
-  - Blind runs are `SignalRun` rows with `sr_` IDs.
+  - Blind runs are `SignalRun` rows with `sr_` IDs (blind run not built, §5.5).
   - Validation numbers come only from `validation/site_signal/summary.json`.
   - The backend never computes a threshold. It reads `monitoring/out/thresholds.json`.
   - No route in this section calls an LLM (REQ-021).
 - **Subject IDs only.** No patient name appears in any Site Signal payload, query text or inbox item (REQ-027).
 - **Fail safe (REQ-025).** If `monitoring/out/` is missing, unreadable or fails schema validation, the read routes return 503 `site_signal_unavailable` and the UI renders every site grey "Not computed: error". The safety path (agent tools, paging, post-call pipeline) never reads Site Signal data, and nothing here can delay a page.
 - **Examples.** Numbers in the examples below are placeholders that show types and shapes. They are not results. Results are quoted only from `validation/site_signal/summary.json`.
-- **Logging.** Each write (query actions, blind-run create and reveal) logs one structured line with `site_id`, `query_id` or `run_id`, plus `role`.
+- **Logging.** Each write (query actions, blind-run create and reveal (blind run not built, §5.5)) logs one structured line with `site_id`, `query_id` or `run_id`, plus `role`.
 
 ### 5.2 Endpoint summary
 
@@ -346,7 +346,7 @@ Drill-down: the site card, its signal row, episodes with evidence and status, la
  "queries":[]}
 ```
 
-- `run_id` defaults to `sr_committed`. A blind-run id returns that run's `signal` row with `episodes: []`, `strata: null`, `paged_stratum: null` and `queries: []`. Blind runs store per-site results only.
+- `run_id` defaults to `sr_committed`. A blind-run id returns that run's `signal` row with `episodes: []`, `strata: null`, `paged_stratum: null` and `queries: []`. Blind runs store per-site results only. (Blind run not built, §5.5: in this build any other `run_id` is 404 `signal_run_not_found`.)
 - `status` (optional, comma-separated) filters episodes. Values: `matched` | `unmatched` | `pending` | `paged` | `not_evaluated`.
   - `unmatched` = evaluable, not paged, and no matching site-originated AE.
   - `pending` = the entry window has not passed at the data cut. Shown greyed, never counted as missed.
@@ -635,7 +635,7 @@ All errors use the standard envelope `{"error":{"code","message"}}`.
 | 422 | `banned_phrase` | Query text contains a banned phrase from `data/site_queries.json`. |
 | 422 | `invalid_response_code` | `response_code` not in `data/site_queries.json`. |
 | 503 | `site_signal_unavailable` | `monitoring/out/` missing, unreadable or invalid. The UI shows grey, never green. |
-| 503 | `blind_run_unavailable` | Blind-run subprocess failed or timed out. The body also carries `precomputed_seeds`. |
+| 503 | `blind_run_unavailable` | Blind-run subprocess failed or timed out. The body also carries `precomputed_seeds`. (blind run not built, §5.5) |
 
 ### 5.7 Audit actions added in §5
 
@@ -648,8 +648,8 @@ Every action is written with `actor` = `X-BV-User` and `role` = `X-BV-Role` into
 | `site_query.approved` | `SiteQuery` | `{status:"draft"}` → `{status:"sent", approved_at}` | `.../approve` |
 | `site_query.answered` | `SiteQuery` | `{status:"sent"}` → `{status:"answered", response_code}`, plus `note` | `.../respond` |
 | `site_query.closed` | `SiteQuery` | `{status:"answered"}` → `{status:"closed"}`, plus `note` | `.../close` |
-| `signal.blind_run.created` | `SignalRun` / `sr_...` | – → `{seed_label, seed_int, source}` | `POST /api/site-signal/blind-run` |
-| `signal.blind_run.revealed` | `SignalRun` | `{revealed:false}` → `{planted_count, answer_key}` | first `.../reveal` only |
+| `signal.blind_run.created` (blind run not built, §5.5) | `SignalRun` / `sr_...` | – → `{seed_label, seed_int, source}` | `POST /api/site-signal/blind-run` |
+| `signal.blind_run.revealed` (blind run not built, §5.5) | `SignalRun` | `{revealed:false}` → `{planted_count, answer_key}` | first `.../reveal` only |
 
 ### 5.8 Timeliness evidence (Checkpoint C, B21)
 
@@ -665,7 +665,7 @@ Every action is written with `actor` = `X-BV-User` and `role` = `X-BV-Role` into
 
 ## 6. Readiness contract changes (Checkpoint A)
 
-**Status: planned, target Sun 03:30 ET (Checkpoint A).** These are changes to existing endpoints and behavior, plus three new readiness routes: `GET /api/audit/verify`, `GET /api/eval/voice-checks` and `GET /api/demo/scenarios/{scenario_id}/audio`. They are marked inline in §1 and §4 with *Planned change (§6.x)*. Each one has a requirement planned in `07-eval-and-validation.md` (REQ-016..020); those requirements are added to `validation/requirements.yaml` together with their tests.
+**Status: built at Checkpoint A (Sun Oct 11).** These are changes to existing endpoints and behavior, plus three new readiness routes: `GET /api/audit/verify`, `GET /api/eval/voice-checks` and `GET /api/demo/scenarios/{scenario_id}/audio`. They are marked inline in §1 and §4 with *Changed (§6.x)*. Each one has a requirement in `07-eval-and-validation.md` (REQ-016..020), now in `validation/requirements.yaml` with its passing tests.
 
 ### 6.1 Role gating: 403 `wrong_role` (B12, REQ-018)
 
@@ -819,7 +819,7 @@ Rows stay append-only. The database is reseeded, so there is no migration.
 
 **New audit role and actions.**
 - `role` adds `cra`.
-- New actions: `site_query.drafted`, `site_query.edited`, `site_query.approved`, `site_query.answered`, `site_query.closed`, `signal.blind_run.created`, `signal.blind_run.revealed` (§5.7).
+- New actions: `site_query.drafted`, `site_query.edited`, `site_query.approved`, `site_query.answered`, `site_query.closed`, `signal.blind_run.created`, `signal.blind_run.revealed` (blind run not built, §5.5) (§5.7).
 
 ### 6.7 Health (B15)
 
@@ -844,17 +844,17 @@ When `BV_DASHBOARD_TOKEN` is set, every `/api/*` request must carry `X-BV-Token`
 
 ### 6.9 Configuration added or changed
 
-Every variable is read in `backend/app/config.py` and listed in `.env.example`.
+Every variable is read in `backend/app/config.py` and listed in `.env.example`, except the two marked not built.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `DEMO_MODE` | `0` | Now the only switch for `/api/demo/*` and the §5.5 blind-run routes. |
+| `DEMO_MODE` | `0` | Now the only switch for `/api/demo/*` and the §5.5 blind-run routes (not built). |
 | `TOOL_SHARED_SECRET` | (none valid) | Checked by `assert_safe_startup()` when `DEMO_MODE=0` (§6.3). |
 | `REPLAY_SPEED` | unset (→ 2 in demo mode) | Default replay multiplier; the `?speed=` parameter overrides it. |
 | `MONITORING_OUT` | `<repo>/monitoring/out` | Where the backend reads committed Site Signal outputs. |
 | `SITE_SIGNAL_SUMMARY` | `<repo>/validation/site_signal/summary.json` | Where the backend reads the validation summary. Development against the B16b fixtures sets `MONITORING_OUT=backend/tests/fixtures/site_signal` and `SITE_SIGNAL_SUMMARY=backend/tests/fixtures/site_signal/summary.json`. |
-| `MONITORING_CMD` | `uv run --project monitoring python -m bvsignal.blind` | Blind-run command (no shell). |
-| `BLIND_RUN_TIMEOUT_S` | `20` | Subprocess timeout; `0` = precomputed seeds only. |
+| `MONITORING_CMD` | `uv run --project monitoring python -m bvsignal.blind` | Blind-run command (no shell). Not built (blind run cut, NOT_BUILT.md #21); not read by config.py. |
+| `BLIND_RUN_TIMEOUT_S` | `20` | Subprocess timeout; `0` = precomputed seeds only. Not built (blind run cut, NOT_BUILT.md #21); not read by config.py. |
 | `AGENTS_LOCK_JSON` | unset | JSON string used when `agent/agents.lock.json` is absent (cloud deploys). |
 | `BV_DASHBOARD_TOKEN` / `NEXT_PUBLIC_BV_DASHBOARD_TOKEN` | unset | §6.8. |
 | `ELEVENLABS_LLM` | evaluated model (V9) | Agent LLM default. It matches the model in `eval/results/latest.json`, or the difference is documented in `agent/deployed_snapshot.json` and `04-voice-agent.md`. |
