@@ -57,12 +57,13 @@ make secret-scan  # gitleaks (pinned 8.30.1) over the full history of every ref 
 make planning-grid # S1: pre-tag planning grid (dev seed, docs/11 §11.5); picks the design and the gross planted capture loss
 make site-signal  # S6: regenerate monitoring/out/* + validation/site_signal/report.md from the sap-v1 seed (< 60 s, logged,
                   # refuses a dirty tree); development: ARGS="--seed dev --out <scratch dir>" (never monitoring/out/)
+make site-signal-validate  # S7: operating characteristics (docs/11 §12; background, evaluation seed, logged)
+                           # ARGS="--quick --check" in CI; dev: ARGS="--seed dev --scale 0.02 --out $TMPDIR/val"
 ```
 
 Planned (Sun Oct 11, `docs/09`); not in the Makefile until the named task lands, then move each line into the block above:
 
 ```bash
-make site-signal-validate  # S7: operating characteristics (background, <= 45 min); ARGS="--quick --check" in CI
 make blind-run SEED=...    # S8: command-line blind run; ARGS=--precompute writes the fallback seeds
 make cohort                # S10 (optional): Synthea roster, language/age mix only
 ```

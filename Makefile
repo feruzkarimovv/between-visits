@@ -91,6 +91,12 @@ planning-grid:
 site-signal:
 	uv run --project monitoring python -m bvsignal.run $(ARGS)
 
+# S7: Site Signal operating characteristics (docs/11 §12): evaluation seed, logged, refuses a dirty tree; full run in
+# the background (validation/site_signal/*.json). CI: ARGS="--quick --check". Development: ARGS="--seed dev --scale 0.02 --out $$TMPDIR/val"
+.PHONY: site-signal-validate
+site-signal-validate:
+	uv run --project monitoring python -m bvsignal.validate $(ARGS)
+
 demo:
 	@trap 'kill 0' EXIT; \
 	(cd backend && DEMO_MODE=1 uv run python -m app.seed && DEMO_MODE=1 uv run uvicorn app.main:app --port 8000) & \
