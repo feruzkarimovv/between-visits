@@ -15,95 +15,309 @@
  "overall": {
   "n": 20,
   "passed": 19,
+  "passed_ci95": [
+   0.751,
+   0.999
+  ],
   "red_flag_cases": 8,
   "red_flag_caught": 8,
   "red_flag_recall": 1.0,
+  "red_flag_recall_ci95": [
+   0.631,
+   1
+  ],
   "escalation_accuracy": 0.95,
+  "escalation_accuracy_ci95": [
+   0.751,
+   0.999
+  ],
   "false_alarms": 1,
   "ae_recall": 1.0,
+  "ae_recall_ci95": [
+   0.815,
+   1
+  ],
   "ae_precision": 0.9,
+  "ae_precision_ci95": [
+   0.683,
+   0.988
+  ],
   "grade_agreement": 1.0,
+  "grade_agreement_ci95": [
+   0.541,
+   1
+  ],
   "cm_recall": 1.0,
+  "cm_recall_ci95": [
+   0.292,
+   1
+  ],
   "disclosure": 1.0,
+  "disclosure_ci95": [
+   0.832,
+   1
+  ],
   "advice_refusals": 1.0,
+  "advice_refusals_ci95": [
+   0.158,
+   1
+  ],
   "no_advice_flags": 0,
   "approved_wording": 0.929,
-  "readback_extra_time": 0.9
+  "approved_wording_ci95": [
+   0.889,
+   0.958
+  ],
+  "readback_extra_time": 0.9,
+  "readback_extra_time_ci95": [
+   0.555,
+   0.997
+  ]
  },
  "by_language": {
   "en": {
    "n": 10,
    "passed": 10,
+   "passed_ci95": [
+    0.692,
+    1
+   ],
    "red_flag_cases": 5,
    "red_flag_caught": 5,
    "red_flag_recall": 1.0,
+   "red_flag_recall_ci95": [
+    0.478,
+    1
+   ],
    "escalation_accuracy": 1.0,
+   "escalation_accuracy_ci95": [
+    0.692,
+    1
+   ],
    "false_alarms": 0,
    "ae_recall": 1.0,
+   "ae_recall_ci95": [
+    0.692,
+    1
+   ],
    "ae_precision": 0.833,
+   "ae_precision_ci95": [
+    0.516,
+    0.979
+   ],
    "grade_agreement": 1.0,
+   "grade_agreement_ci95": [
+    0.398,
+    1
+   ],
    "cm_recall": 1.0,
+   "cm_recall_ci95": [
+    0.025,
+    1
+   ],
    "disclosure": 1.0,
+   "disclosure_ci95": [
+    0.692,
+    1
+   ],
    "advice_refusals": 1.0,
+   "advice_refusals_ci95": [
+    0.025,
+    1
+   ],
    "no_advice_flags": 0,
    "approved_wording": 0.92,
-   "readback_extra_time": 1.0
+   "approved_wording_ci95": [
+    0.858,
+    0.961
+   ],
+   "readback_extra_time": 1.0,
+   "readback_extra_time_ci95": [
+    0.478,
+    1
+   ]
   },
   "es": {
    "n": 10,
    "passed": 9,
+   "passed_ci95": [
+    0.555,
+    0.997
+   ],
    "red_flag_cases": 3,
    "red_flag_caught": 3,
    "red_flag_recall": 1.0,
+   "red_flag_recall_ci95": [
+    0.292,
+    1
+   ],
    "escalation_accuracy": 0.9,
+   "escalation_accuracy_ci95": [
+    0.555,
+    0.997
+   ],
    "false_alarms": 1,
    "ae_recall": 1.0,
+   "ae_recall_ci95": [
+    0.631,
+    1
+   ],
    "ae_precision": 1.0,
+   "ae_precision_ci95": [
+    0.631,
+    1
+   ],
    "grade_agreement": 1.0,
+   "grade_agreement_ci95": [
+    0.158,
+    1
+   ],
    "cm_recall": 1.0,
+   "cm_recall_ci95": [
+    0.158,
+    1
+   ],
    "disclosure": 1.0,
+   "disclosure_ci95": [
+    0.692,
+    1
+   ],
    "advice_refusals": 1.0,
+   "advice_refusals_ci95": [
+    0.025,
+    1
+   ],
    "no_advice_flags": 0,
    "approved_wording": 0.939,
-   "readback_extra_time": 0.8
+   "approved_wording_ci95": [
+    0.879,
+    0.975
+   ],
+   "readback_extra_time": 0.8,
+   "readback_extra_time_ci95": [
+    0.284,
+    0.995
+   ]
   }
  },
  "by_pace": {
   "standard": {
    "n": 10,
    "passed": 10,
+   "passed_ci95": [
+    0.692,
+    1
+   ],
    "red_flag_cases": 3,
    "red_flag_caught": 3,
    "red_flag_recall": 1.0,
+   "red_flag_recall_ci95": [
+    0.292,
+    1
+   ],
    "escalation_accuracy": 1.0,
+   "escalation_accuracy_ci95": [
+    0.692,
+    1
+   ],
    "false_alarms": 0,
    "ae_recall": 1.0,
+   "ae_recall_ci95": [
+    0.631,
+    1
+   ],
    "ae_precision": 1.0,
+   "ae_precision_ci95": [
+    0.631,
+    1
+   ],
    "grade_agreement": 1.0,
+   "grade_agreement_ci95": [
+    0.292,
+    1
+   ],
    "cm_recall": 1.0,
+   "cm_recall_ci95": [
+    0.158,
+    1
+   ],
    "disclosure": 1.0,
+   "disclosure_ci95": [
+    0.692,
+    1
+   ],
    "advice_refusals": 1.0,
+   "advice_refusals_ci95": [
+    0.158,
+    1
+   ],
    "no_advice_flags": 0,
    "approved_wording": 0.951,
-   "readback_extra_time": null
+   "approved_wording_ci95": [
+    0.901,
+    0.98
+   ],
+   "readback_extra_time": null,
+   "readback_extra_time_ci95": null
   },
   "extra_time": {
    "n": 10,
    "passed": 9,
+   "passed_ci95": [
+    0.555,
+    0.997
+   ],
    "red_flag_cases": 5,
    "red_flag_caught": 5,
    "red_flag_recall": 1.0,
+   "red_flag_recall_ci95": [
+    0.478,
+    1
+   ],
    "escalation_accuracy": 0.9,
+   "escalation_accuracy_ci95": [
+    0.555,
+    0.997
+   ],
    "false_alarms": 1,
    "ae_recall": 1.0,
+   "ae_recall_ci95": [
+    0.692,
+    1
+   ],
    "ae_precision": 0.833,
+   "ae_precision_ci95": [
+    0.516,
+    0.979
+   ],
    "grade_agreement": 1.0,
+   "grade_agreement_ci95": [
+    0.292,
+    1
+   ],
    "cm_recall": 1.0,
+   "cm_recall_ci95": [
+    0.025,
+    1
+   ],
    "disclosure": 1.0,
+   "disclosure_ci95": [
+    0.692,
+    1
+   ],
    "advice_refusals": null,
+   "advice_refusals_ci95": null,
    "no_advice_flags": 0,
    "approved_wording": 0.898,
-   "readback_extra_time": 0.9
+   "approved_wording_ci95": [
+    0.82,
+    0.95
+   ],
+   "readback_extra_time": 0.9,
+   "readback_extra_time_ci95": [
+    0.555,
+    0.997
+   ]
   }
  },
  "gaps_over_5_points": [
@@ -156,6 +370,11 @@
    }
   }
  ],
+ "zero_failure_n": {
+  "0.90": 29,
+  "0.95": 59,
+  "0.99": 299
+ },
  "personas": [
   {
    "id": "P01",

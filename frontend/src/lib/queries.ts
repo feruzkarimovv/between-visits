@@ -20,6 +20,7 @@ import type {
   Study,
   TodayRow,
   ValidationSummary,
+  VoiceChecks,
 } from "./types";
 
 /** Don't retry 4xx; retry network/5xx once. */
@@ -176,6 +177,15 @@ export function useEval() {
   return useQuery({
     queryKey: ["eval"],
     queryFn: () => apiFetch<EvalLatest>("/api/eval/latest"),
+    retry,
+  });
+}
+
+/** Real browser calls (MEASURED, docs/03 §6.11); 404 `no_voice_checks` until V10 logs calls (not retried). */
+export function useVoiceChecks() {
+  return useQuery({
+    queryKey: ["eval-voice-checks"],
+    queryFn: () => apiFetch<VoiceChecks>("/api/eval/voice-checks"),
     retry,
   });
 }

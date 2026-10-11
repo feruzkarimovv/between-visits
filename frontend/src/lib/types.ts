@@ -303,21 +303,34 @@ export type AuditEvent = S["AuditOut"];
 // GET /api/eval/latest and /api/validation/latest return free-form JSON
 // (eval/results/latest.json, validation/summary.json); shapes from docs/07.
 
+/** Clopper-Pearson exact two-sided 95% interval `[lo, hi]` (docs/03 §6.11). */
+export type Ci95 = [number, number];
+
+/**
+ * One block of `overall`, `by_language.*` or `by_pace.*`. Every proportion metric `<m>` has a sibling
+ * `<m>_ci95` (null when its denominator is 0, and then the metric is null too); counts have no interval.
+ */
 export interface EvalMetrics {
-  red_flag_recall?: number;
-  escalation_accuracy?: number;
+  n?: number;
+  passed?: number;
+  passed_ci95?: Ci95 | null;
+  red_flag_cases?: number;
+  red_flag_caught?: number;
+  red_flag_recall?: number | null;
+  red_flag_recall_ci95?: Ci95 | null;
+  escalation_accuracy?: number | null;
   false_alarms?: number;
-  ae_recall?: number;
-  ae_precision?: number;
-  grade_agreement?: number;
-  cm_recall?: number;
-  disclosure?: number;
-  advice_refusals?: number;
+  ae_recall?: number | null;
+  ae_precision?: number | null;
+  grade_agreement?: number | null;
+  cm_recall?: number | null;
+  disclosure?: number | null;
+  advice_refusals?: number | null;
   no_advice_flags?: number;
-  approved_wording?: number;
-  readback_extra_time?: number;
+  approved_wording?: number | null;
+  readback_extra_time?: number | null;
   interruptions_per_call?: number;
-  [key: string]: number | undefined;
+  [key: string]: number | Ci95 | null | undefined;
 }
 
 export interface EvalPersona {
@@ -349,8 +362,37 @@ export interface EvalLatest {
   overall: EvalMetrics;
   by_language: Partial<Record<Lang, EvalMetrics>>;
   by_pace: Partial<Record<Pace, EvalMetrics>>;
+  /** consecutive red-flag catches needed to show recall >= p at one-sided 95% confidence, keyed by p ("0.95") */
+  zero_failure_n?: Record<string, number>;
   personas: EvalPersona[];
   known_misses: KnownMiss[];
+}
+
+/** One real browser call against the deployed live backend (eval/results/voice_checks.json, V10). */
+export interface VoiceCheckCall {
+  variant?: string | null;
+  conversation_id?: string | null;
+  checkin_id?: string | null;
+  scenario?: string | null;
+  disclosure_first_turn?: boolean | null;
+  red_flag_expected?: boolean | null;
+  paged?: boolean | null;
+  utterance_to_page_s?: number | null;
+  page_to_ack_s?: number | null;
+  grade?: number | null;
+  rule_id?: string | null;
+  /** "pending" (or `pending: true`) marks a placeholder row prepared before the call: not a result */
+  status?: string | null;
+  pending?: boolean | null;
+}
+
+/** GET /api/eval/voice-checks (docs/03 §6.11): the file plus `data_origin: "MEASURED"`; 404 `no_voice_checks` when absent. */
+export interface VoiceChecks {
+  run_at?: string | null;
+  backend?: string | null;
+  agent_llm?: string | null;
+  data_origin: "MEASURED";
+  calls?: VoiceCheckCall[];
 }
 
 export interface ValidationRow {

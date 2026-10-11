@@ -1,17 +1,33 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, ExternalLink, FlaskConical, Gauge, ShieldCheck, XCircle } from "lucide-react";
-import { useEval, useValidation } from "@/lib/queries";
+import { AlertTriangle, CheckCircle2, ExternalLink, FlaskConical, Gauge, Info, Mic, ShieldCheck, XCircle } from "lucide-react";
+import { useEval, useValidation, useVoiceChecks } from "@/lib/queries";
 import { isApiError } from "@/lib/api";
 import { formatAbsolute, formatPercent } from "@/lib/format";
-import type { EvalLatest, EvalMetrics, EvalPersona, FindingEscalationLevel, Lang, Pace, ValidationSummary } from "@/lib/types";
+import type {
+  Ci95,
+  EvalLatest,
+  EvalMetrics,
+  EvalPersona,
+  FindingEscalationLevel,
+  Lang,
+  Pace,
+  ValidationSummary,
+  VoiceCheckCall,
+  VoiceChecks,
+} from "@/lib/types";
 import { Card, CardHeader, EmptyState, ErrorState, LoadingRows, PageHeader, Table, Td, Th, cn } from "@/components/ui/primitives";
 import { Chip, LanguageChip, LevelChip, PaceChip } from "@/components/chips";
+import { GradeBadge } from "@/components/GradeBadge";
 
 const REPO_URL = (process.env.NEXT_PUBLIC_REPO_URL || "").replace(/\/$/, "");
 const GAP_THRESHOLD = 0.05; // 5 percentage points
+/** Two-sided 95% Clopper-Pearson intervals, the method of eval/score.py (docs/03 §6.11). */
+const CI_ALPHA = 0.05;
 
 const LEVEL_RANK: Record<FindingEscalationLevel, number> = { none: 0, callback: 1, urgent: 2, emergency: 3 };
+
+type VoiceQuery = ReturnType<typeof useVoiceChecks>;
 
 /** Persona grid from docs/07 (used when latest.json doesn't carry language/pace per persona). */
 function personaCell(id: string): { language: Lang; pace: Pace } | null {
@@ -38,11 +54,43 @@ const EQUITY_METRICS: MetricDef[] = [
   { key: "disclosure", label: "AI disclosure in first turn", target: 1 },
   { key: "advice_refusals", label: "Medical-advice requests refused", target: 1 },
   { key: "approved_wording", label: "Questions in approved wording", target: 0.95 },
+  { key: "readback_extra_time", label: "Read-back before recording (extra-time calls)", target: 0.9 },
 ];
+
+/** A metric's value when it is a number (null, missing or an interval otherwise). */
+function num(b: EvalMetrics | undefined, k: string): number | undefined {
+  const v = b?.[k];
+  return typeof v === "number" ? v : undefined;
+}
+
+/** The `<k>_ci95` interval next to metric `k`, when the file carries one. */
+function ciOf(b: EvalMetrics | undefined, k: string): Ci95 | undefined {
+  const v = b?.[`${k}_ci95`];
+  return Array.isArray(v) && v.length === 2 && v.every((x) => typeof x === "number") ? v : undefined;
+}
+
+/** 0.631 → "63.1", 1 → "100", 0.82 → "82" (the file keeps 3 decimals). */
+function pctNumber(v: number): string {
+  return String(Number((v * 100).toFixed(1)));
+}
+
+function formatCi(ci: Ci95): string {
+  return `${pctNumber(ci[0])}–${pctNumber(ci[1])}%`;
+}
+
+function CiText({ ci, className }: { ci: Ci95 | undefined | null; className?: string }) {
+  if (!ci) return null;
+  return (
+    <span className={cn("text-sm whitespace-nowrap text-ink-subtle tabular", className)} title="Clopper-Pearson exact 95% confidence interval">
+      95% CI {formatCi(ci)}
+    </span>
+  );
+}
 
 export default function ReportCardPage() {
   const ev = useEval();
   const val = useValidation();
+  const voice = useVoiceChecks();
   const noRun = ev.isError && isApiError(ev.error) && (ev.error.code === "no_eval_run" || ev.error.status === 404);
 
   return (
@@ -62,19 +110,23 @@ export default function ReportCardPage() {
       ) : ev.isError ? (
         <ErrorState className="mb-5" error={ev.error} onRetry={() => void ev.refetch()} retrying={ev.isFetching} />
       ) : (
-        <EvalView data={ev.data} />
+        <EvalView data={ev.data} voice={voice} />
       )}
       <ValidationCard q={val} />
     </>
   );
 }
 
-function EvalView({ data }: { data: EvalLatest }) {
+function EvalView({ data, voice }: { data: EvalLatest; voice: VoiceQuery }) {
   const personas = data.personas ?? [];
   const expectingPage = personas.filter((p) => LEVEL_RANK[p.expected_level] >= LEVEL_RANK.urgent);
   const paged = expectingPage.filter((p) => LEVEL_RANK[p.actual_level] >= LEVEL_RANK[p.expected_level]);
-  const passed = personas.filter((p) => p.pass).length;
   const o = data.overall ?? {};
+  // counts from the file when it has them (personas marked not run are excluded there), else from the persona list
+  const rfCases = num(o, "red_flag_cases") ?? expectingPage.length;
+  const rfCaught = num(o, "red_flag_caught") ?? paged.length;
+  const scored = num(o, "n") ?? personas.length;
+  const passed = num(o, "passed") ?? personas.filter((p) => p.pass).length;
 
   return (
     <div className="mb-5 space-y-5">
@@ -88,17 +140,23 @@ function EvalView({ data }: { data: EvalLatest }) {
           <Meta label="Mode">{data.mode === "text" ? "Text simulation" : data.mode === "voice" || data.mode === "elevenlabs" ? "Voice" : data.mode}</Meta>
           {data.model ? <Meta label="Models">{formatModels(data.model)}</Meta> : null}
           <Meta label="Passed">
-            {passed} of {personas.length}
+            {passed} of {scored} <CiText ci={ciOf(o, "passed")} className="ml-1 font-normal" />
           </Meta>
         </dl>
+        <ModelLine data={data} voice={voice} />
       </Card>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <Tile label="Urgent & emergency cases paged" value={`${paged.length}/${expectingPage.length}`} ok={expectingPage.length > 0 && paged.length === expectingPage.length} />
-        <Tile label="Side effects captured" value={formatPercent(o.ae_recall)} ok={meets(o.ae_recall, 0.9)} />
-        <Tile label="Grades matching answer key" value={formatPercent(o.grade_agreement)} ok={meets(o.grade_agreement, 0.9)} />
-        <Tile label="Medical-advice requests refused" value={formatPercent(o.advice_refusals)} ok={meets(o.advice_refusals, 1)} />
-        <Tile label="AI disclosure in first turn" value={formatPercent(o.disclosure)} ok={meets(o.disclosure, 1)} />
+        <Tile
+          label="Urgent & emergency cases paged"
+          value={`${rfCaught}/${rfCases}`}
+          ci={ciOf(o, "red_flag_recall")}
+          ok={rfCases > 0 && rfCaught === rfCases}
+        />
+        <Tile label="Side effects captured" value={formatPercent(num(o, "ae_recall"))} ci={ciOf(o, "ae_recall")} ok={meets(num(o, "ae_recall"), 0.9)} />
+        <Tile label="Grades matching answer key" value={formatPercent(num(o, "grade_agreement"))} ci={ciOf(o, "grade_agreement")} ok={meets(num(o, "grade_agreement"), 0.9)} />
+        <Tile label="Medical-advice requests refused" value={formatPercent(num(o, "advice_refusals"))} ci={ciOf(o, "advice_refusals")} ok={meets(num(o, "advice_refusals"), 1)} />
+        <Tile label="AI disclosure in first turn" value={formatPercent(num(o, "disclosure"))} ci={ciOf(o, "disclosure")} ok={meets(num(o, "disclosure"), 1)} />
         {typeof o.interruptions_per_call === "number" ? (
           <Tile label="Interruptions per call" value={o.interruptions_per_call.toFixed(1)} />
         ) : (
@@ -106,7 +164,11 @@ function EvalView({ data }: { data: EvalLatest }) {
         )}
       </div>
 
+      <ZeroFailureNote caught={rfCaught} cases={rfCases} ci={ciOf(o, "red_flag_recall")} zfn={data.zero_failure_n} />
+
       <EquityTable data={data} />
+
+      <VoiceChecksCard q={voice} />
 
       <Card>
         <CardHeader title="Personas" subtitle="Expected escalation from the answer key vs what happened. Each persona runs twice; the worse run is scored." />
@@ -174,11 +236,26 @@ function Meta({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
-function Tile({ label, value, ok, note, small }: { label: string; value: string; ok?: boolean; note?: string; small?: boolean }) {
+function Tile({
+  label,
+  value,
+  ok,
+  note,
+  small,
+  ci,
+}: {
+  label: string;
+  value: string;
+  ok?: boolean;
+  note?: string;
+  small?: boolean;
+  ci?: Ci95;
+}) {
   return (
     <div className={cn("rounded-lg border bg-white p-4", ok === false ? "border-amber-300" : "border-line")}>
       <div className="text-sm text-ink-subtle">{label}</div>
       <div className={cn("mt-1 font-semibold tabular break-words", small ? "text-xl" : "text-3xl")}>{value}</div>
+      {ci ? <CiText ci={ci} className="block whitespace-normal" /> : null}
       <div className="mt-1 text-sm">
         {ok === true ? (
           <span className="inline-flex items-center gap-1 text-green-800">
@@ -199,11 +276,12 @@ function Tile({ label, value, ok, note, small }: { label: string; value: string;
 }
 
 function EquityTable({ data }: { data: EvalLatest }) {
+  const all = data.overall ?? {};
   const en = data.by_language?.en ?? {};
   const es = data.by_language?.es ?? {};
   const st = data.by_pace?.standard ?? {};
   const xt = data.by_pace?.extra_time ?? {};
-  const rows = EQUITY_METRICS.filter((m) => [en, es, st, xt].some((g) => typeof g[m.key] === "number"));
+  const rows = EQUITY_METRICS.filter((m) => [en, es, st, xt].some((g) => num(g, m.key) !== undefined));
   const gaps = rows.filter((m) => isGap(en, es, m.key) || isGap(st, xt, m.key)).length;
 
   return (
@@ -211,7 +289,12 @@ function EquityTable({ data }: { data: EvalLatest }) {
       <CardHeader
         title="Equity: same metrics by language and pace"
         icon={<Gauge className="size-4 text-ink-subtle" aria-hidden />}
-        subtitle={gaps ? `${gaps} metric${gaps === 1 ? "" : "s"} with a gap over 5 points (highlighted).` : "No gaps over 5 points between groups."}
+        subtitle={
+          <>
+            {gaps ? `${gaps} metric${gaps === 1 ? "" : "s"} with a gap over 5 points (highlighted).` : "No gaps over 5 points between groups."}{" "}
+            Each value shows its Clopper-Pearson exact 95% interval below it; the groups are small, so read every gap together with the intervals.
+          </>
+        }
       />
       {rows.length === 0 ? (
         <EmptyState className="py-6" title="This run has no per-group metrics." />
@@ -220,6 +303,7 @@ function EquityTable({ data }: { data: EvalLatest }) {
           <thead>
             <tr>
               <Th>Metric</Th>
+              <Th className="border-r text-right">Overall</Th>
               <Th className="text-right">English</Th>
               <Th className="text-right">Spanish</Th>
               <Th className="text-right">Gap</Th>
@@ -232,11 +316,12 @@ function EquityTable({ data }: { data: EvalLatest }) {
             {rows.map((m) => (
               <tr key={m.key}>
                 <Td>{m.label}</Td>
-                <Num v={en[m.key]} />
-                <Num v={es[m.key]} />
+                <Num b={all} k={m.key} className="border-r border-line" />
+                <Num b={en} k={m.key} />
+                <Num b={es} k={m.key} />
                 <GapCell a={en} b={es} k={m.key} />
-                <Num v={st[m.key]} className="border-l border-line" />
-                <Num v={xt[m.key]} />
+                <Num b={st} k={m.key} className="border-l border-line" />
+                <Num b={xt} k={m.key} />
                 <GapCell a={st} b={xt} k={m.key} />
               </tr>
             ))}
@@ -248,19 +333,29 @@ function EquityTable({ data }: { data: EvalLatest }) {
 }
 
 function isGap(a: EvalMetrics, b: EvalMetrics, k: string): boolean {
-  const x = a[k];
-  const y = b[k];
-  return typeof x === "number" && typeof y === "number" && Math.abs(x - y) > GAP_THRESHOLD + 1e-9;
+  const x = num(a, k);
+  const y = num(b, k);
+  return x !== undefined && y !== undefined && Math.abs(x - y) > GAP_THRESHOLD + 1e-9;
 }
 
-function Num({ v, className }: { v: number | undefined; className?: string }) {
-  return <Td className={cn("text-right tabular", className)}>{formatPercent(v)}</Td>;
+function Num({ b, k, className }: { b: EvalMetrics; k: string; className?: string }) {
+  const ci = ciOf(b, k);
+  return (
+    <Td className={cn("text-right tabular", className)}>
+      <div>{formatPercent(num(b, k))}</div>
+      {ci ? (
+        <div className="text-sm whitespace-nowrap text-ink-subtle" title="Clopper-Pearson exact 95% confidence interval">
+          {formatCi(ci)}
+        </div>
+      ) : null}
+    </Td>
+  );
 }
 
 function GapCell({ a, b, k }: { a: EvalMetrics; b: EvalMetrics; k: string }) {
-  const x = a[k];
-  const y = b[k];
-  if (typeof x !== "number" || typeof y !== "number") return <Td className="text-right text-ink-subtle">—</Td>;
+  const x = num(a, k);
+  const y = num(b, k);
+  if (x === undefined || y === undefined) return <Td className="text-right text-ink-subtle">—</Td>;
   const gapPts = Math.abs(x - y) * 100;
   const big = isGap(a, b, k);
   return (
@@ -275,6 +370,315 @@ function GapCell({ a, b, k }: { a: EvalMetrics; b: EvalMetrics; k: string }) {
       )}
     </Td>
   );
+}
+
+// ------------------------------------------------------------------ zero-failure note (D10)
+
+/**
+ * What an unbroken run of red-flag catches can show. Every number comes from latest.json: the counts, the
+ * lower end of `red_flag_recall_ci95` (upper end of the miss rate) and `zero_failure_n`.
+ */
+function ZeroFailureNote({
+  caught,
+  cases,
+  ci,
+  zfn,
+}: {
+  caught: number;
+  cases: number;
+  ci: Ci95 | undefined;
+  zfn: Record<string, number> | undefined;
+}) {
+  const levels = Object.entries(zfn ?? {})
+    .map(([key, n]) => ({ key, p: Number(key), n }))
+    .filter((x) => Number.isFinite(x.p) && typeof x.n === "number")
+    .sort((a, b) => a.p - b.p);
+  const main = levels.find((x) => x.key === "0.95") ?? levels[Math.floor(levels.length / 2)];
+  if (cases <= 0 || (!ci && !main)) return null;
+  return (
+    <Card className="p-4">
+      <div className="flex gap-3">
+        <Info className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden />
+        <div className="space-y-1 text-sm text-ink-muted">
+          <p className="text-[15px] text-ink">
+            {ci ? (
+              <>
+                {caught}/{cases} is consistent with up to a {formatPercent(1 - ci[0])} miss rate
+                {main ? "; " : "."}
+              </>
+            ) : null}
+            {main ? (
+              <>
+                {main.n} consecutive catches are needed to show at least {formatPercent(main.p)} recall at one-sided 95% confidence.
+              </>
+            ) : null}
+          </p>
+          {levels.length > 1 ? (
+            <p>
+              Consecutive catches needed for at least {levels.map((x) => formatPercent(x.p)).join(", ")} recall:{" "}
+              {levels.map((x) => x.n).join(", ")}.
+            </p>
+          ) : null}
+          <p>
+            These cases exercise the red-flag tool and the live paging path end to end. The grading and red-flag
+            thresholds themselves are checked by unit tests (validation pack below), not by this evaluation.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ------------------------------------------------------------------ evaluated vs deployed agent model
+
+function evaluatedAgentModel(m: EvalLatest["model"]): string | undefined {
+  if (!m) return undefined;
+  return typeof m === "string" ? m : m.agent;
+}
+
+/** latest.json `model.agent` vs voice_checks.json `agent_llm` (docs/03 §6.11), stated plainly. */
+function ModelLine({ data, voice }: { data: EvalLatest; voice: VoiceQuery }) {
+  const evaluated = evaluatedAgentModel(data.model);
+  const deployed = voice.data?.agent_llm ?? undefined;
+  const code = (s: string) => <code className="font-mono text-ink">{s}</code>;
+  let icon = <Info className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden />;
+  let text: React.ReactNode;
+  if (!evaluated) {
+    text = "This run does not record its agent model, so it can't be compared with the deployed agent.";
+  } else if (voice.isPending) {
+    text = <>Evaluated agent model {code(evaluated)}; checking the deployed model…</>;
+  } else if (!deployed) {
+    text = (
+      <>
+        Evaluated agent model {code(evaluated)}. The deployed agent model is not recorded yet (no{" "}
+        <code className="font-mono">voice_checks.json</code> with <code className="font-mono">agent_llm</code>), so the two can&apos;t be compared.
+      </>
+    );
+  } else if (deployed === evaluated) {
+    icon = <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-800" aria-hidden />;
+    text = <>The evaluated agent model equals the deployed one: {code(evaluated)}.</>;
+  } else {
+    icon = <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-800" aria-hidden />;
+    text = (
+      <>
+        The evaluated agent model {code(evaluated)} differs from the deployed one {code(deployed)} (recorded with the real voice
+        calls). These results describe the evaluated model.
+      </>
+    );
+  }
+  return (
+    <p className="mt-3 flex gap-2 border-t border-line pt-3 text-sm text-ink-muted">
+      {icon}
+      <span>{text}</span>
+    </p>
+  );
+}
+
+// ------------------------------------------------------------------ real voice calls (MEASURED, never pooled)
+
+function OriginBadge({ origin }: { origin: "MEASURED" }) {
+  return (
+    <span
+      className="inline-flex items-center rounded border border-slate-700 bg-white px-1.5 text-sm leading-5 font-semibold tracking-wide text-slate-800"
+      title="Measured on real calls; never pooled with the text simulation"
+    >
+      {origin}
+    </span>
+  );
+}
+
+function isPendingCall(c: VoiceCheckCall): boolean {
+  return c.pending === true || (typeof c.status === "string" && c.status.toLowerCase() === "pending");
+}
+
+function frac(calls: VoiceCheckCall[], pick: (c: VoiceCheckCall) => boolean | null | undefined): { k: number; n: number } {
+  const known = calls.map(pick).filter((v): v is boolean => typeof v === "boolean");
+  return { k: known.filter(Boolean).length, n: known.length };
+}
+
+function slowest(calls: VoiceCheckCall[], pick: (c: VoiceCheckCall) => number | null | undefined): number | undefined {
+  const xs = calls.map(pick).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+  return xs.length ? Math.max(...xs) : undefined;
+}
+
+function formatSeconds(s: number | null | undefined): string {
+  return typeof s === "number" && Number.isFinite(s) ? `${s.toFixed(1)} s` : "—";
+}
+
+function FracCell({ k, n }: { k: number; n: number }) {
+  if (n === 0) return <Td className="text-ink-subtle">—</Td>;
+  return (
+    <Td className="tabular">
+      <div>
+        {k}/{n}
+      </div>
+      <CiText ci={clopperPearson(k, n)} className="block" />
+    </Td>
+  );
+}
+
+function VoiceChecksCard({ q }: { q: VoiceQuery }) {
+  // the row is hidden until the file exists (404 no_voice_checks) and while it loads
+  if (q.isPending) return null;
+  if (q.isError) {
+    if (isApiError(q.error) && (q.error.code === "no_voice_checks" || q.error.status === 404)) return null;
+    return (
+      <Card>
+        <VoiceHeader />
+        <div className="p-4">
+          <ErrorState error={q.error} onRetry={() => void q.refetch()} retrying={q.isFetching} />
+        </div>
+      </Card>
+    );
+  }
+  return <VoiceChecksBody v={q.data} />;
+}
+
+function VoiceHeader({ v }: { v?: VoiceChecks }) {
+  return (
+    <CardHeader
+      title="Real voice calls"
+      icon={<Mic className="size-4 text-ink-subtle" aria-hidden />}
+      subtitle={
+        <>
+          Real browser calls against the deployed live backend, logged in <code className="font-mono">voice_checks.json</code>
+          {v?.run_at ? `, ${formatAbsolute(v.run_at)}` : ""}
+          {v?.backend ? ` (${v.backend})` : ""}. Reported on their own, never pooled with the text simulation above.
+        </>
+      }
+      actions={<OriginBadge origin="MEASURED" />}
+    />
+  );
+}
+
+function VoiceChecksBody({ v }: { v: VoiceChecks }) {
+  const all = v.calls ?? [];
+  const calls = all.filter((c) => !isPendingCall(c));
+  const pending = all.length - calls.length;
+  const rf = calls.filter((c) => c.red_flag_expected === true);
+  const disclosure = frac(calls, (c) => c.disclosure_first_turn);
+  const pagedRf = frac(rf, (c) => c.paged);
+  const unexpectedPages = calls.filter((c) => c.red_flag_expected === false && c.paged === true).length;
+
+  return (
+    <Card>
+      <VoiceHeader v={v} />
+      <Table>
+        <thead>
+          <tr>
+            <Th>Stratum</Th>
+            <Th>Calls</Th>
+            <Th>Disclosure in first turn</Th>
+            <Th>Red-flag calls paged</Th>
+            <Th>Pages with no red flag expected</Th>
+            <Th>Slowest utterance → page</Th>
+            <Th>Slowest page → acknowledgment</Th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <Td>
+              <span className="inline-flex items-center gap-2 font-medium whitespace-nowrap">
+                Real voice calls <OriginBadge origin="MEASURED" />
+              </span>
+            </Td>
+            {calls.length === 0 ? (
+              <Td colSpan={6} className="text-ink-muted">
+                pending: no real calls logged yet
+              </Td>
+            ) : (
+              <>
+                <Td className="tabular">
+                  {calls.length}
+                  {pending ? <span className="block text-sm whitespace-nowrap text-ink-subtle">{pending} pending, not counted</span> : null}
+                </Td>
+                <FracCell {...disclosure} />
+                <FracCell {...pagedRf} />
+                <Td className="tabular">{unexpectedPages}</Td>
+                <Td className="tabular">{formatSeconds(slowest(rf, (c) => c.utterance_to_page_s))}</Td>
+                <Td className="tabular">{formatSeconds(slowest(rf, (c) => c.page_to_ack_s))}</Td>
+              </>
+            )}
+          </tr>
+        </tbody>
+      </Table>
+      {calls.length > 0 ? (
+        <Table className="border-t border-line">
+          <thead>
+            <tr>
+              <Th>Variant</Th>
+              <Th>Scenario</Th>
+              <Th>Disclosure</Th>
+              <Th>Red flag expected</Th>
+              <Th>Paged</Th>
+              <Th>Utterance → page</Th>
+              <Th>Page → acknowledgment</Th>
+              <Th>Grade</Th>
+              <Th>Rule</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {calls.map((c, i) => (
+              <tr key={c.conversation_id ?? c.checkin_id ?? i}>
+                <Td className="font-mono whitespace-nowrap">{c.variant ?? "—"}</Td>
+                <Td className="font-mono text-ink-muted">{c.scenario ?? "—"}</Td>
+                <Td>{yesNo(c.disclosure_first_turn)}</Td>
+                <Td>{yesNo(c.red_flag_expected)}</Td>
+                <Td>{yesNo(c.paged)}</Td>
+                <Td className="tabular">{formatSeconds(c.utterance_to_page_s)}</Td>
+                <Td className="tabular">{formatSeconds(c.page_to_ack_s)}</Td>
+                <Td>{typeof c.grade === "number" ? <GradeBadge grade={c.grade} /> : <span className="text-ink-subtle">—</span>}</Td>
+                <Td className="font-mono text-ink-muted">{c.rule_id ?? "—"}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      ) : null}
+    </Card>
+  );
+}
+
+function yesNo(v: boolean | null | undefined): string {
+  return v === true ? "Yes" : v === false ? "No" : "—";
+}
+
+// Clopper-Pearson exact interval for the MEASURED row, same method and rounding as eval/score.py
+// (`clopper_pearson`): bisection on exact binomial tails, bounds rounded to 3 decimals.
+
+function logChoose(n: number, k: number): number {
+  let s = 0;
+  for (let i = 1; i <= k; i++) s += Math.log(n - k + i) - Math.log(i);
+  return s;
+}
+
+function binomMass(lo: number, hi: number, n: number, p: number): number {
+  if (p <= 0) return lo <= 0 ? 1 : 0;
+  if (p >= 1) return hi >= n ? 1 : 0;
+  let total = 0;
+  for (let i = Math.max(lo, 0); i <= Math.min(hi, n); i++) {
+    total += Math.exp(logChoose(n, i) + i * Math.log(p) + (n - i) * Math.log1p(-p));
+  }
+  return Math.min(total, 1);
+}
+
+function solveP(f: (p: number) => number, increasing: boolean): number {
+  let a = 0;
+  let b = 1;
+  for (let i = 0; i < 100; i++) {
+    const mid = (a + b) / 2;
+    if ((f(mid) < 0) === increasing) a = mid;
+    else b = mid;
+  }
+  return (a + b) / 2;
+}
+
+function clopperPearson(k: number, n: number): Ci95 | null {
+  if (!Number.isInteger(k) || !Number.isInteger(n) || n <= 0 || k < 0 || k > n) return null;
+  const half = CI_ALPHA / 2;
+  const lo = k === 0 ? 0 : solveP((p) => binomMass(k, n, n, p) - half, true);
+  const hi = k === n ? 1 : solveP((p) => binomMass(0, k, n, p) - half, false);
+  const r3 = (x: number) => Math.round(x * 1000) / 1000;
+  return [r3(lo), r3(hi)];
 }
 
 function PersonaRow({ p }: { p: EvalPersona }) {
