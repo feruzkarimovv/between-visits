@@ -1,0 +1,58 @@
+{
+  "_about": "Operational Site Signal rules and English UI labels (WS4, task D11). Frozen with docs/11-site-signal-sap.md and monitoring/params.yaml by the sap-v1 tag; after the tag any change needs a row in docs/11 section 17. Read by backend/app/services/episodes.py, site_signal.py and site_queries.py and by monitoring/, with no LLM on this path. Schema: docs/02-data-model.md, Files behind Site Signal. Values: docs/11 sections 4 to 8. Grades come only from rules.py and data/ctcae_rules.json. term_synonyms is our own lower-case list (no MedDRA codes or hierarchy). Tier thresholds are not in this file; they come from monitoring/out/thresholds.json. A tier marks capture discordance: a reason to look, not a finding.",
+  "version": 1,
+  "primary_terms": ["Diarrhea", "Fever", "Dyspnea"],
+  "min_grade": 2,
+  "grade_source": "data/ctcae_rules.json via rules.py",
+  "ungraded_terms_policy": "context_only",
+  "episode": {"gap_days": 21, "worsened_opens_new": true},
+  "match": {
+    "window_days": 7,
+    "lower_anchor": "last_negative_call",
+    "lower_tolerance_days": 2,
+    "sensitivity": [
+      {"id": "SE1", "window_days": 3, "lower_tolerance_days": 0},
+      {"id": "SE2", "window_days": 14, "lower_tolerance_days": 7}
+    ],
+    "one_to_one": true,
+    "exclude_origins": ["between_visits"],
+    "term_synonyms": {
+      "Diarrhea": ["diarrhea", "diarrhoea", "loose stools"],
+      "Fever": ["fever", "pyrexia", "febrile"],
+      "Dyspnea": ["dyspnea", "dyspnoea", "shortness of breath", "breathlessness"]
+    }
+  },
+  "evaluability": {"entry_window_days": 14, "next_visit_plus_days": 8},
+  "paged": {"levels": ["urgent", "emergency"], "policy": "exclude_from_oe_report_separately", "proximity_days": 7},
+  "minimum_data": {"min_sites": 10, "min_patients": 10, "min_evaluable_episodes": 15, "min_call_completion": 0.60},
+  "integrated_mode": {"site_roles": ["coordinator", "investigator"]},
+  "tiers": {"look": {"per_site_alpha": 0.05}, "watch": {"family_wise_alpha": 0.10}},
+  "overdispersion": {"method": "additive", "winsor": [0.10, 0.90]},
+  "labels": {
+    "watch": {"en": "Watch"},
+    "look": {"en": "Look"},
+    "none": {"en": "No signal at this sample size"},
+    "not_computed": {"en": "Not computed"},
+    "footer": {"en": "A reason to look, not a finding."},
+    "footer_expected_false_look": {"en": "About {expected_false_look} false Look flags are expected in a study like this with no problems, under the pre-registered null."},
+    "reasons": {
+      "error": {"en": "The analysis could not be completed for this site's data, so no tier is shown."},
+      "integrated_mode": {"en": "Between Visits drafts reached this site's staff during the analysis window, so its AE log is not independent of the patient reports and the site is not compared."},
+      "low_coverage": {"en": "Fewer than 60% of scheduled calls were completed at this site, too few to compare its AE log with the patient reports."},
+      "insufficient_patients": {"en": "This site has fewer than 10 patients, too few for a site-level comparison."},
+      "insufficient_episodes": {"en": "This site has fewer than 15 evaluable episodes outside the paged stratum, or no variation to measure, so a site-level comparison is not possible."},
+      "study_below_min_sites": {"en": "Fewer than 10 sites in this study have enough data for a comparison, so no site is ranked."}
+    },
+    "answer_key": {
+      "gross_under": {"en": "Planted: large capture loss"},
+      "under_50": {"en": "Planted: 50% capture loss"},
+      "under_25": {"en": "Planted: 25% capture loss"},
+      "language_gap": {"en": "Planted: lower capture for Spanish speakers"},
+      "decoy_healthy_casemix": {"en": "Honest (healthier patients)"},
+      "honest_low_diligence": {"en": "Honest (low diligence)"},
+      "low_coverage": {"en": "Honest (low call completion)"},
+      "small_site": {"en": "Honest (small site)"},
+      "honest": {"en": "Honest"}
+    }
+  }
+}
