@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     elevenlabs_api_key: str = ""
     elevenlabs_webhook_secret: str = ""
     elevenlabs_phone_number_id: str = ""
-    elevenlabs_llm: str = "gemini-3.5-flash"
+    elevenlabs_llm: str = "claude-sonnet-5-5"  # pinned to the evaluated model (agent/variants.json, V9)
     elevenlabs_voice_id_en: str = ""
     elevenlabs_voice_id_es: str = ""
 

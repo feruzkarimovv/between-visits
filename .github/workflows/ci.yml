@@ -53,6 +53,8 @@ jobs:
         run: uv run --project backend python data/validate_data.py
       - name: Agent sync script (offline)
         run: python3 agent/test_sync_agent.py
+      - name: Deployed agent config matches git (agent/deployed_snapshot.json, offline)
+        run: python3 agent/check_config_hash.py
       - name: Tests + requirement traceability
         run: uv run --project backend python validation/build_traceability.py --check
 

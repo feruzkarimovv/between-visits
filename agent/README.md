@@ -10,6 +10,8 @@ ElevenLabs agent config as code (WS1). Exact API fields: `docs/04-voice-agent.md
 | `variants.json` | `en-standard`, `en-extra_time`, `es-standard`, `es-extra_time` (language, voice, pace settings) |
 | `sync_agent.py` | Renders all of the above and upserts it in ElevenLabs |
 | `agents.lock.json` | Written by the sync: `{"en-standard": "agent_...", ...}` (gitignored; the backend reads it) |
+| `deployed_snapshot.json` | Written by `--snapshot` (committed): what each deployed variant runs, as model names and config hashes; agent IDs cut to the last 4 characters (`docs/02`) |
+| `check_config_hash.py` | Offline CI check: the hashes of the config in git equal the snapshot, and the deployed LLM is the evaluated one |
 
 ## Agent sync
 
@@ -20,7 +22,9 @@ uv run --project backend python agent/sync_agent.py --dry-run       # print ever
 uv run --project backend python agent/sync_agent.py --only es-extra_time     # one agent (tools are always synced)
 uv run --project backend python agent/sync_agent.py --setup-webhook          # + HMAC post-call webhook (prints the secret once)
 uv run --project backend python agent/sync_agent.py --inbound es-extra_time  # + inbound-call fallback on that variant
-python3 agent/test_sync_agent.py                                     # offline rendering checks
+uv run --project backend python agent/sync_agent.py --snapshot      # read-only: writes deployed_snapshot.json
+python3 agent/test_sync_agent.py                                     # offline rendering + snapshot checks
+python3 agent/check_config_hash.py                                   # offline: deployed snapshot == git (CI)
 ```
 
 Needs in `.env`: `ELEVENLABS_API_KEY`, `PUBLIC_BASE_URL` (https tunnel URL), `TOOL_SHARED_SECRET`, `ELEVENLABS_VOICE_ID_EN`, `ELEVENLABS_VOICE_ID_ES`; `ELEVENLABS_PHONE_NUMBER_ID` for `--inbound`. Optional: `ELEVENLABS_LLM`, `ELEVENLABS_TTS_MODEL_EN` / `ELEVENLABS_TTS_MODEL_ES` (defaults per language in `variants.json`). `--dry-run` uses placeholders for anything missing.
@@ -37,3 +41,15 @@ It is idempotent: running it twice leaves one secret, five tools and four agents
 `--setup-webhook`: creates the `between-visits` workspace webhook (`{PUBLIC_BASE_URL}/webhooks/elevenlabs/post-call`, HMAC), turns on retries, and attaches it for `transcript`, `call_initiation_failure` and `audio`. Copy the printed secret into `.env` as `ELEVENLABS_WEBHOOK_SECRET`. ElevenLabs shows the secret only at creation; if the webhook already exists it is reused and no secret is printed.
 
 `--inbound <variant>`: points the workspace inbound-init webhook at `{PUBLIC_BASE_URL}/webhooks/elevenlabs/inbound-init`, lets that variant take its variables and first message from the webhook, and assigns `ELEVENLABS_PHONE_NUMBER_ID` to it. Later plain syncs keep the inbound settings on whichever variant has them. Test with a real call; dashboard Preview doesn't call the inbound webhook.
+
+## Deployed snapshot and the CI hash check (V9)
+
+The agent LLM is pinned to the evaluated model: `variants.json` `llm` = `eval/results/latest.json` `model.agent` = `claude-sonnet-5-5`, with Claude backups from `backup_llm_order_claude`. After every sync, record what is deployed and commit it:
+
+```bash
+make sync-agent                     # push the config in git
+make sync-agent ARGS=--snapshot     # read it back (GET only) -> agent/deployed_snapshot.json
+python3 agent/check_config_hash.py  # must print OK and exit 0; then commit agent/deployed_snapshot.json
+```
+
+`--snapshot` reads each variant by the IDs in `agents.lock.json` (or `AGENTS_LOCK_JSON`) together with its tools. It keeps only the keys the sync sends, removes IDs, tool URLs, secret references and the `--inbound` wiring (`platform_settings.overrides`), turns integral floats back into ints (the API reads `0` back as `0.0`), and hashes canonical JSON. `check_config_hash.py` renders the same config offline exactly like `--dry-run` (without `.env` and ignoring the `ELEVENLABS_LLM` / `ELEVENLABS_TTS_MODEL_*` overrides, as in CI). It exits 1 with the differing hashes and values, or with "no deployed snapshot yet" when the file is missing. It also fails when the deployed LLM is not the evaluated model, unless the snapshot was taken with `--llm-note 'differs from evaluated model: <why>'`.

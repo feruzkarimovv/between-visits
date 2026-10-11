@@ -19,7 +19,7 @@ Between Visits is a voice agent that phones cancer-trial patients in the days af
 
 ```mermaid
 flowchart LR
-  P(("Patient (browser call)")) <-->|"voice (EN/ES, standard or extra time)"| EL["ElevenLabs agent<br/>LLM: Claude Sonnet"]
+  P(("Patient (browser call)")) <-->|"voice (EN/ES, standard or extra time)"| EL["ElevenLabs agent<br/>LLM: claude-sonnet-5-5"]
   EL -->|"server tools: record_answer, report_red_flag, ..."| BE["Backend (FastAPI)<br/>interview engine + CTCAE rules"]
   BE -->|"approved next question"| EL
   BE -->|"urgent push + Acknowledge"| N(("Nurse phone (ntfy)"))
@@ -33,6 +33,8 @@ flowchart LR
 3. **Rules grade.** The agent only reports what it heard (an option code or a number plus the exact quote). Fixed CTCAE v5 rules turn answers into *provisional* grades, and a fixed red-flag table decides escalation. Urgent findings page the nurse before the agent says its next word.
 4. **After the call.** The transcript, extracted symptoms and medications, a safety-net scan for red flags the call missed, and labeled English translations become drafts with evidence (quote, language, second in the call, source).
 5. **Humans decide.** The coordinator confirms, edits or rejects each draft. The investigator marks seriousness and relatedness. A serious event becomes a CIOMS-style sponsor report with a 24-hour clock from the moment the site became aware, and lands in a mock sponsor safety inbox.
+
+**Agent model:** `claude-sonnet-5-5`, the same model the evaluation below used, pinned in `agent/variants.json` with Claude backups (`claude-sonnet-5`, `claude-haiku-4-5`). `agent/deployed_snapshot.json` records what the four deployed agents run (model and config hashes, agent IDs cut to 4 characters), and CI (`agent/check_config_hash.py`) fails if it drifts from git.
 
 ## Safety by design
 

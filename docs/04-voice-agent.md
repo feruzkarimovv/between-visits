@@ -19,7 +19,7 @@ Also: no real PHI (BAA is Enterprise-only). Synthetic patients only.
 backend (POST /api/patients/{id}/checkins)
   -> POST /v1/convai/twilio/outbound-call  {agent_id (variant), agent_phone_number_id, to_number, dynamic_variables}
   <- {conversation_id, callSid}                     stored on CheckIn
-ElevenLabs agent (LLM gemini-3.5-flash) talks to the patient
+ElevenLabs agent (LLM claude-sonnet-5-5) talks to the patient
   -> webhook tools  POST {PUBLIC_BASE_URL}/agent/tools/<name>   header X-BV-Tool-Secret, body includes injected checkin_id
   <- {"ok":true,"next":{"action":"ask","say":"..."}}            agent says next.say verbatim
 call ends -> post-call webhook  POST {PUBLIC_BASE_URL}/webhooks/elevenlabs/post-call  (HMAC signed)
@@ -47,11 +47,14 @@ All four come from `agent/agent.template.json` + `agent/variants.json`. Only the
 | `agent.first_message` | `data/scripts.json` `first_message.en` | `first_message.es` |
 | `tts.model_id` | `eleven_flash_v2` (English agents must use turbo/flash v2) | `eleven_flash_v2_5` |
 
-Same for all: `llm: "gemini-3.5-flash"`, `temperature: 0`, `disable_first_message_interruptions: true` (older patients say "Hello?" over the greeting), the prompt from `agent/prompt.md`.
+Same for all: `llm: "claude-sonnet-5-5"` (model note below), `temperature: 0`, `disable_first_message_interruptions: true` (older patients say "Hello?" over the greeting), the prompt from `agent/prompt.md`.
 
 Keep barge-in on (patients must be able to say "¿Cómo?"): leave `"interruption"` in `conversation.client_events` (it is there by default; to change it you GET the agent, edit the list and PATCH it back).
 
-**LLM:** `gemini-3.5-flash` is GA and recommended. Keep reasoning minimal (`prompt.reasoning_effort: "minimal"` or `"none"`; check `GET /v1/convai/llm/list` for the values the model accepts, UNVERIFIED). Pin a Gemini-only backup so the eval matches production: `"backup_llm_config": {"preference": "override", "order": ["gemini-3.5-flash-lite", "gemini-2.5-flash"]}`. If latency feels slow, A/B `gemini-3.5-flash-lite` using `conversation_turn_metrics.convai_llm_service_ttfb` in the transcript.
+**LLM (model note, V9, Sun Oct 11):** the agents run **`claude-sonnet-5-5`**, the model the text-mode evaluation used (`eval/results/latest.json` `model.agent`). It is pinned in `agent/variants.json` `llm`, the `elevenlabs_llm` default in `backend/app/config.py` and `ELEVENLABS_LLM` in `.env.example`. The backups stay in the evaluated family: `"backup_llm_config": {"preference": "override", "order": ["claude-sonnet-5", "claude-haiku-4-5"]}` (`backup_llm_order_claude`). ElevenLabs accepts the model for agents: on Oct 11 all four deployed variants read back `llm: "claude-sonnet-5-5"`.
+- **What is deployed** is recorded by `make sync-agent ARGS=--snapshot` (read-only) in `agent/deployed_snapshot.json`: per variant the last 4 characters of the agent ID, `llm`, `backup_llms`, `tts_model`, and sha256 hashes of the prompt, the tools and the whole config the sync sends, read back with IDs, URLs and secret references removed.
+- **CI check:** `python3 agent/check_config_hash.py` (offline) renders the config like `--dry-run`, recomputes the hashes and fails when they differ from the snapshot, or when the deployed `llm` is not the evaluated model and the snapshot has no `llm_note`. Any edit to `prompt.md`, `tools.json`, the template, `variants.json` or the scripts and red flags in `data/` therefore needs `make sync-agent`, then `--snapshot`, and a commit of the new snapshot.
+- **Changing the model:** Gemini (`gemini-3.5-flash`, backups `backup_llm_order`) was the original plan. A model that was not evaluated needs `--snapshot --llm-note 'differs from evaluated model: <why>'` and a re-evaluation (`make eval` with `ELEVENLABS_LLM` set to it). For latency, compare `conversation_turn_metrics.convai_llm_service_ttfb` in the transcripts.
 
 ## Agent config (`conversation_config` + `platform_settings`)
 
@@ -72,14 +75,14 @@ The shape the sync script produces (values for `es-extra_time`):
      "language_name": "Spanish", "pace_instructions": "<extra_time text>", "caregiver_name": "Lucía"}},
    "prompt": {
      "prompt": "<agent/prompt.md with ${RED_FLAG_LIST} rendered>",
-     "llm": "gemini-3.5-flash", "temperature": 0, "timezone": "America/New_York",
+     "llm": "claude-sonnet-5-5", "temperature": 0, "timezone": "America/New_York",
      "tool_ids": ["<record_answer id>", "<report_red_flag id>", "<record_medication_change id>", "<request_human id>", "<set_speaker id>"],
      "built_in_tools": {
        "end_call": {"type": "system", "name": "end_call", "description": "", "params": {"system_tool_type": "end_call"}},
        "skip_turn": {"type": "system", "name": "skip_turn", "description": "", "params": {"system_tool_type": "skip_turn", "wait_timeout_secs": 20}},
        "voicemail_detection": {"type": "system", "name": "voicemail_detection", "description": "",
          "params": {"system_tool_type": "voicemail_detection", "voicemail_message": "<scripts.voicemail.es>"}}},
-     "backup_llm_config": {"preference": "override", "order": ["gemini-3.5-flash-lite", "gemini-2.5-flash"]}}},
+     "backup_llm_config": {"preference": "override", "order": ["claude-sonnet-5", "claude-haiku-4-5"]}}},
   "tts": {"model_id": "eleven_flash_v2_5", "voice_id": "<ES voice>", "speed": 0.85, "stability": 0.6, "similarity_boost": 0.8},
   "asr": {"keywords": ["Imodium", "loperamida", "loperamide", "Tylenol", "acetaminofén", "amoxicilina", "Lucía", "Rosa"]},
   "turn": {"turn_eagerness": "patient", "turn_timeout": 15, "silence_end_call_timeout": 120, "speculative_turn": false,
