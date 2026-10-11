@@ -23,20 +23,7 @@ Steps that need a person. Everything around them is done; each item says exactly
    ```
    `make demo` (`DEMO_MODE=1`) starts with any secret and needs none of this.
 
-3. **Record the deployed agent config so CI goes green (V9).** CI's step "Deployed agent config matches git" (`python3 agent/check_config_hash.py`) fails until `agent/deployed_snapshot.json` is committed. The two Spanish agents were deployed before D8's wording fix, so sync first, then snapshot. In the main checkout (`.env` with `ELEVENLABS_API_KEY`):
-   ```bash
-   git checkout site-signal-build && git pull --ff-only
-   make sync-agent                          # pushes the D8 Spanish wording to es-standard and es-extra_time
-   make sync-agent ARGS=--snapshot          # read-only (GET only): writes agent/deployed_snapshot.json
-   jq -r '[.variants[].llm]|unique|.[]' agent/deployed_snapshot.json   # expect: claude-sonnet-5-5
-   python3 agent/check_config_hash.py; echo exit=$?                     # expect: OK ... and exit=0
-   git add agent/deployed_snapshot.json
-   git commit -m "WS1-V9: deployed snapshot"
-   git push origin site-signal-build
-   ```
-   From now on, any edit to `agent/prompt.md`, `agent/tools.json`, `agent/agent.template.json`, `agent/variants.json` or the agent-facing files in `data/` (scripts, red flags, plan, study) needs the same `make sync-agent` → `make sync-agent ARGS=--snapshot` → commit of the new snapshot, or CI fails.
-
-4. **Reseed every SQLite database built before B13 (audit hash chain).** `AuditEvent` gained `seq`, `prev_hash` and `hash` columns and there is no migration (docs/02). Until an old database is reseeded, each audit row is dropped (the hook logs `audit_chain_failed`; the caller's own write still commits) and `GET /api/audit` returns 500. Reseeding deletes the local demo data in that database. In each checkout or deploy that has a database:
+3. **Reseed every SQLite database built before B13 (audit hash chain).** `AuditEvent` gained `seq`, `prev_hash` and `hash` columns and there is no migration (docs/02). Until an old database is reseeded, each audit row is dropped (the hook logs `audit_chain_failed`; the caller's own write still commits) and `GET /api/audit` returns 500. Reseeding deletes the local demo data in that database. In each checkout or deploy that has a database:
    ```bash
    git checkout site-signal-build && git pull --ff-only
    make seed                                  # or: make demo (reseeds with DEMO_MODE=1, then starts backend + frontend)
@@ -45,7 +32,7 @@ Steps that need a person. Everything around them is done; each item says exactly
    ```
    For a deployed instance, run the same seed command in its shell (`cd backend && uv run python -m app.seed`, with `DEMO_MODE=1` for a demo deploy) and restart the service.
 
-5. **Optional: make `make up` (R5 production images) run from this laptop's docker CLI.** The host `docker` has no working `compose` or `buildx` plugin: `~/.docker/cli-plugins/docker-compose` and `docker-buildx` are symlinks into `/Applications/Docker.app`, which is not installed (colima is the engine). Install Compose and point both symlinks at the Homebrew binaries (`docker-buildx` is already installed by Homebrew):
+4. **Optional: make `make up` (R5 production images) run from this laptop's docker CLI.** The host `docker` has no working `compose` or `buildx` plugin: `~/.docker/cli-plugins/docker-compose` and `docker-buildx` are symlinks into `/Applications/Docker.app`, which is not installed (colima is the engine). Install Compose and point both symlinks at the Homebrew binaries (`docker-buildx` is already installed by Homebrew):
    ```bash
    brew install docker-compose
    ln -sfn /opt/homebrew/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
@@ -61,47 +48,7 @@ Steps that need a person. Everything around them is done; each item says exactly
    ```
    Without this, the same stack runs through the compose inside the colima VM: `colima ssh -- env GIT_COMMIT=$(git rev-parse --short HEAD) docker compose --project-directory "$PWD" -f "$PWD/docker-compose.prod.yml" up --build -d` (stop with the same command and `down`).
 
-6. **Freeze the SAP: review, tag `sap-v1`, publish the timestamp, fetch the beacon (S1; docs/11 §1.2 steps 2-7).** S1 is integrated on `site-signal-build`: §11.5 filled (patients per site 40-80 and gross *f* 0.90, both "shortfall" from the planning grid), `monitoring/params.yaml` frozen-input hashes written, §17 empty. **Update:** the §1.5 `sap-v1` row is now filled (commit 9c6e84a), so follow item 11 instead of sub-steps 1-2 here, then sub-steps 3-6. Nothing below can be undone once the tag is pushed (the tag is never moved or deleted), so do the steps in order:
-   1. Review the SAP diff (`git diff 607d213..origin/site-signal-build -- docs/11-site-signal-sap.md monitoring/params.yaml`). If the review OK has not arrived by 03:15, tag anyway and write "tagged without human review" in the change-log line.
-   2. Fill the docs/11 §1.5 change-log row for `sap-v1` (replace "at the tag" with today's date, and keep either "reviewed by the team lead" or "tagged without human review", whichever applies). Commit it on `site-signal-build`, check it, push it, then fast-forward `main` to exactly that commit. docs/11 §1.2 steps 2-3 put the frozen commit on `main` and the tag on `origin/main`, so a later squash or rebase of the branch can never drop the tag commit (part of the seed) from `main`'s history:
-      ```bash
-      cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
-      # edit docs/11-site-signal-sap.md §1.5, then:
-      git commit -am "SAP v1: change log"
-      uv run --project monitoring python -m bvsignal.seed --check-frozen          # expect: frozen inputs: OK
-      git push origin site-signal-build
-      git push origin site-signal-build:main      # fast-forward only: never add --force, -f or a leading +
-      git fetch origin
-      test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)" && echo main-is-the-sap-commit   # expect: main-is-the-sap-commit
-      git ls-tree -r origin/main --name-only | grep -E '^(monitoring/out|validation/site_signal)/'   # must print nothing
-      ```
-      If `git push origin site-signal-build:main` is rejected (non-fast-forward: `main` has commits that are not on `site-signal-build`), stop: do not force it and do not tag. Bring `main` into the branch with a merge commit, then repeat this step from the `--check-frozen` line:
-      ```bash
-      git fetch origin && git merge --no-ff origin/main -m "Merge main into site-signal-build before sap-v1" && git push origin site-signal-build
-      ```
-      If `git push origin site-signal-build` is rejected because the branch moved, run `git pull --rebase origin site-signal-build` (only the unpushed change-log commit moves; nothing is tagged yet) and repeat from the `--check-frozen` line.
-   3. Tag exactly the commit `origin/main` now points to, and push the tag:
-      ```bash
-      git fetch origin && git tag -a sap-v1 origin/main -m 'Site Signal SAP v1' && git push origin sap-v1
-      git rev-parse 'sap-v1^{commit}'                                       # the tag sha to publish
-      git merge-base --is-ancestor sap-v1 origin/main && echo tag-on-main   # expect: tag-on-main
-      ```
-      From now on `main` is never rebased, squashed or force-pushed (on GitHub never "Squash and merge" or "Rebase and merge" into `main`), and the commits from the tag onwards on `site-signal-build` are never rebased either. Later work reaches `main` only by fast-forward or a merge commit (item 1), so the tag commit stays an ancestor of `main` and of every commit that adds evaluation outputs (REQ-022).
-   4. Within 10 minutes of the push, publish the tag sha outside the team's control: on GitHub, Releases > Draft a new release > choose tag `sap-v1` > title "Site Signal SAP v1" > Publish release (or `gh release create sap-v1 --title "Site Signal SAP v1" --notes "sap-v1 = <tag sha>"`), and post the sha in the Devpost draft or the event's organizer channel. Keep both links for the §17 row.
-   5. Fetch the beacon (docs/11 §1.3: the first drand round at least 10 minutes after the tagger time) and record the seed. Start it right after the tag push and leave it running:
-      ```bash
-      uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait   # writes monitoring/seed_beacon.json once; never overwrites it
-      uv run --project monitoring python -m bvsignal.seed --show                  # tag sha, beacon round, evaluation seed
-      ```
-      `--wait` sleeps until the round time (it prints it), then tries drand every 30 s. It asks NIST only from round time + 30 min and writes the empty value only from round time + 60 min, so with drand down it can run up to an hour: let it finish. The file records `source`, the `selection` times and every failed attempt (`attempts`). If you stop it (Ctrl-C) or it exits with an error, rerun the same command: the failed attempts so far are kept in `monitoring/seed_beacon_attempts.jsonl` and go into the beacon file. Never delete either file.
-   6. Add a docs/11 §17 clarification row (Release link, Devpost/organizer link, beacon round and `source`; say so if the external timestamp is not earlier than the beacon round; if `attempts` is not empty, cite how many there were, the first and last UTC times and the errors) and commit it with the beacon file:
-      ```bash
-      git add monitoring/seed_beacon.json docs/11-site-signal-sap.md
-      git commit -m "SAP v1: beacon round and external timestamp (docs/11 §17)" && git push origin site-signal-build
-      ```
-   Only after this may S6/S7/S8 produce evaluation output (`monitoring/out/`, `validation/site_signal/`).
-
-7. **Deploy to Render: public demo pair and private live API (R6; `render.yaml`, full guide in `docs/deploy.md`).** R6 is integrated on `site-signal-build` and verified locally only (token tests, a live-config container returning 401 without `X-BV-Token`, `render.yaml` parses to the three services). Dashboard labels are as of Oct 2026 and may have moved (UNVERIFIED). Never type a secret into a file in the repository.
+5. **Deploy to Render: public demo pair and private live API (R6; `render.yaml`, full guide in `docs/deploy.md`).** R6 is integrated on `site-signal-build` and verified locally only (token tests, a live-config container returning 401 without `X-BV-Token`, `render.yaml` parses to the three services). Dashboard labels are as of Oct 2026 and may have moved (UNVERIFIED). Never type a secret into a file in the repository.
    1. **`render.yaml` must be on `main`**: the Blueprint and every auto-deploy read `main`. Do item 1 (merge `site-signal-build` into `main`) first.
    2. **Billing.** Sign in at https://dashboard.render.com with GitHub → **Workspace Settings → Billing** → add a payment method, and approve three always-on `starter` instances (`bv-demo-api`, `bv-demo-web`, `bv-live-api`; pricing UNVERIFIED).
    3. **GitHub app access.** Render dashboard → **New → Blueprint → Connect a repository** → on GitHub's Render app page choose the account that owns `feruzkarimovv/between-visits` → **Only select repositories** → add `between-visits` → **Install** (or **Save**). Do not change the repository's visibility.
@@ -144,10 +91,10 @@ Steps that need a person. Everything around them is done; each item says exactly
       cd frontend && npm run dev      # http://localhost:3000
       ```
       Do not merge to `main` during the calls: each deploy resets the live SQLite state. You can also turn off **`bv-live-api` → Settings → Build & Deploy → Auto-Deploy** for the session. Known gap (F10): the SAE JSON export link is a plain link and cannot send `X-BV-Token`, so it returns 401 on the live instance (`docs/deploy.md` §5).
-   9. **Once it works:** put the `bv-demo-web` URL into the README (R8 replaced the old "**Live demo:** not deployed yet" line; the exact edits are item 9 below), and remove "verified locally only" from `docs/deploy.md`; commit and push.
+   9. **Once it works:** put the `bv-demo-web` URL into the README (R8 replaced the old "**Live demo:** not deployed yet" line; the exact edits are item 7 below), and remove "verified locally only" from `docs/deploy.md`; commit and push.
 
-8. **Timed README walkthrough (R8 acceptance).** A teammate who did not build the product follows only the README section "Reviewer path (3 minutes)" and must reach the Sponsor inbox in under 3 minutes. Do not help them; start a stopwatch when they open the dashboard.
-   - Once `bv-demo-web` is deployed (item 7): open the `bv-demo-web` URL in an incognito window.
+6. **Timed README walkthrough (R8 acceptance).** A teammate who did not build the product follows only the README section "Reviewer path (3 minutes)" and must reach the Sponsor inbox in under 3 minutes. Do not help them; start a stopwatch when they open the dashboard.
+   - Once `bv-demo-web` is deployed (item 5): open the `bv-demo-web` URL in an incognito window.
    - Until then, on a laptop with uv, Node 22 and make, from the repo root:
      ```bash
      cp .env.example .env                  # leave every key empty
@@ -161,10 +108,10 @@ Steps that need a person. Everything around them is done; each item says exactly
      ```
    - If it took 3 minutes or more, note the step that cost the time; the README path gets fixed before submission (D16).
 
-9. **Put the public demo URL into the README after the Render deploy (R8; after item 7).** The README says "the public demo URL (pending deploy, …)" in two places. With the real `bv-demo-web` URL (from item 7, sub-step 5):
+7. **Put the public demo URL into the README after the Render deploy (R8; after item 5).** The README says "the public demo URL (pending deploy, …)" in two places. With the real `bv-demo-web` URL (from item 5, sub-step 5):
    - README line 13 (starts with "**Public demo:**"): replace the words from "the public demo URL (pending deploy" through the closing parenthesis after the `docs/deploy.md` link with the `bv-demo-web` URL, and change "Until it is live, run" to "To run"; keep the `make demo` and Quickstart link.
    - README line 17 (first line under "Reviewer path (3 minutes)"): replace the same words, "the public demo URL (pending deploy" through the closing parenthesis after the `docs/deploy.md` link, with the `bv-demo-web` URL.
-   - README "Deploy" section: remove the sentence "So far it is verified locally only." (and the same words at the top of `docs/deploy.md`, as in item 7 sub-step 9; `docs/deploy.md` §4 step 8 still names the old "**Live demo:** not deployed yet" line, update it to say README lines 13 and 17).
+   - README "Deploy" section: remove the sentence "So far it is verified locally only." (and the same words at the top of `docs/deploy.md`, as in item 5 sub-step 9; `docs/deploy.md` §4 step 8 still names the old "**Live demo:** not deployed yet" line, update it to say README lines 13 and 17).
    - Check, then commit and push:
      ```bash
      grep -n 'pending deploy' README.md    # prints nothing
@@ -172,7 +119,7 @@ Steps that need a person. Everything around them is done; each item says exactly
      ```
    - The demo video and deck lines (`_TODO_ (added at submission)`, README lines 9 and 11) are filled by D16 at submission, not here.
 
-10. **Export the real V10 calls as recorded replay scenarios (V11; after V10).** V11 is integrated on `site-signal-build`: `agent/export_scenario.py` and the demo-only route `GET /api/demo/scenarios/{id}/audio`. No recorded scenario exists yet (the demo lists 0 recorded scenarios until this item is done).
+8. **Export the real V10 calls as recorded replay scenarios (V11; after V10).** V11 is integrated on `site-signal-build`: `agent/export_scenario.py` and the demo-only route `GET /api/demo/scenarios/{id}/audio`. No recorded scenario exists yet (the demo lists 0 recorded scenarios until this item is done).
    1. **Consent first.** Confirm that the teammate who played each synthetic patient agrees to the call being recorded and exported as a transcript. Use `--audio` only with that consent. Serving the audio from the public demo also needs their written consent; without it, ship transcript-only (leave out `--audio`, or keep the mp3 off the public instance).
    2. **Setup.** After the V10 calls are logged in `eval/results/voice_checks.json`, work from the main checkout root and take each call's `conversation_id` and `checkin_id` from that file. `ELEVENLABS_API_KEY` must be in `.env`. If the live instance uses a dashboard token, `BV_DASHBOARD_TOKEN` must be set in `.env` or the shell.
       ```bash
@@ -207,81 +154,20 @@ Steps that need a person. Everything around them is done; each item says exactly
       git add scenarios/rec_*.json && git commit -m "WS1-V11: recorded scenarios rec_en_g2 rec_es_g3_flag" && git push origin site-signal-build
       ```
 
-11. **Finish the `sap-v1` freeze: the §1.5 row is filled, the tag is not made (S1 final; docs/11 §1.2 steps 2-7).** Commit 9c6e84a on `site-signal-build` sets the docs/11 Status line to "frozen by the annotated tag `sap-v1` (§1.5)" and fills the §1.5 `sap-v1` row (2026-10-11; §11.5 P1 shortfall, P2 shortfall; reviewed by agent with a statistician's lens, 4 rounds; "team lead review pending"). This replaces item 6 sub-steps 1-2 (do not add a second change-log commit). `--check-frozen` passes and nothing under `monitoring/out/` or `validation/site_signal/` exists. Nothing is tagged or released yet.
-   1. **Review the SAP diff** (team lead):
-      ```bash
-      cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
-      git diff 607d213..origin/site-signal-build -- docs/11-site-signal-sap.md monitoring/params.yaml
-      ```
-   2. **Optional, only if you signed off before tagging:** before sub-step 3, change the phrase "team lead review pending" in the docs/11 §1.5 `sap-v1` row to "reviewed by the team lead", and commit it before anything goes to `main`:
-      ```bash
-      sed -i '' 's/team lead review pending; frozen\./reviewed by the team lead; frozen./' docs/11-site-signal-sap.md
-      grep -n '^| `sap-v1` |' docs/11-site-signal-sap.md       # check the row
-      git commit -am "SAP v1: team lead review in change log"
-      ```
-      Without a sign-off, leave the row as it is (docs/KICKOFF.md wording).
-   3. **Land the frozen commit on `main`** (docs/11 §1.2 steps 2-3; same rejection handling as item 6 sub-step 2: never force):
-      ```bash
-      uv run --project monitoring python -m bvsignal.seed --check-frozen; echo exit=$?   # expect: frozen inputs: OK, exit=0
-      git push origin site-signal-build
-      git push origin site-signal-build:main      # fast-forward only: never add --force, -f or a leading +
-      git fetch origin
-      test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)" && echo main-is-the-sap-commit   # expect: main-is-the-sap-commit
-      git ls-tree -r origin/main --name-only | grep -E '^(monitoring/out|validation/site_signal)/'   # must print nothing
-      ```
-   4. **Tag the pushed commit** (docs/11 §1.2 step 5; tag `origin/main`, never a worktree sha):
-      ```bash
-      git fetch origin && git tag -a sap-v1 origin/main -m 'Site Signal SAP v1' && git push origin sap-v1
-      git rev-parse 'sap-v1^{commit}'                                       # the tag sha to publish
-      git merge-base --is-ancestor sap-v1 origin/main && echo tag-on-main   # expect: tag-on-main
-      ```
-   5. **External timestamp within 10 minutes** (docs/11 §1.2 step 6): GitHub > Releases > Draft a new release > tag `sap-v1` > title "Site Signal SAP v1" > Publish release (or `gh release create sap-v1 --title "Site Signal SAP v1" --notes "sap-v1 = <tag sha>"`), and post the tag sha in the Devpost draft or the organizer channel. Keep both links.
-   6. **Beacon** (docs/11 §1.2 step 7), started right after the tag push and left running until it exits:
-      ```bash
-      uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait   # writes monitoring/seed_beacon.json once
-      uv run --project monitoring python -m bvsignal.seed --show                  # tag sha, beacon round, evaluation seed
-      ```
-   7. **Commit the beacon file with a §17 clarification** (Release link, Devpost/organizer link, beacon round and `source`, and the `attempts` summary if not empty), exactly as item 6 sub-step 6:
-      ```bash
-      git add monitoring/seed_beacon.json docs/11-site-signal-sap.md
-      git commit -m "SAP v1: beacon round and external timestamp (docs/11 §17)" && git push origin site-signal-build
-      ```
-   Only after this may S6/S7/S8 produce evaluation output.
-
-12. **Post the `sap-v1` tag sha outside the team's control and log the link in docs/11 §17 (S1 follow-up; docs/11 §1.2 step 6).** Done on `site-signal-build` in commit 5e1849e ("WS5-S1: beacon round and evaluation seed"): tag `sap-v1` on commit `68838978bb305e0f730d30e5cbf3c00bceca5a25` (tag object `e5b4a7983c4a3f3b3bd5f46d8b6cdc65d9d4b1e6`, same on origin), GitHub Release https://github.com/feruzkarimovv/between-visits/releases/tag/sap-v1 published 2026-10-11T08:38:10Z, beacon drand round 6542582 (round time 08:48:00Z, no failed attempts) in `monitoring/seed_beacon.json`, evaluation seed 92794863, docs/11 §17 rows C1 (Release timestamp) and C2 (beacon and seed). This finishes item 6 sub-steps 3-6 and item 11 sub-steps 3-7, except the Devpost/organizer post. Do not rerun `--fetch-beacon` and never edit or delete `monitoring/seed_beacon.json`. The tag exists now, so do not edit the docs/11 §1.5 `sap-v1` row (item 11 sub-step 2 no longer applies); a later team lead sign-off goes in its own §17 clarification row.
-   1. Post this text in the Devpost draft (project description or an update) or in the event's organizer channel, then copy the post's link (Devpost URL or message permalink) and note the post time in UTC:
+9. **Post the `sap-v1` tag sha in the Devpost draft or the organizer channel, and log the link in docs/11 §17 (S1; docs/11 §1.2 step 6).** The tag, the GitHub Release (the external timestamp) and the beacon are done (docs/11 §17 rows C1, C2); only this post is left. Never edit the docs/11 §1.5 `sap-v1` row or `monitoring/seed_beacon.json`.
+   1. Post this text in the Devpost draft (project description or an update) or in the event's organizer channel, then copy the post's link and note the post time in UTC:
       ```
       Between Visits Site Signal SAP v1 is frozen: sap-v1 = 68838978bb305e0f730d30e5cbf3c00bceca5a25
       https://github.com/feruzkarimovv/between-visits/releases/tag/sap-v1
       ```
-   2. In `docs/11-site-signal-sap.md` §17, add row C4 directly below C3 (S4 took C3; if more rows landed since, use the next free number below the last C row) and above the empty placeholder row `| | | | | | | | | |` (keep the placeholder last: `monitoring/tests/test_seed.py` replaces it in a test). Fill in `<HH:MM>`, `<post link>` and `<UTC time>`. The post is later than both the 10-minute window and the beacon round time, and §1.2 step 6 requires §17 to say so:
+   2. Update the branch first (`cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only`). In `docs/11-site-signal-sap.md` §17, add a row with the next free C number (C5 unless more rows have landed) directly above the empty placeholder row `| | | | | | | | | |`, which stays last. Fill in `<n>`, `<HH:MM>`, `<post link>` and `<UTC time>`:
       ```
-      | C4 | 2026-10-11 <HH:MM> ET | Commit `SAP v1: organizer timestamp link (docs/11 §17)` | §1.2 step 6 | clarification | Tag sha `68838978bb305e0f730d30e5cbf3c00bceca5a25` and the Release link posted at <post link> at <UTC time>. This post is later than the 10-minute window after the tag push and later than the beacon round time 2026-10-11T08:48:00Z (row C2); the GitHub Release in row C1 (`publishedAt` 08:38:10Z) is the external timestamp that is earlier than the round. | §1.2 step 6 puts both external-timestamp links in a §17 clarification and requires §17 to say when one is not earlier than the beacon round. | No | None on any result. |
+      | C<n> | 2026-10-11 <HH:MM> ET | Commit `SAP v1: organizer timestamp link (docs/11 §17)` | §1.2 step 6 | clarification | Tag sha `68838978bb305e0f730d30e5cbf3c00bceca5a25` and the Release link posted at <post link> at <UTC time>. This post is later than the 10-minute window after the tag push and later than the beacon round time 2026-10-11T08:48:00Z (row C2); the GitHub Release in row C1 (`publishedAt` 08:38:10Z) is the external timestamp that is earlier than the round. | §1.2 step 6 puts both external-timestamp links in a §17 clarification and requires §17 to say when one is not earlier than the beacon round. | No | None on any result. |
       ```
-   3. Check, commit and push:
+   3. Check, commit and push the branch:
       ```bash
-      cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
-      grep -c '^| C[1234] |' docs/11-site-signal-sap.md                     # expect: 4
       uv run --project monitoring python -m bvsignal.seed --check-frozen     # expect: frozen inputs: OK
-      uv run --project monitoring python -m bvsignal.seed --show             # expect: sap_tag_commit=68838978bb305e0f730d30e5cbf3c00bceca5a25 beacon_round=6542582 eval_seed=92794863
       make test
       git add docs/11-site-signal-sap.md && git commit -m "SAP v1: organizer timestamp link (docs/11 §17)" && git push origin site-signal-build
       ```
-   4. Optional (docs/workstreams/WS5-site-signal.md, S1 step 7): post the seed line in the team chat:
-      ```
-      sap_tag_commit=68838978bb305e0f730d30e5cbf3c00bceca5a25 beacon_round=6542582 eval_seed=92794863
-      ```
-
-13. **Run the committed evaluation-seed calibration once (S4; WS5 sequence step 9, docs/11 §9.2).** S4 (`monitoring/bvsignal/calibrate.py`, `indicators.py`) is integrated on `site-signal-build` in commit 666c618; no evaluation-seed run has been made and `monitoring/out/` does not exist. Run it once, on a clean checkout, after S5 is green (it is) and before S6's `make site-signal`. The first evaluation-seed run of a code commit is the one committed: never rerun it to get different numbers, never commit a `--seed dev` output, and do not quote any threshold until it is in `validation/site_signal/summary.json`.
-   ```bash
-   cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
-   git status --porcelain                                                 # expect: nothing (the run refuses a dirty tree)
-   uv run --project monitoring python -m bvsignal.seed --check-frozen     # expect: frozen inputs: OK
-   time uv run --project monitoring python -m bvsignal.calibrate          # evaluation seed (default), R = 2000; about 22 s on 14 cores
-   jq '{r_null, discordance, rate_kri, simaerep_classic, achieved}' monitoring/out/thresholds.json
-   git status --porcelain   # expect exactly: monitoring/out/thresholds.json, monitoring/out/null_pool.json, validation/site_signal/run_log.jsonl
-   git add monitoring/out/thresholds.json monitoring/out/null_pool.json validation/site_signal/run_log.jsonl
-   git commit -m "WS5-S4: evaluation-seed calibration (thresholds.json, null_pool.json, run log)"
-   git push origin site-signal-build                                      # never rebase or amend this commit afterwards
-   ```
-   If the run refuses or fails, do not edit any output by hand; record the error and stop.
+   If the team lead reviews the SAP later, the sign-off and any findings go in their own §17 rows the same way (docs/11 §1.2 step 4).

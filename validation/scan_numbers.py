@@ -5,8 +5,14 @@ NANP-shaped numbers written with or without +1 and with spaces, dashes, dots or 
 A match whose exchange (digits 4-6 of the 10-digit number) is 555 is ignored: that is the fictional range every
 committed placeholder uses. Any other match prints the commit, the file and the last 4 digits only (never the
 number), and the script exits 1. Known false positives (a digit run inside a hash, say) go in
-validation/scan_numbers_allow.txt as the sha256 of the 10 matched digits, never the digits themselves. The digest
-lines of that file are the only added lines not checked (a hex digest has digit runs of its own); its comments are.
+validation/scan_numbers_allow.txt as the sha256 of the 10 matched digits, never the digits themselves.
+
+Two kinds of added lines are not checked (validation/secret-scan.md, § Lines that are not checked):
+- the digest lines of that allowlist (a hex digest has digit runs of its own); its comments are checked;
+- every added line of a lockfile, chosen by path: a file named `uv.lock` or `package-lock.json`, or any `*.lock`.
+  Package managers write these from registry metadata (names, versions, URLs, sha256/sha512 hashes). Their hash
+  digit runs are number-shaped false positives that change with every re-lock. A lockfile's path is still checked,
+  and gitleaks still scans its content.
 
 gitleaks stays the primary check; `make secret-scan` runs gitleaks first, then this script.
 
@@ -35,6 +41,9 @@ DEFAULT_ALLOW = ROOT / ALLOW_REL
 # The pattern from docs/workstreams/WS0-readiness.md R1, unchanged.
 NUMBER_RE = re.compile(r"(?<![0-9])(?:\+?1[ .-]?)?\(?[2-9][0-9]{2}\)?[ .-]?[2-9][0-9]{2}[ .-]?[0-9]{4}(?![0-9])")
 FICTIONAL_EXCHANGE = "555"
+# Lockfiles, matched on the file name in any directory (validation/secret-scan.md). `agents.lock.json` is not one.
+LOCKFILE_NAMES = frozenset({"uv.lock", "package-lock.json"})
+LOCKFILE_SUFFIX = ".lock"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 SUMMARY_RE = re.compile(r"^numbers: (\d+) hits? \(.*; (\d+) allowlisted\)$", re.M)  # parsed by the self-test
 
@@ -49,6 +58,12 @@ def national_digits(match: str) -> str:
     """Separators stripped; a leading country code 1 dropped, so the result is the 10-digit national number."""
     digits = re.sub(r"[^0-9]", "", match)
     return digits[1:] if len(digits) == 11 else digits
+
+
+def is_lockfile(path: str) -> bool:
+    """A package-manager lockfile, by file name: `uv.lock`, `package-lock.json` or any `*.lock`."""
+    name = path.rsplit("/", 1)[-1]
+    return name in LOCKFILE_NAMES or name.endswith(LOCKFILE_SUFFIX)
 
 
 def digest(digits: str) -> str:
@@ -94,6 +109,7 @@ class Scan:
         self.hits: dict[tuple[str, str, str], None] = {}  # (commit, file, digits), insertion-ordered
         self.commits = 0
         self.added_lines = 0
+        self.lockfile_lines = 0  # added lines of lockfiles, not checked
         self.fictional = 0
         self.allowlisted = 0
 
@@ -129,6 +145,9 @@ class Scan:
                 elif line.startswith("@@"):
                     in_header = False
             elif line.startswith("+"):
+                if is_lockfile(path):
+                    self.lockfile_lines += 1
+                    continue
                 self.added_lines += 1
                 text = line[1:]
                 if path == ALLOW_REL:
@@ -154,6 +173,7 @@ class Scan:
         n = len(self.hits)
         print(
             f"numbers: {n} hit{'' if n == 1 else 's'} ({self.commits} commits, {self.added_lines} added lines; "
+            f"{self.lockfile_lines} lockfile lines not checked; "
             f"{self.fictional} fictional 555 matches ignored; {self.allowlisted} allowlisted)"
         )
         if n:
@@ -199,13 +219,19 @@ def _summary(out: str) -> tuple[int, int] | None:
     return (int(m.group(1)), int(m.group(2))) if m else None
 
 
+# Self-test files: two lockfiles (not checked) and a file whose name only contains "lock" (checked).
+SELFTEST_LOCKFILES = ("selftest_deps/uv.lock", "selftest_deps/web/package-lock.json")
+SELFTEST_NOT_LOCKFILE = "selftest_deps/agents.lock.json"
+
+
 def self_test() -> int:
     numbers: list[str] = []
-    while len(numbers) < 4:
+    while len(numbers) < 7:
         d = _generated_number()
         if all(d[-4:] != n[-4:] for n in numbers):
             numbers.append(d)
-    a, b, c, e = numbers
+    a, b, c, e, h, f, g = numbers
+    found, skipped = [a, b, c, e, h], [f, g]  # numbers the scan must report, numbers inside lockfiles
     fictional = _generated_number()[:3] + FICTIONAL_EXCHANGE + "0100"
     planted = (
         f"call +1 ({a[:3]}) {a[3:6]}-{a[6:]} after the visit\n"
@@ -230,14 +256,19 @@ def self_test() -> int:
         allow_in_clone.parent.mkdir(parents=True, exist_ok=True)
         with allow_in_clone.open("a") as fh:
             fh.write(allow_line)
-        subprocess.run(["git", "add", "selftest_contact.txt", ALLOW_REL], cwd=clone, **quiet)
+        planted_files = {SELFTEST_NOT_LOCKFILE: h, SELFTEST_LOCKFILES[0]: f, SELFTEST_LOCKFILES[1]: g}
+        for rel, d in planted_files.items():
+            (clone / rel).parent.mkdir(parents=True, exist_ok=True)
+            (clone / rel).write_text(f'"contact": "{d[:3]}-{d[3:6]}-{d[6:]}"\n')
+        subprocess.run(["git", "add", "selftest_contact.txt", ALLOW_REL, *planted_files], cwd=clone, **quiet)
         subprocess.run(
             ["git", "-c", "user.name=scan self-test", "-c", "user.email=selftest@example.invalid",
              "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify", "-m", "self-test: planted numbers"],
             cwd=clone, **quiet,
         )
-        print(f"self-test: scratch clone {clone} (outside the repository); 1 commit with 4 generated non-555 "
-              "numbers (3 formats in a file, 1 in an allowlist comment) and 1 fictional 555 number")
+        print(f"self-test: scratch clone {clone} (outside the repository); 1 commit with 7 generated non-555 "
+              f"numbers (3 formats in a file, 1 in an allowlist comment, 1 in {SELFTEST_NOT_LOCKFILE}, 1 in each "
+              f"lockfile {' and '.join(SELFTEST_LOCKFILES)}) and 1 fictional 555 number")
 
         def run_scan(allow: Path) -> tuple[int, str]:
             r = subprocess.run([sys.executable, str(Path(__file__).resolve()), "--repo", str(clone), "--allow", str(allow)],
@@ -257,15 +288,19 @@ def self_test() -> int:
                 print(f"  | {line}")
             print(f"self-test: scan exit={rc}")
             first, second = _summary(out), _summary(out2)
-            last4_shown = all(f"last4 {n[-4:]}" in out for n in numbers)
-            four_hits = first is not None and first[0] == 4  # the 555 placeholder and the digest line are not hits
+            last4_shown = all(f"last4 {n[-4:]}" in out for n in found)
+            # the 555 placeholder, the digest line and the two lockfile lines are not hits
+            exact_hits = first is not None and first[0] == len(found)
+            lockfiles_skipped = not any(f"last4 {n[-4:]}" in text for text in (out, out2) for n in skipped)
             allow_works = (rc2 == 1 and first is not None and second is not None
                            and second == (first[0] - 1, first[1] + 1))
-            ok = rc == 1 and last4_shown and four_hits and allow_works
-            print(f"self-test: exit 1 {'yes' if rc == 1 else 'NO'}; last 4 digits of each planted number shown "
-                  f"{'yes' if last4_shown else 'NO'}; full numbers absent from output yes; exactly 4 hits (555 "
-                  f"placeholder ignored, allowlist comment checked) {'yes' if four_hits else 'NO'}; one allowlist "
-                  f"sha256 suppresses one hit {'yes' if allow_works else 'NO'}")
+            ok = rc == 1 and last4_shown and exact_hits and lockfiles_skipped and allow_works
+            print(f"self-test: exit 1 {'yes' if rc == 1 else 'NO'}; last 4 digits of each planted number outside "
+                  f"lockfiles shown {'yes' if last4_shown else 'NO'}; full numbers absent from output yes; exactly "
+                  f"{len(found)} hits (555 placeholder ignored, allowlist comment and {SELFTEST_NOT_LOCKFILE} "
+                  f"checked) {'yes' if exact_hits else 'NO'}; lockfile numbers not reported "
+                  f"{'yes' if lockfiles_skipped else 'NO'}; one allowlist sha256 suppresses one hit "
+                  f"{'yes' if allow_works else 'NO'}")
     except (OSError, subprocess.CalledProcessError) as exc:
         err = getattr(exc, "stderr", None)
         detail = err.decode(errors="replace").strip() if isinstance(err, bytes) and err else exc
