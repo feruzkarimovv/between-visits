@@ -71,3 +71,7 @@ requirements:
     title: Safe startup and demo-only controls
     text: Outside DEMO_MODE the backend refuses to start with the default, empty or short tool secret, and /api/demo/* returns 404 unless DEMO_MODE=1.
     risk: medium
+  - id: REQ-020
+    title: Parseable, consistent exports
+    text: AE/CM CSVs start with the header row, carry ORIGIN=between_visits, and AEOUT agrees with the SAE report outcome.
+    risk: medium

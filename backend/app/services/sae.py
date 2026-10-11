@@ -5,6 +5,7 @@ fallback: the AE's confirmation time. due_at = aware_at + 24h (example protocol 
 """
 
 import logging
+import re
 from datetime import date, timedelta
 from typing import Any
 
@@ -16,9 +17,49 @@ from app.errors import ApiError
 from app.models import CheckIn, DraftEntry, Escalation, Patient, SAEReport, Study
 from app.schemas import SponsorInboxItem, ValidCaseChecks
 from app.services import gemini, llm
+from app.services.export import outcome_of
 from app.timeutil import ensure_utc, iso, local_date, utcnow
 
 log = logging.getLogger("bv.sae")
+
+# Narrative punctuation (CAPA-001). Patient quotes are joined with "; " upstream and often end with their own
+# period or an ellipsis, so the generated text showed "..", ".;" and a nested parenthesis in the drug-class string.
+_ELLIPSIS = re.compile(r"\.{3,}")
+_STOP_THEN_SEMICOLON = re.compile(r"([.!?…])[ \t]*;")
+_STOP_THEN_PERIOD = re.compile(r"([.!?…])\.+")
+_SPACES = re.compile(r"[ \t]{2,}")
+
+
+def _flat_parens(text: str) -> str:
+    """Turn a parenthesis nested inside another into a comma aside: "a (b (c))" -> "a (b, c)"."""
+    out: list[str] = []
+    depth = 0
+    for ch in text:
+        if ch == "(":
+            if depth:
+                while out and out[-1] == " ":
+                    out.pop()
+                out.append(", ")
+            else:
+                out.append(ch)
+            depth += 1
+        elif ch == ")" and depth:
+            depth -= 1
+            if not depth:
+                out.append(ch)
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def tidy_punctuation(text: str | None) -> str | None:
+    """No doubled periods, no ".;" and no nested parentheses; the words themselves are unchanged."""
+    if not text:
+        return text
+    t = _ELLIPSIS.sub("…", text)
+    t = _STOP_THEN_SEMICOLON.sub(r"\1", t)
+    t = _STOP_THEN_PERIOD.sub(r"\1", t)
+    return _SPACES.sub(" ", _flat_parens(t))
 
 
 def _aware_at(session: Session, d: DraftEntry):  # noqa: ANN202
@@ -57,10 +98,10 @@ def build_payload(session: Session, d: DraftEntry, user: str, aware_at, due_at) 
         "reaction": {
             "term": pay.get("term"), "onset_date": pay.get("onset_date") or on.isoformat(),
             "provisional_ctcae_grade": pay.get("provisional_grade"), "ctcae_version": content.ctcae_version(),
-            "description": pay.get("verbatim_en"), "outcome": pay.get("outcome", "not_recovered"),
+            "description": tidy_punctuation(pay.get("verbatim_en")), "outcome": outcome_of(pay),
         },
         "seriousness": inv.get("seriousness_criteria", []),
-        "suspect_product": {"description": f"Study drug ({study.drug_class})", "route": "intravenous",
+        "suspect_product": {"description": tidy_punctuation(f"Study drug ({study.drug_class})"), "route": "intravenous",
                             "last_dose_date": _last_dose(p, on)},
         "concomitant": [
             {"medication": cm.payload.get("medication_name"), "start_date": cm.payload.get("start_date"),
@@ -88,6 +129,7 @@ def create_for(session: Session, d: DraftEntry, user: str) -> SAEReport:
     except Exception as e:  # noqa: BLE001
         log.warning("narrative_fallback draft_id=%s error=%r", d.id, e)
         narrative = gemini.template_narrative(payload)
+    narrative = tidy_punctuation(narrative) or narrative
     from app.ids import new_id
 
     r = SAEReport(

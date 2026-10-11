@@ -269,6 +269,7 @@ class DraftOut(BaseModel):
     created_at: datetime
     sae_report_id: str | None = None
     patient: PatientBrief | None = None
+    origin: Literal["between_visits"] = "between_visits"  # computed, not stored (docs/03 §6.5)
 
 
 class TranscriptTurn(BaseModel):

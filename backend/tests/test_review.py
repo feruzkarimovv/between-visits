@@ -79,10 +79,10 @@ def test_review_to_sponsor(client, session, fake_pager):
     assert {a.actor for a in human} <= {"Jess Kim", "Dr. Patel"}
 
     ae_csv = client.get("/api/export/ae.csv").text
-    rows = list(csv.reader(io.StringIO(ae_csv.split("\n", 1)[1])))
+    rows = list(csv.reader(io.StringIO(ae_csv)))  # header row is line 1 (B14)
     assert rows[0] == AE_COLUMNS and rows[1][AE_COLUMNS.index("AETOXGR")] == "3"
     assert rows[1][AE_COLUMNS.index("AESHOSP")] == "Y" and rows[1][AE_COLUMNS.index("AEDECOD")] == ""
-    cm_rows = list(csv.reader(io.StringIO(client.get("/api/export/cm.csv").text.split("\n", 1)[1])))
+    cm_rows = list(csv.reader(io.StringIO(client.get("/api/export/cm.csv").text)))
     assert cm_rows[0] == CM_COLUMNS and len(cm_rows) == 2
 
 

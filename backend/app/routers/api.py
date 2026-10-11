@@ -394,13 +394,15 @@ def sponsor_inbox(session: Session = Depends(get_session)) -> list[SponsorInboxI
 @router.get("/export/ae.csv", response_class=PlainTextResponse)
 def export_ae(session: Session = Depends(get_session)) -> PlainTextResponse:
     return PlainTextResponse(export_svc.ae_csv(session), media_type="text/csv",
-                             headers={"Content-Disposition": "attachment; filename=ae.csv"})
+                             headers={"Content-Disposition": "attachment; filename=ae.csv",
+                                      "X-BV-Note": export_svc.ae_note()})
 
 
 @router.get("/export/cm.csv", response_class=PlainTextResponse)
 def export_cm(session: Session = Depends(get_session)) -> PlainTextResponse:
     return PlainTextResponse(export_svc.cm_csv(session), media_type="text/csv",
-                             headers={"Content-Disposition": "attachment; filename=cm.csv"})
+                             headers={"Content-Disposition": "attachment; filename=cm.csv",
+                                      "X-BV-Note": export_svc.CM_NOTE})
 
 
 @router.get("/export/sae/{sae_id}.json")

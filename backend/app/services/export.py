@@ -1,8 +1,12 @@
-"""SDTM-style exports of confirmed drafts (docs/05 § 8). MedDRA/WHODrug columns are left empty on purpose."""
+"""SDTM-style exports of confirmed drafts (docs/05 § 8). MedDRA/WHODrug columns are left empty on purpose.
+
+The header row is line 1 (a standard CSV reader takes line 1 as the header); the note about the file travels in
+the `X-BV-Note` response header instead (docs/03 §6.5, CAPA-001).
+"""
 
 import csv
 import io
-from typing import Any
+from typing import Any, Final
 
 from sqlmodel import Session, select
 
@@ -10,8 +14,12 @@ from app import content
 from app.models import CheckIn, DraftEntry, Patient, SAEReport, Study
 from app.timeutil import local_date
 
+# Every exported row is a confirmed Between Visits draft. Sponsor-defined column (SUPPAE QNAM ORIGIN in a real
+# submission); Site Signal excludes rows with this origin from matching (REQ-024).
+ORIGIN: Final = "between_visits"
 AE_COLUMNS = ["STUDYID", "DOMAIN", "USUBJID", "AESEQ", "AESPID", "AETERM", "AEDECOD", "AEBODSYS", "AETOXGR", "AESER",
-              "AESDTH", "AESLIFE", "AESHOSP", "AESDISAB", "AESCONG", "AESMIE", "AEREL", "AEOUT", "AESTDTC", "AEENDTC"]
+              "AESDTH", "AESLIFE", "AESHOSP", "AESDISAB", "AESCONG", "AESMIE", "AEREL", "AEOUT", "AESTDTC", "AEENDTC",
+              "ORIGIN"]
 CM_COLUMNS = ["STUDYID", "DOMAIN", "USUBJID", "CMSEQ", "CMTRT", "CMDECOD", "CMINDC", "CMDOSE", "CMDOSU", "CMDOSFRQ",
               "CMROUTE", "CMSTDTC", "CMENDTC"]
 REL = {"not_related": "NOT RELATED", "unlikely_related": "UNLIKELY RELATED", "possibly_related": "POSSIBLY RELATED",
@@ -20,6 +28,25 @@ OUT = {"recovered": "RECOVERED/RESOLVED", "recovering": "RECOVERING/RESOLVING", 
        "recovered_with_sequelae": "RECOVERED/RESOLVED WITH SEQUELAE", "fatal": "FATAL", "unknown": "UNKNOWN"}
 CRIT = {"AESDTH": "death", "AESLIFE": "life_threatening", "AESHOSP": "hospitalization", "AESDISAB": "disability",
         "AESCONG": "congenital_anomaly", "AESMIE": "important_medical_event"}
+CM_NOTE = "synthetic data; CMDECOD empty: WHODrug coding is licensed and done downstream"
+
+
+def ae_note() -> str:
+    """`X-BV-Note` for ae.csv (docs/03 §6.5)."""
+    return (f"CTCAE v{content.ctcae_version()}; synthetic data; AEDECOD/AEBODSYS coded downstream by licensed sponsor; "
+            "ORIGIN is a sponsor-defined column")
+
+
+def outcome_of(payload: dict[str, Any] | None) -> str:
+    """Outcome key of an AE draft, shared by ae.csv `AEOUT` and the SAE report's `reaction.outcome` (docs/03 §6.5).
+
+    A known `outcome` key wins; otherwise an ongoing event is `not_recovered` and anything else is `unknown`.
+    """
+    pay = payload or {}
+    key = pay.get("outcome")
+    if isinstance(key, str) and key in OUT:
+        return key
+    return "not_recovered" if pay.get("ongoing") is True else "unknown"
 
 
 def _yn(v: bool) -> str:
@@ -45,7 +72,6 @@ def _studyid(session: Session) -> str:
 
 def ae_csv(session: Session) -> str:
     buf = io.StringIO()
-    buf.write(f"# CTCAE v{content.ctcae_version()}; synthetic data; AEDECOD/AEBODSYS coded downstream by licensed sponsor\n")
     w = csv.DictWriter(buf, fieldnames=AE_COLUMNS)
     w.writeheader()
     sid = _studyid(session)
@@ -59,8 +85,9 @@ def ae_csv(session: Session) -> str:
             "STUDYID": sid, "DOMAIN": "AE", "USUBJID": f"{sid}-{p.subject_id}", "AESEQ": seq[p.id], "AESPID": c.id,
             "AETERM": pay.get("term", ""), "AEDECOD": "", "AEBODSYS": "", "AETOXGR": str(grade) if grade else "",
             "AESER": _yn(bool(inv.get("is_serious"))) if inv else "",
-            "AEREL": REL.get(inv.get("relatedness", ""), ""), "AEOUT": OUT.get(pay.get("outcome", "unknown"), "UNKNOWN"),
+            "AEREL": REL.get(inv.get("relatedness", ""), ""), "AEOUT": OUT[outcome_of(pay)],
             "AESTDTC": pay.get("onset_date") or local_date(c.started_at or c.created_at).isoformat(), "AEENDTC": "",
+            "ORIGIN": ORIGIN,
         }
         for col, key in CRIT.items():
             row[col] = _yn(key in crit) if inv else ""
@@ -70,7 +97,6 @@ def ae_csv(session: Session) -> str:
 
 def cm_csv(session: Session) -> str:
     buf = io.StringIO()
-    buf.write("# synthetic data; CMDECOD empty: WHODrug coding is licensed and done downstream\n")
     w = csv.DictWriter(buf, fieldnames=CM_COLUMNS)
     w.writeheader()
     sid = _studyid(session)

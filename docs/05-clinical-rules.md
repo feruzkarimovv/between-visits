@@ -154,10 +154,18 @@ The narrative draft (Gemini) may use only facts present in the payload and evide
 
 ## 8. Exports (SDTM-style CSV, confirmed drafts only)
 
-**AE:** `STUDYID, DOMAIN ("AE"), USUBJID, AESEQ, AESPID (check-in ID), AETERM (CTCAE term), AEDECOD (empty: coded downstream by licensed sponsor), AEBODSYS (empty), AETOXGR ("1"–"5", provisional or clinician-confirmed), AESER (Y/N), AESDTH, AESLIFE, AESHOSP, AESDISAB, AESCONG, AESMIE (Y/N), AEREL (NOT RELATED / UNLIKELY RELATED / POSSIBLY RELATED / PROBABLY RELATED / RELATED), AEOUT (RECOVERED/RESOLVED, RECOVERING/RESOLVING, NOT RECOVERED/NOT RESOLVED, RECOVERED/RESOLVED WITH SEQUELAE, FATAL, UNKNOWN), AESTDTC, AEENDTC` (ISO 8601). Add a header comment line with `# CTCAE v5.0; synthetic data`.
+**AE:** `STUDYID, DOMAIN ("AE"), USUBJID, AESEQ, AESPID (check-in ID), AETERM (CTCAE term), AEDECOD (empty: coded downstream by licensed sponsor), AEBODSYS (empty), AETOXGR ("1"–"5", provisional or clinician-confirmed), AESER (Y/N), AESDTH, AESLIFE, AESHOSP, AESDISAB, AESCONG, AESMIE (Y/N), AEREL (NOT RELATED / UNLIKELY RELATED / POSSIBLY RELATED / PROBABLY RELATED / RELATED), AEOUT (RECOVERED/RESOLVED, RECOVERING/RESOLVING, NOT RECOVERED/NOT RESOLVED, RECOVERED/RESOLVED WITH SEQUELAE, FATAL, UNKNOWN), AESTDTC, AEENDTC, ORIGIN` (dates ISO 8601).
 
-*Planned change (B14, `docs/03` §6.5): the `#` line is removed so the header row is line 1; the note moves to the `X-BV-Note` response header (exact strings in `docs/03` §6.5); ae.csv gains a trailing, sponsor-defined `ORIGIN` column (`between_visits`; SUPPAE QNAM `ORIGIN` in a real submission); `AEOUT` comes from the shared `outcome_of()` helper so it agrees with the SAE report. B14 rewrites this paragraph when it lands.*
+- **Header row first.** Line 1 of each file is the header row, so a standard CSV reader (`csv.DictReader`) reads the columns correctly. There is no comment line.
+- **The note travels in the `X-BV-Note` response header** (CORS exposes it and `Content-Disposition` to the dashboard):
+  - ae.csv: `CTCAE v5.0; synthetic data; AEDECOD/AEBODSYS coded downstream by licensed sponsor; ORIGIN is a sponsor-defined column`
+  - cm.csv: `synthetic data; CMDECOD empty: WHODrug coding is licensed and done downstream`
+- **`ORIGIN`** is a trailing, sponsor-defined (non-SDTM) column, `between_visits` on every row: every exported row is a confirmed Between Visits draft. In a real submission it would be the supplemental qualifier SUPPAE, QNAM `ORIGIN`. Site Signal excludes rows with this origin from matching (REQ-024).
+- **`AEOUT` agrees with the SAE report.** One helper, `outcome_of(payload)` in `backend/app/services/export.py`, gives both `AEOUT` and the SAE report's `reaction.outcome`: a known `outcome` key is used as is; with no `outcome`, an event with `ongoing: true` is `not_recovered` (NOT RECOVERED/NOT RESOLVED); anything else is `unknown` (UNKNOWN).
+- `AESTDTC` is the draft's onset date, else the `DISPLAY_TZ` local date of the call (§6.4 of `docs/03`).
 
-**CM:** `STUDYID, DOMAIN ("CM"), USUBJID, CMSEQ, CMTRT (as reported), CMDECOD (empty: WHODrug is licensed), CMINDC, CMDOSE, CMDOSU, CMDOSFRQ, CMROUTE (ORAL, INTRAVENOUS, ... UNKNOWN), CMSTDTC, CMENDTC`.
+Fixed under CAPA-001 (`validation/capa.md`), tested by REQ-020 (`backend/tests/test_exports.py`).
+
+**CM:** `STUDYID, DOMAIN ("CM"), USUBJID, CMSEQ, CMTRT (as reported), CMDECOD (empty: WHODrug is licensed), CMINDC, CMDOSE, CMDOSU, CMDOSFRQ, CMROUTE (ORAL, INTRAVENOUS, ... UNKNOWN), CMSTDTC, CMENDTC`. Header row first, note in `X-BV-Note` (above); no `ORIGIN` column.
 
 `USUBJID = STUDYID + "-" + subject_id`. These match SDTMIG v3.3 variable names and the CDISC controlled-terminology values listed above.

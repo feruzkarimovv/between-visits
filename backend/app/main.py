@@ -60,6 +60,7 @@ def create_app(start_background: bool = True) -> FastAPI:
         allow_credentials=False,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-BV-Note", "Content-Disposition"],  # read by the dashboard's download helper (docs/03 §6.5)
     )
 
     @app.exception_handler(ApiError)
