@@ -38,7 +38,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | A | B15 replay speed, provenance, health, voice checks | todo | | | |
 | A | F10 demo UX, downloads, /sae list | todo | | | |
 | A | D8 Spanish del fix, product-name guard | done | 6da3b18 | validate_data exit=0 (product names: 0 hits in 202 files; self-test 16/16 incl. dummy-token guard files exit 1 with guard.txt:3, control exit 0); grep -rn 'de el ' data/ scenarios/ prints nothing; test_disclosure.py 10 passed; red_flags.json rule/level fields unchanged (only sources and _about); make test exit 0 (184 pytest, ruff, data, agent-sync, tsc+eslint); diff has no keys, phone numbers or drug names | |
-| A | D9 boundary tests, mutation probe | todo | | | |
+| A | D9 boundary tests, mutation probe | done | 9848cf8 | pytest tests/test_rule_boundaries.py 14 passed (Diarrhea/Fever/Dyspnea G1/G2 + G2/G3 and no-grade/G1 edges, exactly one matching rule per value; RF_FEVER, RF_DIARRHEA_SEVERE, RF_DEHYDRATION thresholds; untested-threshold guard); data/mutation_probe.py baseline pass, killed 26/26 (13 numeric thresholds x 1 unit down/up, temp copies outside repo, ~7 s), git status clean after; validate_data grade bands OK: 5 terms contiguous, non-overlapping, grades consecutive; self-test 19/19; make test exit 0 (ruff, 295 pytest, data + site signal OK, product names 0 hits in 215 files, agent-sync 29 tests, tsc+eslint); no monitoring/out or validation/site_signal files; diff has no keys, phone numbers or drug names | |
 | A | D10 Clopper-Pearson intervals | todo | | | |
 | B | S2 simulate and roster | todo | | | |
 | B | S3 match | todo | | | |
