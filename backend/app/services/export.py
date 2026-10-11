@@ -8,6 +8,7 @@ from sqlmodel import Session, select
 
 from app import content
 from app.models import CheckIn, DraftEntry, Patient, SAEReport, Study
+from app.timeutil import local_date
 
 AE_COLUMNS = ["STUDYID", "DOMAIN", "USUBJID", "AESEQ", "AESPID", "AETERM", "AEDECOD", "AEBODSYS", "AETOXGR", "AESER",
               "AESDTH", "AESLIFE", "AESHOSP", "AESDISAB", "AESCONG", "AESMIE", "AEREL", "AEOUT", "AESTDTC", "AEENDTC"]
@@ -59,7 +60,7 @@ def ae_csv(session: Session) -> str:
             "AETERM": pay.get("term", ""), "AEDECOD": "", "AEBODSYS": "", "AETOXGR": str(grade) if grade else "",
             "AESER": _yn(bool(inv.get("is_serious"))) if inv else "",
             "AEREL": REL.get(inv.get("relatedness", ""), ""), "AEOUT": OUT.get(pay.get("outcome", "unknown"), "UNKNOWN"),
-            "AESTDTC": pay.get("onset_date") or (c.started_at or c.created_at).date().isoformat(), "AEENDTC": "",
+            "AESTDTC": pay.get("onset_date") or local_date(c.started_at or c.created_at).isoformat(), "AEENDTC": "",
         }
         for col, key in CRIT.items():
             row[col] = _yn(key in crit) if inv else ""

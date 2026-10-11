@@ -63,3 +63,7 @@ requirements:
     title: Demo mode without keys
     text: Demo mode runs the full replay end to end without external API keys.
     risk: low
+  - id: REQ-016
+    title: Local dates
+    text: The check-in day filter, patient timeline dates, AESTDTC fallback and SAE onset use the DISPLAY_TZ local date of the call.
+    risk: medium

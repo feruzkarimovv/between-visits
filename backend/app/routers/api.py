@@ -50,7 +50,7 @@ from app.services import checkins as checkin_svc
 from app.services import elevenlabs, review, sae
 from app.services import escalation as esc_svc
 from app.services import export as export_svc
-from app.timeutil import utcnow
+from app.timeutil import local_date, utcnow
 
 router = APIRouter(prefix="/api", tags=["api"])
 
@@ -149,7 +149,7 @@ def patient_detail(patient_id: str, session: Session = Depends(get_session)) -> 
     for c in sorted(cis, key=lambda c: c.created_at):
         if c.status == "scheduled":
             continue
-        d = (c.started_at or c.created_at).date()
+        d = local_date(c.started_at or c.created_at)
         for f in session.exec(select(Finding).where(Finding.checkin_id == c.id)).all():
             ans = session.exec(select(Answer).where(Answer.checkin_id == c.id, Answer.term == f.term)).first()
             timeline.setdefault(f.term, []).append(TimelinePoint(
@@ -179,10 +179,9 @@ def list_checkins(date_: date | None = Query(default=None, alias="date"), sessio
     seen: set[str] = set()
     rows = session.exec(select(CheckIn).order_by(CheckIn.created_at.desc())).all()  # type: ignore[attr-defined]
     for c in rows:
-        when = (c.scheduled_for or c.created_at)
-        if c.status != "scheduled" and c.started_at:
-            when = c.started_at
-        if when.date() != day and (c.created_at.date() != day):
+        # `day` is a DISPLAY_TZ local day (docs/03 §6.4): compare local dates, never UTC dates
+        when = c.started_at or c.scheduled_for or c.created_at
+        if local_date(when) != day and local_date(c.created_at) != day:
             continue
         p = pats.get(c.patient_id)
         if p is None:

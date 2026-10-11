@@ -66,7 +66,7 @@ Planned changes to existing targets: `make setup` uses `npm ci` and syncs `monit
 
 **Contracts first.** `docs/03-api-contracts.md` defines every endpoint, tool and webhook. If a change is needed, update the doc first, tell the team, then implement. Frontend types are generated; never hand-edit `api-types.ts`.
 
-**Backend (Python 3.12, uv):** FastAPI routers stay thin; logic lives in `app/services/*` as plain functions that take a DB session. Pydantic models for every request/response. Type hints everywhere, `ruff` clean. IDs from `app/ids.py` (`pat_`, `ci_`, `ans_`, `fnd_`, `esc_`, `dr_`, `sae_`, `aud_`). UTC ISO-8601 timestamps. Errors: `{"error":{"code","message"}}`. Agent tools always return HTTP 200 with the `{ok, next:{action, item_code, say}, escalated}` envelope. One structured log line per tool call, page, ack and webhook, including `checkin_id`.
+**Backend (Python 3.12, uv):** FastAPI routers stay thin; logic lives in `app/services/*` as plain functions that take a DB session. Pydantic models for every request/response. Type hints everywhere, `ruff` clean. IDs from `app/ids.py` (`pat_`, `ci_`, `ans_`, `fnd_`, `esc_`, `dr_`, `sae_`, `aud_`). UTC ISO-8601 timestamps. Dates shown or exported as days use DISPLAY_TZ local dates (`timeutil.local_date`). Errors: `{"error":{"code","message"}}`. Agent tools always return HTTP 200 with the `{ok, next:{action, item_code, say}, escalated}` envelope. One structured log line per tool call, page, ack and webhook, including `checkin_id`.
 
 **External services** (ElevenLabs, Gemini, Twilio) are wrapped in `app/services/{elevenlabs,gemini,pager}.py`. Each has a deterministic fake used by tests and by `DEMO_MODE=1`. Tests never call real APIs.
 

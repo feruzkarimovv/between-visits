@@ -16,7 +16,7 @@ from app.errors import ApiError
 from app.models import CheckIn, DraftEntry, Escalation, Patient, SAEReport, Study
 from app.schemas import SponsorInboxItem, ValidCaseChecks
 from app.services import gemini, llm
-from app.timeutil import ensure_utc, iso, utcnow
+from app.timeutil import ensure_utc, iso, local_date, utcnow
 
 log = logging.getLogger("bv.sae")
 
@@ -44,7 +44,7 @@ def build_payload(session: Session, d: DraftEntry, user: str, aware_at, due_at) 
     assert p is not None and c is not None and study is not None
     pay = d.payload or {}
     inv = d.investigator or {}
-    on = (c.started_at or c.created_at).date()
+    on = local_date(c.started_at or c.created_at)  # DISPLAY_TZ call date (docs/03 §6.4)
     cms = session.exec(
         select(DraftEntry).where(DraftEntry.patient_id == p.id, DraftEntry.kind == "CM", DraftEntry.status != "rejected")
     ).all()
