@@ -71,3 +71,96 @@ jobs:
       - run: cd frontend && npm run typecheck
       - run: cd frontend && npm run lint
       - run: cd frontend && npm run build
+
+  # WS0 R9: the README quickstart on a clean runner, ending in a real replay through `make demo`
+  # (DEMO_MODE=1: no external keys, fake LLM, console pager). make demo serves the API on :8000, the dashboard on :3000.
+  quickstart:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    env:
+      BV_API: http://localhost:8000
+      BV_SCENARIO: rosa_es_urgent
+      BV_REPLAY_SPEED: "4"     # ?speed=1|2|4 (docs/03 §6.2)
+      BV_EXPECTED_DRAFTS: "3"  # Rosa's replay drafts one CM and two AE entries
+      BV_WAIT_SECONDS: "120"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: cp .env.example .env
+        run: cp .env.example .env
+      - name: make setup
+        run: make setup
+      - name: make seed
+        run: make seed
+      - name: make test
+        run: make test
+      - name: make demo (background)
+        run: |
+          # Own session and process group: the recipe's `trap 'kill 0' EXIT` then reaches only the demo servers,
+          # and the stop step below ends the whole group. Output goes to a file so this step returns at once.
+          setsid make demo > "$RUNNER_TEMP/demo.log" 2>&1 < /dev/null &
+          echo "$!" > "$RUNNER_TEMP/demo.pgid"
+          echo "make demo started (process group $!)"
+      - name: Wait for /api/health
+        run: |
+          set -euo pipefail
+          deadline=$((SECONDS + BV_WAIT_SECONDS))
+          until body=$(curl -fsS --max-time 3 "$BV_API/api/health" 2>/dev/null); do
+            if (( SECONDS >= deadline )); then
+              echo "::error::$BV_API/api/health did not answer within ${BV_WAIT_SECONDS} s"
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "health: $body"
+          python3 -c 'import json, sys; sys.exit(0 if json.loads(sys.argv[1]).get("demo_mode") is True else "health: demo_mode is not true")' "$body"
+      - name: Replay rosa_es_urgent and poll until its drafts arrive
+        run: |
+          set -euo pipefail
+          resp=$(curl -fsS --max-time 10 -X POST "$BV_API/api/demo/replay/$BV_SCENARIO?speed=$BV_REPLAY_SPEED")
+          echo "POST /api/demo/replay/$BV_SCENARIO?speed=$BV_REPLAY_SPEED -> $resp"
+          id=$(python3 -c 'import json, sys; print(json.loads(sys.argv[1])["checkin_id"])' "$resp")
+          start=$SECONDS
+          deadline=$((start + BV_WAIT_SECONDS))
+          status=unknown
+          postcall=unknown
+          n=0
+          while :; do
+            if body=$(curl -fsS --max-time 5 "$BV_API/api/checkins/$id" 2>/dev/null); then
+              # CheckInDetail (docs/03): checkin.status, checkin.postcall_status (processing | done | failed), drafts[]
+              read -r status postcall n < <(python3 -c 'import json, sys; d = json.loads(sys.argv[1]); c = d["checkin"]; print(c.get("status"), c.get("postcall_status"), len(d["drafts"]))' "$body")
+              echo "t=$((SECONDS - start))s status=$status postcall=$postcall drafts=$n"
+              if (( n == BV_EXPECTED_DRAFTS )); then
+                echo "drafts=$n for $BV_SCENARIO (checkin $id, ?speed=$BV_REPLAY_SPEED, $((SECONDS - start)) s)"
+                exit 0
+              fi
+              # The post-call pipeline writes its drafts and postcall_status=done together: done or failed is final.
+              if (( n > BV_EXPECTED_DRAFTS )) || [ "$postcall" = done ] || [ "$postcall" = failed ]; then
+                echo "::error::$BV_SCENARIO: drafts=$n (status=$status, postcall=$postcall), expected $BV_EXPECTED_DRAFTS"
+                exit 1
+              fi
+            fi
+            if (( SECONDS >= deadline )); then
+              echo "::error::$BV_SCENARIO: drafts=$n (status=$status, postcall=$postcall) after ${BV_WAIT_SECONDS} s, expected $BV_EXPECTED_DRAFTS"
+              exit 1
+            fi
+            sleep 2
+          done
+      - name: make demo log (on failure)
+        if: failure()
+        run: tail -n 200 "$RUNNER_TEMP/demo.log" || true
+      - name: Stop make demo
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/demo.pgid" ]; then
+            kill -TERM -- "-$(cat "$RUNNER_TEMP/demo.pgid")" 2>/dev/null || true
+          fi
