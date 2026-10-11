@@ -4,7 +4,7 @@ Next.js (App Router) + TypeScript + Tailwind + shadcn/ui + TanStack Query. API t
 
 ## Design direction
 
-Calm clinical tool, not a consumer app. White and light-gray surfaces, one accent color, dense but readable tables, large hit targets. Semantic colors are reserved for state:
+Calm clinical tool, not a consumer app. White cards on a light canvas, one accent color (deep teal), dense but readable tables, large hit targets. Tokens live in `frontend/src/app/globals.css`: the accent scale, neutrals tinted toward the accent (they replace Tailwind's `gray-*`), a dark "rail" palette for the sidebar and the call console, and shadows. Type: Instrument Serif for page titles and patient names only, Geist for everything else (numbers and stats included, in tabular figures), Geist Mono for subject IDs, rule IDs and timers. The brand mark (`BrandMark.tsx`, also the favicon) is two visits bridged by a voice waveform. Site Signal tier and data-origin badges keep their own slate scale (§ Site Signal pages). Semantic colors are reserved for state:
 
 | State | Color | Used for |
 |---|---|---|
@@ -18,7 +18,7 @@ Rules: every AI-produced string carries a visible label. Every draft shows its e
 
 ## Layout
 
-Top bar: product name, study short title + NCT ID, **open escalations banner** (red/amber pill with count, links to `/escalations`, polls every 2 s), **Demo role switch** (Coordinator · Investigator · Sponsor) with a visible "demo, no authentication" note. Left nav: Today, Escalations, Review, Patients, Plan, Report card, Sponsor inbox, Audit.
+Left rail (dark, sticky): product name, nav grouped as Care team (Today, Escalations, Review queue, Serious events, Patients), Study (Check-in plan, Safety report card, Audit trail) and Sponsor (Sites, Site inbox and Sponsor inbox, the two inboxes tagged "mock"), live counts on Escalations (colored by the highest open level) and Review queue (drafts waiting), the synthetic-data disclaimer, and the **Demo role switch** (Coordinator · Investigator · Sponsor · CRA (sponsor)) under a visible "Demo role · no authentication" label. Top bar: study short title + NCT ID and site, data-mode chip (Fixture data / Demo mode), site clock (ET), and the **open escalations banner** (red/amber pill with count, links to `/escalations`, polls every 2 s). On phones the rail becomes a bottom tab bar that scrolls horizontally, and the top bar keeps the mark, the escalations pill and a compact role switch. Only one role switch is mounted at a time (rail on desktop, top bar on phones), so the "Demo role" label always names a single select.
 
 ## Pages
 
@@ -73,7 +73,7 @@ Append-only list: time, actor, role, action, entity, before/after diff on expand
 
 ## Components to build once
 
-`StatusChip`, `LevelChip`, `LanguageChip`, `PaceChip`, `GradeBadge` (always shows "provisional"), `EvidenceQuote` (quote + translation + timestamp + source), `AiLabel`, `CountdownClock`, `RelativeTime`, `RoleSwitch`, `EscalationBanner`, `WebCallWidget`, `Sparkline`. *Planned (Site Signal, below):* `TierBadge`, `DataOriginBadge`, `FunnelPlot`, `EpisodeTable`, `SiteQueryComposer`, `BlindRunDialog`, `PowerTable`, `EquityPanel` (BlindRunDialog and EquityPanel not built: NOT_BUILT.md #21, #22).
+`StatusChip`, `LevelChip`, `LanguageChip`, `PaceChip`, `GradeBadge` (always shows "provisional"; rising bars for grade 1–5), `EvidenceQuote` (quote + translation + timestamp + source; `EpisodeEvidenceQuote` is its compact table variant for Site Signal episodes), `AiLabel`, `CountdownClock` (24-hour ring; `size="sm"` pill in tables), `RelativeTime`, `RoleSwitch`, `EscalationBanner`, `EscalationPanel` (raised → paged → acknowledged timeline), `WebCallWidget`, `Sparkline` (grade ≥ 3 band), `RingGauge`, `BrandMark`, `DraftKindIcon`, and the primitives in `components/ui/primitives.tsx` (`Button`, `Card`, `PageHeader`, `Segmented`, `Avatar`, `EmptyState`, `ErrorState`, `Skeleton`, `Table`). *Planned (Site Signal, below):* `TierBadge`, `DataOriginBadge`, `FunnelPlot`, `EpisodeTable`, `SiteQueryComposer`, `BlindRunDialog`, `PowerTable`, `EquityPanel` (BlindRunDialog and EquityPanel not built: NOT_BUILT.md #21, #22).
 
 ## States
 
@@ -87,9 +87,9 @@ Keyboard reachable actions, visible focus, color never the only signal (chips ha
 
 What each page must show and who can act is in `docs/10-site-signal.md` §6; payloads are in `docs/03-api-contracts.md` §5; tasks are WS3 F10–F19. This section fixes layout, components and tokens.
 
-**Tokens.** Site Signal tiers get their own neutral scale and never reuse state colors: no green or "success" token (no tier means "clean") and no escalation red or amber (a statistical tier is not a clinical escalation). Watch = strongest emphasis (dark slate fill, white text), Look = medium (slate outline), "No signal at this sample size" = neutral gray text, "Not computed: reason" = light gray with the reason. `DataOriginBadge`: SIMULATED (dashed outline), MEASURED (solid outline), MIXED (half dashed). AI-assisted translations, including those of synthetic quotes, keep the violet `AiLabel`.
+**Tokens.** Site Signal tiers get their own neutral slate scale (Tailwind `slate-*`, untouched by the tinted `gray-*` neutrals), use the same pill geometry as the clinical chips, and never reuse state colors: no green or "success" token (no tier means "clean") and no escalation red or amber (a statistical tier is not a clinical escalation). Watch = strongest emphasis (dark slate fill, white text), Look = medium (slate outline), "No signal at this sample size" = neutral gray text, "Not computed: reason" = light gray with the reason. `DataOriginBadge`: SIMULATED (dashed outline), MEASURED (solid outline), MIXED (half dashed). AI-assisted translations, including those of synthetic quotes, keep the violet `AiLabel`.
 
-**Nav.** `AppShell` adds **Sites** (`/sites`) and **Site inbox** (`/site-inbox`); `/sae` gets its own nav state. The role switch adds **CRA (sponsor)** (Sam Rivera). On phone width the bottom nav scrolls horizontally without page overflow.
+**Nav.** `AppShell` adds **Sites** (`/sites`) and **Site inbox** (`/site-inbox`) in the rail's Sponsor group; `/sae` gets its own nav item and active state (Serious events, Care team group). The role switch adds **CRA (sponsor)** (Sam Rivera). On phone width the bottom nav scrolls horizontally without page overflow.
 
 ### `/sites` Site Signal (cra, sponsor; other roles see a "Switch to CRA to view site rankings" notice)
 - Header: `DataOriginBadge` SIMULATED, `sap-v1` short sha and date, "Thresholds fixed from the pre-registered null". Tabs: **Signal** · **How well it works** (the Equity tab is not built, #22; the pooled odds ratios are an Equity block inside How well it works, CRA and sponsor only).

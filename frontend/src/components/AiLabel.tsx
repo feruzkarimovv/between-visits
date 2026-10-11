@@ -12,7 +12,7 @@ export function AiLabel({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border border-dashed border-violet-400 bg-white px-2 py-0.5 text-sm leading-5 font-medium whitespace-nowrap text-violet-800",
+        "inline-flex items-center gap-1 rounded-full border border-dashed border-violet-400 bg-violet-50/70 px-2 py-px text-sm leading-5 font-medium whitespace-nowrap text-violet-800",
         className,
       )}
     >
@@ -33,9 +33,9 @@ export function AiBlock({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-md border border-dashed border-violet-300 bg-violet-50/40 p-3", className)}>
-      <AiLabel className="mb-2">{label}</AiLabel>
-      <div className="text-sm text-ink">{children}</div>
+    <div className={cn("rounded-xl border border-dashed border-violet-300 bg-gradient-to-b from-violet-50/70 to-white p-4", className)}>
+      <AiLabel className="mb-2.5">{label}</AiLabel>
+      <div className="text-[15px] leading-7 text-ink">{children}</div>
     </div>
   );
 }

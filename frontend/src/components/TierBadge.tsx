@@ -17,13 +17,17 @@ import { cn } from "./ui/primitives";
  */
 
 const STYLES: Record<SignalTier, { className: string; icon: LucideIcon }> = {
-  watch: { className: "border-slate-800 bg-slate-800 font-medium text-white", icon: Eye },
-  look: { className: "border-slate-600 bg-white font-medium text-slate-900", icon: ScanSearch },
+  watch: {
+    className: "border-slate-900 bg-slate-800 font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(15_23_42/0.25)]",
+    icon: Eye,
+  },
+  look: { className: "border-slate-600 bg-white font-semibold text-slate-900 shadow-card", icon: ScanSearch },
   none: { className: "border-transparent bg-transparent font-normal text-slate-600", icon: Minus },
   not_computed: { className: "border-slate-200 bg-slate-100 font-normal text-slate-700", icon: CircleSlash },
 };
 
-const PILL = "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-sm leading-5";
+// Same geometry as the clinical chips (components/chips.tsx), in the tier-only slate scale.
+const PILL = "inline-flex items-center gap-1 rounded-full border px-2 py-px text-sm leading-5";
 
 export function TierBadge({
   tier,

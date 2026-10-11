@@ -1,76 +1,188 @@
 @import "tailwindcss";
 
 /*
- * Design tokens (docs/06-frontend.md): neutral grays, one accent (teal),
- * semantic colors reserved for state:
+ * Design tokens (docs/06-frontend.md). One brand accent (deep teal), neutrals
+ * tinted toward it, and semantic colors reserved for state:
  *   emergency = red · urgent / grade >= 3 = amber · callback / task = blue
- *   done / acknowledged = green · AI-generated = violet outline
+ *   done / acknowledged = green · AI-generated = violet dashed outline
+ * Display type (page titles, patient names) is Instrument Serif; everything
+ * else is Geist. Text never goes below 14 px.
  */
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
 
-  --color-accent-50: #f0fdfa;
-  --color-accent-100: #ccfbf1;
-  --color-accent-200: #99f6e4;
-  --color-accent-600: #0d9488;
-  --color-accent-700: #0f766e;
-  --color-accent-800: #115e59;
-  --color-accent-900: #134e4a;
+  /* brand */
+  --color-accent-50: #effaf7;
+  --color-accent-100: #d6f3ec;
+  --color-accent-200: #aee6da;
+  --color-accent-300: #78d2c2;
+  --color-accent-400: #3fb7a5;
+  --color-accent-500: #1f9b8a;
+  --color-accent-600: #127d70;
+  --color-accent-700: #0d655b;
+  --color-accent-800: #0c514a;
+  --color-accent-900: #0b433e;
+  --color-accent-950: #042825;
+
+  /* neutrals, tinted toward the brand so every gray-* utility matches */
+  --color-gray-50: #f6f8f7;
+  --color-gray-100: #eef1f0;
+  --color-gray-200: #e2e7e5;
+  --color-gray-300: #cfd6d3;
+  --color-gray-400: #9ba7a3;
+  --color-gray-500: #6b7975;
+  --color-gray-600: #4f5c58;
+  --color-gray-700: #3b4643;
+  --color-gray-800: #262f2d;
+  --color-gray-900: #172020;
+  --color-gray-950: #0c1312;
 
   --color-surface: #ffffff;
-  --color-canvas: #f6f7f9;
-  --color-line: #e3e6ea;
-  --color-ink: #111827;
-  --color-ink-muted: #4b5563;
-  --color-ink-subtle: #6b7280;
+  --color-canvas: #f3f5f4;
+  --color-line: #e2e7e5;
+  --color-line-strong: #cfd6d3;
+  --color-ink: #131b1a;
+  --color-ink-muted: #45524e;
+  --color-ink-subtle: #5f6d69;
 
+  /* the dark rail (sidebar) and dark call console */
+  --color-rail: #0a1a19;
+  --color-rail-raised: #102927;
+  --color-rail-line: #1d3734;
+  --color-rail-ink: #e8f1ef;
+  --color-rail-muted: #9fb5b0;
+  --color-live: #5eead4;
+
+  /* the mock sponsor tool is a different organization: indigo, never teal */
+  --color-sponsor-950: #13123a;
   --color-sponsor-900: #1e1b4b;
   --color-sponsor-800: #272463;
   --color-sponsor-50: #f5f5ff;
+
+  --shadow-card: 0 1px 2px rgb(16 28 26 / 0.04), 0 1px 3px rgb(16 28 26 / 0.03);
+  --shadow-raised: 0 1px 2px rgb(16 28 26 / 0.05), 0 10px 28px -12px rgb(16 28 26 / 0.18);
+  --shadow-pop: 0 18px 40px -16px rgb(16 28 26 / 0.35);
+
+  --animate-enter: bv-enter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-bubble: bv-bubble 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-:root {
-  color-scheme: light;
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--color-accent-200);
+    color: var(--color-accent-950);
+  }
+
+  /* Visible focus for keyboard users everywhere. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent-600);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  .on-dark :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline-color: var(--color-live);
+  }
 }
 
-body {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+@layer components {
+  .font-display {
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  /* Native select with a drawn chevron, so it matches the inputs. */
+  .bv-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%235f6d69' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 1rem;
+    padding-right: 2.25rem;
+  }
+
+  /* Thin, quiet scrollbars inside scroll boxes (conversation, rail). */
+  .bv-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-300) transparent;
+  }
+  .bv-scroll-dark {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rail-line) transparent;
+  }
+
+  /* Hairline dot grid used behind hero panels. */
+  .bv-grid {
+    background-image: radial-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+  .bv-grid-light {
+    background-image: radial-gradient(rgb(19 27 26 / 0.06) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  .bv-enter {
+    animation: var(--animate-enter);
+  }
+
+  .bv-highlight {
+    animation: bv-flash 2.4s ease-out;
+    box-shadow: inset 3px 0 0 #f59e0b;
+  }
+
+  /* Voice waveform bars (call console, brand mark). */
+  .bv-wave > * {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: bv-wave 1.1s ease-in-out infinite;
+  }
+
+  /* Slow breathing glow for things that need a human right now. */
+  .bv-breathe {
+    animation: bv-breathe 2s ease-in-out infinite;
+  }
+
+  .bv-shimmer {
+    background-image: linear-gradient(90deg, transparent 0, rgb(255 255 255 / 0.65) 50%, transparent 100%);
+    background-size: 400px 100%;
+    background-repeat: no-repeat;
+    animation: bv-shimmer 1.4s ease-in-out infinite;
+  }
+
+  /* SVG strokes that draw themselves in (sparklines, rings). */
+  .bv-draw {
+    stroke-dasharray: var(--bv-len, 400);
+    animation: bv-draw 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
 }
 
-/* Visible focus for keyboard users everywhere. */
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-accent-600);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Stable numbers: counters and clocks don't jitter while polling. */
-.tabular {
+@utility tabular {
+  /* Stable numbers: counters and clocks don't jitter while polling. */
   font-variant-numeric: tabular-nums;
-}
-
-@keyframes bv-flash {
-  0% {
-    background-color: #fef3c7;
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-
-.bv-highlight {
-  animation: bv-flash 2.4s ease-out;
-  box-shadow: inset 3px 0 0 #f59e0b;
 }
 
 @keyframes bv-enter {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -78,13 +190,75 @@ body {
   }
 }
 
-.bv-enter {
-  animation: bv-enter 0.35s ease-out;
+@keyframes bv-bubble {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bv-flash {
+  0% {
+    background-color: #fdf0c4;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes bv-wave {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes bv-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--bv-glow, rgb(239 68 68 / 0.4));
+  }
+  60% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+@keyframes bv-shimmer {
+  from {
+    background-position: -400px 0;
+  }
+  to {
+    background-position: 400px 0;
+  }
+}
+
+@keyframes bv-draw {
+  from {
+    stroke-dashoffset: var(--bv-len, 400);
+  }
+  to {
+    stroke-dashoffset: var(--bv-to, 0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bv-enter,
-  .bv-highlight {
-    animation: none;
+  .bv-highlight,
+  .bv-breathe,
+  .bv-shimmer,
+  .bv-draw,
+  .bv-wave > *,
+  .animate-bubble,
+  .animate-enter,
+  .animate-ping,
+  .animate-pulse {
+    animation: none !important;
   }
 }

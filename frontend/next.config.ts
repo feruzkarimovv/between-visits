@@ -4,6 +4,9 @@ import type { NextConfig } from "next";
 // prefetching are left off on purpose: every page reads live data in the browser.
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // `make demo` runs the dev server at the judging table; the floating route
+  // indicator would sit on top of the sidebar. Errors still show in an overlay.
+  devIndicators: false,
   // Self-contained server in .next/standalone for the production image (frontend/Dockerfile, WS0 R5).
   output: "standalone",
   turbopack: {

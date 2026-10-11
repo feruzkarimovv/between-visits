@@ -127,7 +127,7 @@ export interface DraftFilters {
   checkin_id?: string;
 }
 
-export function useDrafts(filters: DraftFilters) {
+export function useDrafts(filters: DraftFilters, refetchInterval?: number) {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(filters)) if (v) qs.set(k, v);
   return useQuery({
@@ -143,6 +143,7 @@ export function useDrafts(filters: DraftFilters) {
           (!filters.checkin_id || d.checkin_id === filters.checkin_id),
       );
     },
+    refetchInterval,
     retry,
   });
 }

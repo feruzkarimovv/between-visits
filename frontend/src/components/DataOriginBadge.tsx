@@ -23,7 +23,8 @@ const ORIGIN: Record<DataOrigin, { icon: LucideIcon; title: string }> = {
   },
 };
 
-const BASE = "inline-flex items-center gap-1 border bg-white py-0.5 text-sm leading-5 font-semibold tracking-wide whitespace-nowrap text-slate-800";
+// Same geometry as the clinical chips (components/chips.tsx); neutral slate ink, never a state color.
+const BASE = "inline-flex items-center gap-1 border bg-white/90 py-px text-sm leading-5 font-semibold tracking-wide whitespace-nowrap text-slate-800";
 
 export function DataOriginBadge({ origin, className }: { origin: DataOrigin; className?: string }) {
   const meta = ORIGIN[origin];
