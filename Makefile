@@ -9,9 +9,11 @@ GITLEAKS_VERSION := 8.30.1
 
 .PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo secret-scan
 
+# Clean setup (WS0 R2): Python 3.12 from .python-version; `npm ci` installs exactly frontend/package-lock.json
+# and never rewrites it, so the tree stays clean. Add or upgrade frontend deps with `npm install` in frontend/.
 setup:
 	cd backend && uv sync
-	cd frontend && npm install
+	cd frontend && npm ci
 
 dev:
 	@trap 'kill 0' EXIT; \

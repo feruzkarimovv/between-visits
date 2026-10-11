@@ -2,7 +2,7 @@
 name = "between-visits-backend"
 version = "0.1.0"
 description = "Between Visits backend: FastAPI + SQLModel, rules engine, interview engine, agent tools, webhooks"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",

@@ -35,7 +35,7 @@ Only edit your workstream's folders unless your task says otherwise.
 ## Commands
 
 ```bash
-make setup        # uv sync (backend) + npm install (frontend)
+make setup        # uv sync (backend, Python 3.12 from .python-version) + npm ci (frontend; never rewrites package-lock.json)
 make dev          # backend :8000 (reload) + frontend :3000
 make seed         # reset DB and load data/*.json (+ data/patients.local.json)
 make test         # pytest + data validation + frontend typecheck/lint
@@ -62,7 +62,7 @@ make blind-run SEED=...    # S8: command-line blind run; ARGS=--precompute write
 make cohort                # S10 (optional): Synthea roster, language/age mix only
 ```
 
-Planned changes to existing targets: `make setup` uses `npm ci` and syncs `monitoring/` (R2, S1); `make test` adds the monitoring suite (S6); `make demo DEMO_PROD=1` serves the production frontend build (R5).
+Planned changes to existing targets: `make setup` also syncs `monitoring/` (S1); `make test` adds the monitoring suite (S6); `make demo DEMO_PROD=1` serves the production frontend build (R5).
 
 ## Conventions
 

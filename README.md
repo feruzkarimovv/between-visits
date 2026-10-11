@@ -77,11 +77,21 @@ The validation pack traces each of 15 requirements to automated tests and their 
 
 ## Quickstart
 
+**Prerequisites:**
+
+- [uv](https://docs.astral.sh/uv/) (installs and manages Python for you)
+- Python 3.12 (pinned in `.python-version` and `backend/pyproject.toml`; uv downloads it if it is missing)
+- Node.js 22 (22.22 or newer) with npm
+- `make`
+- Docker is optional (`docker compose up` runs demo mode without the local toolchain)
+
+`make setup` uses `npm ci`, so it installs exactly the committed `frontend/package-lock.json` and leaves `git status` clean.
+
 **Demo mode (no API keys, about 5 minutes):**
 
 ```bash
 cp .env.example .env        # leave keys empty
-make setup                  # uv sync + npm install
+make setup                  # uv sync (Python 3.12) + npm ci
 make demo                   # seeds, starts backend :8000 + dashboard :3000 with DEMO_MODE=1
 ```
 
