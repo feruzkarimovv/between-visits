@@ -13,7 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.config import ROOT, get_settings
+from app.config import ROOT, assert_safe_startup, get_settings
 from app.db import create_all
 from app.errors import ApiError
 
@@ -35,6 +35,7 @@ def git_commit() -> str:
 def create_app(start_background: bool = True) -> FastAPI:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     settings = get_settings()
+    assert_safe_startup(settings)  # exits non-zero outside DEMO_MODE with an unsafe TOOL_SHARED_SECRET
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:

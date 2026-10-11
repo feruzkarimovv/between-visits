@@ -67,3 +67,7 @@ requirements:
     title: Local dates
     text: The check-in day filter, patient timeline dates, AESTDTC fallback and SAE onset use the DISPLAY_TZ local date of the call.
     risk: medium
+  - id: REQ-017
+    title: Safe startup and demo-only controls
+    text: Outside DEMO_MODE the backend refuses to start with the default, empty or short tool secret, and /api/demo/* returns 404 unless DEMO_MODE=1.
+    risk: medium

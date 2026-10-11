@@ -1,5 +1,6 @@
 """Settings from the repo-root .env (see .env.example). Every variable in .env.example is read here."""
 
+import logging
 from functools import lru_cache
 from pathlib import Path
 
@@ -10,6 +11,13 @@ ROOT = BACKEND_DIR.parent
 DATA_DIR = ROOT / "data"
 SCENARIOS_DIR = ROOT / "scenarios"
 AGENT_DIR = ROOT / "agent"
+
+# The .env.example placeholder for TOOL_SHARED_SECRET; refused outside demo mode (docs/03 §6.3).
+TOOL_SECRET_PLACEHOLDER = "change-me-long-random-string"
+MIN_TOOL_SECRET_LEN = 24
+MIN_NTFY_TOPIC_LEN = 16
+
+log = logging.getLogger("bv")
 
 
 class Settings(BaseSettings):
@@ -22,7 +30,7 @@ class Settings(BaseSettings):
     ngrok_domain: str = ""
     database_url: str = "sqlite:///./backend/data/app.db"
     cors_origins: str = "http://localhost:3000"
-    tool_shared_secret: str = "change-me-long-random-string"
+    tool_shared_secret: str = TOOL_SECRET_PLACEHOLDER
     display_tz: str = "America/New_York"
     ack_timeout_seconds: int = 90
 
@@ -89,9 +97,45 @@ class Settings(BaseSettings):
 
     @property
     def demo_controls_enabled(self) -> bool:
-        return self.demo_mode or self.app_env == "dev"
+        """`/api/demo/*` and the demo-only routes: DEMO_MODE=1 only (APP_ENV does not open them)."""
+        return self.demo_mode
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def tool_secret_problem(settings: Settings) -> str | None:
+    """Why TOOL_SHARED_SECRET is unsafe outside demo mode, or None when it is acceptable."""
+    secret = settings.tool_shared_secret
+    if not secret.strip():
+        return "TOOL_SHARED_SECRET is empty"
+    if secret == TOOL_SECRET_PLACEHOLDER:
+        return "TOOL_SHARED_SECRET is still the .env.example placeholder"
+    if len(secret) < MIN_TOOL_SECRET_LEN:
+        return f"TOOL_SHARED_SECRET is shorter than {MIN_TOOL_SECRET_LEN} characters"
+    return None
+
+
+def assert_safe_startup(settings: Settings | None = None) -> None:
+    """Refuse to start outside demo mode with a guessable tool secret (docs/03 §6.3).
+
+    DEMO_MODE=1 starts with any secret, because demo mode makes no external calls. Exits the process
+    with a non-zero status and a one-line reason; the secret itself is never printed.
+    """
+    s = settings or get_settings()
+    if s.demo_mode:
+        return
+    problem = tool_secret_problem(s)
+    if problem:
+        msg = (
+            f"Refusing to start: {problem} (DEMO_MODE=0). Generate one with "
+            "python3 -c 'import secrets; print(secrets.token_urlsafe(32))' and set TOOL_SHARED_SECRET in .env, "
+            "or run with DEMO_MODE=1 (make demo)."
+        )
+        raise SystemExit(msg)  # printed to stderr; exit status 1
+    if s.pager_channel == "ntfy" and len(s.ntfy_topic) < MIN_NTFY_TOPIC_LEN:
+        state = (f"is shorter than {MIN_NTFY_TOPIC_LEN} characters" if s.ntfy_topic
+                 else "is empty, so pages go to the backend console only")
+        log.warning("NTFY_TOPIC %s. Use a long random topic: ntfy topic names act as shared secrets.", state)

@@ -46,6 +46,8 @@ make types        # regenerate frontend/src/lib/api-types.ts from /openapi.json
 make eval         # run the 20-persona evaluation -> eval/results/latest.json
 make validate     # build validation/traceability.md + summary.json
 make demo         # DEMO_MODE=1: no external keys, replay scenarios
+                  # /api/demo/* exists only under make demo (DEMO_MODE=1); outside it the backend refuses
+                  # to start with an empty, placeholder or < 24-character TOOL_SHARED_SECRET
 ```
 
 Planned (Sun Oct 11, `docs/09`); not in the Makefile until the named task lands, then move each line into the block above:
@@ -60,7 +62,7 @@ make blind-run SEED=...    # S8: command-line blind run; ARGS=--precompute write
 make cohort                # S10 (optional): Synthea roster, language/age mix only
 ```
 
-Planned changes to existing targets: `make setup` uses `npm ci` and syncs `monitoring/` (R2, S1); `make test` adds the monitoring suite (S6); `/api/demo/*` only under `make demo` (R4); `make demo DEMO_PROD=1` serves the production frontend build (R5).
+Planned changes to existing targets: `make setup` uses `npm ci` and syncs `monitoring/` (R2, S1); `make test` adds the monitoring suite (S6); `make demo DEMO_PROD=1` serves the production frontend build (R5).
 
 ## Conventions
 

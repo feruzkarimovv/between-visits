@@ -97,8 +97,12 @@ def test_dashboard_reads(client, session, fake_pager):
     assert len(today) == 6
     assert client.get("/api/patients/pat_rosa").json()["subject_id"] == "101-007"
     assert client.get("/api/checkins/nope").json()["error"]["code"] == "checkin_not_found"
-    assert client.get("/api/demo/scenarios").json()[0]["id"] == "rosa_es_urgent"
     assert client.get("/openapi.json").status_code == 200
+
+
+def test_demo_scenarios_in_demo_mode(demo_mode, client):
+    assert client.get("/api/health").json()["demo_mode"] is True
+    assert client.get("/api/demo/scenarios").json()[0]["id"] == "rosa_es_urgent"
 
 
 def test_phone_checkin_without_keys_is_503(client):

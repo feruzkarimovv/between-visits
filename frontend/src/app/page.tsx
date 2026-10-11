@@ -69,7 +69,7 @@ export default function TodayPage() {
           </span>
         }
         actions={
-          scenarioList.length > 0 ? (
+          demoMode && scenarioList.length > 0 ? (
             <div className="flex items-center gap-2 rounded-lg border border-line bg-white p-1.5 pl-3">
               <label htmlFor="scenario" className="text-sm font-medium text-ink-muted">
                 {demoMode ? "Demo mode" : "Replay"}

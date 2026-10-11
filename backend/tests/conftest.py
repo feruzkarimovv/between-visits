@@ -2,10 +2,13 @@
 
 import os
 
+# At least 24 characters: assert_safe_startup() refuses shorter tool secrets outside demo mode (docs/03 §6.3).
+TEST_TOOL_SECRET = "test-secret-test-secret-test"
+
 os.environ.update(
     {
         "DATABASE_URL": "sqlite://",
-        "TOOL_SHARED_SECRET": "test-secret",
+        "TOOL_SHARED_SECRET": TEST_TOOL_SECRET,
         "DEMO_MODE": "0",
         "APP_ENV": "dev",
         "GEMINI_API_KEY": "",
@@ -31,7 +34,7 @@ from app.services import gemini, pager  # noqa: E402
 
 get_settings.cache_clear()
 
-SECRET = {"X-BV-Tool-Secret": "test-secret"}
+SECRET = {"X-BV-Tool-Secret": TEST_TOOL_SECRET}
 COORD = {"X-BV-User": "Jess Kim", "X-BV-Role": "coordinator"}
 INVESTIGATOR = {"X-BV-User": "Dr. Patel", "X-BV-Role": "investigator"}
 
@@ -51,6 +54,20 @@ def fake_pager():
     pager.set_pager(fp)
     yield fp
     pager.set_pager(None)
+
+
+@pytest.fixture
+def demo_mode():
+    """DEMO_MODE=1 for tests that call /api/demo/* (DEMO_MODE is the only switch, docs/03 §6.2)."""
+    before = os.environ.get("DEMO_MODE")
+    os.environ["DEMO_MODE"] = "1"
+    get_settings.cache_clear()
+    yield
+    if before is None:
+        os.environ.pop("DEMO_MODE", None)
+    else:
+        os.environ["DEMO_MODE"] = before
+    get_settings.cache_clear()
 
 
 @pytest.fixture

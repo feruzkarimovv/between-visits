@@ -1,4 +1,4 @@
-"""Demo controls (enabled when DEMO_MODE=1 or APP_ENV=dev)."""
+"""Demo controls (enabled only when DEMO_MODE=1; otherwise 404 demo_disabled)."""
 
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/demo", tags=["demo"])
 
 def require_demo() -> None:
     if not get_settings().demo_controls_enabled:
-        raise ApiError(404, "demo_disabled", "Demo controls are off (set DEMO_MODE=1 or APP_ENV=dev).")
+        raise ApiError(404, "demo_disabled", "Demo controls are off (set DEMO_MODE=1).")
 
 
 @router.get("/scenarios", response_model=list[ScenarioOut], dependencies=[Depends(require_demo)])
