@@ -477,6 +477,12 @@ These follow the cut rules in `docs/09`. When one fires, add the item to `NOT_BU
 | 05:50, S10 not done | Covered by BL-16 | — |
 | 07:00, equity UI not done | Equity panel and single-language toggle in the UI (numbers already in `report.md`) | `not-built`, `statistics` |
 | 07:30 freeze | Phone-width and 125% zoom polish on remaining pages | `not-built` |
+| `NOT_BUILT.md` cut B21, F18 | Check-in page: "Site aware N days before next visit" badge and recorded-scenario labels | `not-built` |
+| `NOT_BUILT.md` human step V12 | Hero call: a real browser call with a teammate playing the synthetic patient, for the video | `not-built` |
+| `NOT_BUILT.md` human step D15 | 3:00 video: recording, editing and upload | `not-built` |
+| `NOT_BUILT.md` human step D16 | Devpost submission: README text, links, contributors and confirmation | `not-built` |
+
+R11 created one issue per `NOT_BUILT.md` item; the issue numbers are in `NOT_BUILT.md`.
 
 ## 6. Maintenance
 

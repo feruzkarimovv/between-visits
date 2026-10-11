@@ -179,9 +179,9 @@ The validation pack traces each requirement in [`validation/requirements.yaml`](
 ## Roadmap
 
 - **[`NOT_BUILT.md`](NOT_BUILT.md)** has one line per item this submission does not build. That covers the 20 backlog items in [`docs/backlog.md`](docs/backlog.md), the cuts made this round, and the steps that need a person.
-- **GitHub issues.** Each line becomes a GitHub issue with the label [`not-built`](https://github.com/feruzkarimovv/between-visits/issues?q=label%3Anot-built).
-- **First priority:** retrospective validation of Site Signal on trials with paired patient- and clinician-reported data (BL-11).
-- **Then:** real-call re-verification with measured speech error (BL-01), the P19 nurse-callback fix (BL-04), phone calls through Twilio (BL-02), a third language (BL-03), and real authentication (BL-18).
+- **GitHub issues.** Each line ends with its GitHub issue number. The full list is the [open issues labeled `not-built`](https://github.com/feruzkarimovv/between-visits/issues?q=is%3Aissue+is%3Aopen+label%3Anot-built) (template: [`.github/ISSUE_TEMPLATE/not-built.md`](.github/ISSUE_TEMPLATE/not-built.md)).
+- **First priority:** retrospective validation of Site Signal on trials with paired patient- and clinician-reported data ([BL-11, #11](https://github.com/feruzkarimovv/between-visits/issues/11)).
+- **Then:** real-call re-verification with measured speech error ([BL-01, #1](https://github.com/feruzkarimovv/between-visits/issues/1)), the P19 nurse-callback fix ([BL-04, #4](https://github.com/feruzkarimovv/between-visits/issues/4)), phone calls through Twilio ([BL-02, #2](https://github.com/feruzkarimovv/between-visits/issues/2)), a third language ([BL-03, #3](https://github.com/feruzkarimovv/between-visits/issues/3)), and real authentication ([BL-18, #18](https://github.com/feruzkarimovv/between-visits/issues/18)).
 
 ## Quickstart
 
