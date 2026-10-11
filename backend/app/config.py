@@ -18,6 +18,8 @@ AGENT_DIR = ROOT / "agent"
 AGENTS_LOCK_PATH = AGENT_DIR / "agents.lock.json"
 # Committed Site Signal outputs (docs/03 §6.9, MONITORING_OUT); written by `make site-signal`.
 DEFAULT_MONITORING_OUT = ROOT / "monitoring" / "out"
+# Site Signal validation summary (docs/03 §6.9, SITE_SIGNAL_SUMMARY); written by `make site-signal-validate`.
+DEFAULT_SITE_SIGNAL_SUMMARY = ROOT / "validation" / "site_signal" / "summary.json"
 
 # The .env.example placeholder for TOOL_SHARED_SECRET; refused outside demo mode (docs/03 §6.3).
 TOOL_SECRET_PLACEHOLDER = "change-me-long-random-string"
@@ -25,6 +27,14 @@ MIN_TOOL_SECRET_LEN = 24
 MIN_NTFY_TOPIC_LEN = 16
 
 log = logging.getLogger("bv")
+
+
+def _repo_path(value: Any, default: Path) -> Path:
+    """A path setting: empty or unset means `default`; a relative path is taken from the repo root."""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return default
+    path = Path(value).expanduser()
+    return path if path.is_absolute() else ROOT / path
 
 
 class Settings(BaseSettings):
@@ -87,8 +97,10 @@ class Settings(BaseSettings):
     # Unset means 2 in demo mode. An empty, non-numeric or non-positive value is ignored with a warning.
     replay_speed: float | None = None
 
-    # Site Signal (docs/03 §6.9): directory of the committed outputs. Relative paths are from the repo root.
+    # Site Signal (docs/03 §6.9): directory of the committed outputs and the validation summary file.
+    # Relative paths are from the repo root; empty means the default.
     monitoring_out: Path = DEFAULT_MONITORING_OUT
+    site_signal_summary: Path = DEFAULT_SITE_SIGNAL_SUMMARY
 
     # frontend (read so config is complete; unused by the backend)
     next_public_api_base_url: str = "http://localhost:8000"
@@ -114,10 +126,12 @@ class Settings(BaseSettings):
     @field_validator("monitoring_out", mode="before")
     @classmethod
     def _monitoring_out(cls, value: Any) -> Path:
-        if value is None or (isinstance(value, str) and not value.strip()):
-            return DEFAULT_MONITORING_OUT
-        path = Path(value).expanduser()
-        return path if path.is_absolute() else ROOT / path
+        return _repo_path(value, DEFAULT_MONITORING_OUT)
+
+    @field_validator("site_signal_summary", mode="before")
+    @classmethod
+    def _site_signal_summary(cls, value: Any) -> Path:
+        return _repo_path(value, DEFAULT_SITE_SIGNAL_SUMMARY)
 
     @property
     def cors_origin_list(self) -> list[str]:

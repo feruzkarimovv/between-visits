@@ -1,7 +1,8 @@
 """B12 (docs/03 §6.1): role-restricted routes answer any other role with 403 `wrong_role`; the `cra` role.
 
 ROLE_TABLE is the (method, path, role) -> status table for REQ-018. B17-B19 append the Site Signal rows
-(cra/sponsor views, CRA-only and coordinator-only query actions) as those routes land.
+(cra/sponsor views, CRA-only and coordinator-only query actions) as those routes land; the Site Signal reads run
+against the B16b fixtures (`site_signal_fixtures`).
 """
 
 import pytest
@@ -49,6 +50,15 @@ ROLE_TABLE: list[tuple[str, str, str | None, int]] = [
     ("GET", "/api/sponsor/inbox", "cra", 200),
     ("GET", "/api/audit", "cra", 200),
     ("GET", "/api/escalations", "cra", 200),
+    # Site Signal views (B17, against the B16b fixtures): cra and sponsor; the validation summary: any role
+    *[("GET", path, role, 200 if role in ("cra", "sponsor") else 403)
+      for path in ("/api/sites", "/api/sites/101", "/api/sites/112", "/api/site-signal/answer-key",
+                   "/api/site-signal/equity")
+      for role in ("cra", "sponsor", "coordinator", "investigator", None)],
+    ("GET", "/api/sites", "CRA", 200),
+    ("GET", "/api/sites", "admin", 403),
+    *[("GET", "/api/site-signal/validation", role, 200)
+      for role in ("cra", "sponsor", "coordinator", "investigator", None)],
 ]
 
 
@@ -76,7 +86,7 @@ def review_state(client, session, fake_pager) -> dict[str, str]:
 
 
 @pytest.mark.parametrize(("method", "path", "role", "status"), ROLE_TABLE)
-def test_role_table(client, review_state, method, path, role, status):
+def test_role_table(client, review_state, site_signal_fixtures, method, path, role, status):
     body = BODIES.get((method, path))
     r = client.request(method, path.format(**review_state), headers=_headers(role), json=body)
     assert r.status_code == status, r.text

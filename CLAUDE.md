@@ -11,8 +11,8 @@ Specs live in `docs/`. Read the relevant ones before changing anything:
 2. **Approved words only.** Anything clinical the agent says is assembled by the backend from `data/scripts.json` and `data/symptom_items.json` (or the gitignored local override `data/local/symptom_items.local.json`) in the call's language. Never hard-code clinical text or thresholds in code. Never machine-translate clinical questions at runtime.
 3. **No medical advice** anywhere: agent, page messages, UI copy, generated narratives.
 4. **Disclose and offer a human** in the agent's first turn, every call, every language.
-5. **Fail safe:** if anything errors on a path that could involve a red flag, escalate. Never fail silent.
-6. **Evidence on every draft** (verbatim quote in original language + timestamp + source). AI translations and AI drafts are always labeled in the UI.
+5. **Fail safe:** if anything errors on a path that could involve a red flag, escalate. Never fail silent. Below minimum data, below coverage or on any error a site shows grey "not computed", never green; paging never waits on statistics.
+6. **Evidence on every draft** (verbatim quote in original language + timestamp + source). AI translations and AI drafts are always labeled in the UI. Every site flag drills down to verbatim quotes; every Site Signal view is badged SIMULATED, MEASURED or MIXED.
 7. **Nothing is final without a human**, and every human action writes an `AuditEvent` (append-only). The audit log is a hash chain (`GET /api/audit/verify`).
 8. **Synthetic data only.** Never commit real phone numbers, keys or real patient data. Real numbers live in `.env` and `data/patients.local.json` (gitignored). Refer to the study drug by class only: drug class names are anti-PD-1 (CD3 bispecific in roadmap context only); no product brand name, product code or generic name anywhere in git (the product-name guard in `data/validate_data.py` enforces it with a sha256 denylist). The repository is private; changing visibility is a human decision after a fresh secret scan.
 9. **No licensed content in git:** no PRO-CTCAE item wording, no MedDRA codes or hierarchy, no WHODrug. Pages and push notifications carry the subject ID only, never names.
@@ -91,6 +91,8 @@ The task's acceptance check in its workstream file passes and its output is show
 - Don't add features that aren't in your workstream task list; propose them in the team chat.
 - Don't add heavy dependencies (no ORMs besides SQLModel, no state libraries besides TanStack Query, no websockets; polling is intentional).
 - Don't name real drug products or imply this is a real study's data.
+- Don't call capture discordance under-reporting, fraud or misconduct; say 'a reason to look'.
+- Don't quote a Site Signal number that is not in `validation/site_signal/summary.json`.
 
 ## Status (update at each milestone in docs/09)
 

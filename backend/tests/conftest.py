@@ -27,6 +27,8 @@ os.environ.update(
     }
 )
 
+from pathlib import Path  # noqa: E402
+
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlmodel import Session  # noqa: E402
@@ -40,6 +42,8 @@ get_settings.cache_clear()
 SECRET = {"X-BV-Tool-Secret": TEST_TOOL_SECRET}
 COORD = {"X-BV-User": "Jess Kim", "X-BV-Role": "coordinator"}
 INVESTIGATOR = {"X-BV-User": "Dr. Patel", "X-BV-Role": "investigator"}
+# Hand-written Site Signal fixtures (B16b): placeholder numbers in the shapes of monitoring/out/, not results.
+SITE_SIGNAL_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "site_signal"
 
 
 class FakePager:
@@ -71,6 +75,30 @@ def demo_mode():
     else:
         os.environ["DEMO_MODE"] = before
     get_settings.cache_clear()
+
+
+@pytest.fixture
+def site_signal_out(monkeypatch):
+    """Point MONITORING_OUT (and SITE_SIGNAL_SUMMARY) at a directory, rebuilding Settings and the Site Signal
+    caches; both are restored after the test. Returns the setter."""
+    from app.services import site_signal
+
+    def _point(out: Path, summary: Path | None = None) -> Path:
+        monkeypatch.setenv("MONITORING_OUT", str(out))
+        monkeypatch.setenv("SITE_SIGNAL_SUMMARY", str(summary if summary is not None else out / "summary.json"))
+        get_settings.cache_clear()
+        site_signal.clear_cache()
+        return out
+
+    yield _point
+    get_settings.cache_clear()
+    site_signal.clear_cache()
+
+
+@pytest.fixture
+def site_signal_fixtures(site_signal_out) -> Path:
+    """The B16b fixtures as MONITORING_OUT and SITE_SIGNAL_SUMMARY (docs/03 §6.9)."""
+    return site_signal_out(SITE_SIGNAL_FIXTURES)
 
 
 @pytest.fixture

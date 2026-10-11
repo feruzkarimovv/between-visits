@@ -140,9 +140,10 @@ def create_app(start_background: bool = True) -> FastAPI:
             status_code=422, content={"error": {"code": "validation_error", "message": str(exc.errors())[:1000]}}
         )
 
-    from app.routers import agent_tools, api, demo, webhooks
+    from app.routers import agent_tools, api, demo, site_signal, webhooks
 
     app.include_router(api.router)
+    app.include_router(site_signal.router)
     app.include_router(agent_tools.router)
     app.include_router(webhooks.router)
     app.include_router(demo.router)
