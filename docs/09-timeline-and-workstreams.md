@@ -28,7 +28,7 @@ Facts at plan time:
 
 ### Checkpoints
 
-**Times re-baselined Sun ~1:15 AM** (planning ran long): kickoff is assumed at ~01:45. If kickoff is later, shift every target below by the delay, except two fixed limits: the code freeze is never later than **08:00** and the Devpost submission stays **09:30**. Apply the cut rules against those two limits.
+**No deadlines (team lead decision, Sun ~1:30 AM).** The clock times in this plan (here, in `docs/11`, the WS files and `docs/backlog.md`) are no longer binding: checkpoints SAP → A → B → C → P are an order of work, not a schedule. Time-based cut rules, time boxes and "if not done by HH:MM" fallbacks do not apply; build every task, including optional ones. Where a step waits on a human, do everything around it, record the remaining step in `HUMAN_TODO.md` and continue.
 
 Every checkpoint leaves a shippable product on `main` (or on the session's working branch, merged to `main` with a merge commit, never squashed or rebased once `sap-v1` exists). Nothing new merges until `make test` is green.
 
