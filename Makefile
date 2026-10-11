@@ -7,7 +7,7 @@ ENV_GET = $$(grep -E "^$(1)=" .env 2>/dev/null | head -1 | cut -d= -f2- | sed -E
 # Pinned gitleaks release (WS0 R1); the CI job `gitleaks` downloads and checksum-verifies exactly this version.
 GITLEAKS_VERSION := 8.30.1
 
-.PHONY: setup dev backend frontend seed test test-backend test-frontend test-monitoring lint tunnel sync-agent types eval validate demo secret-scan up planning-grid site-signal
+.PHONY: setup dev backend frontend seed test test-backend test-frontend test-monitoring lint tunnel sync-agent types eval validate demo dual secret-scan up planning-grid site-signal
 
 # Clean setup (WS0 R2): Python 3.12 from .python-version; `npm ci` installs exactly frontend/package-lock.json
 # and never rewrites it, so the tree stays clean. Add or upgrade frontend deps with `npm install` in frontend/.
@@ -97,6 +97,25 @@ site-signal:
 .PHONY: site-signal-validate
 site-signal-validate:
 	uv run --project monitoring python -m bvsignal.validate $(ARGS)
+
+# Live and demo side by side, for showing a real call next to the replays:
+#   live  dashboard :3000 -> API :8000 (DEMO_MODE=0, backend/data/app.db, reload) + ngrok tunnel to :8000 (the agents'
+#         tools and the post-call webhook; started only if no `ngrok http` is running)
+#   demo  dashboard :3001 -> API :8001 (DEMO_MODE=1, its own backend/data/demo.db, reseeded on every start)
+# The demo dashboard is a production build (next build, then next start), since Next allows one dev server per folder;
+# it takes about a minute before :3001 answers.
+DUAL_DEMO_DB := sqlite:///./backend/data/demo.db
+dual:
+	@trap 'kill 0' EXIT; \
+	(cd backend && uv run uvicorn app.main:app --reload --port 8000) & \
+	(cd frontend && npm run dev) & \
+	(pgrep -f "ngrok http" >/dev/null && echo "dual: ngrok already running, not starting another" || \
+	  ngrok http 8000 --url https://$(call ENV_GET,NGROK_DOMAIN) --log stdout --log-level warn) & \
+	(cd backend && export DEMO_MODE=1 DATABASE_URL=$(DUAL_DEMO_DB) CORS_ORIGINS=http://localhost:3001 && \
+	  uv run python -m app.seed && uv run uvicorn app.main:app --port 8001) & \
+	(cd frontend && NEXT_PUBLIC_API_BASE_URL=http://localhost:8001 npm run build >/dev/null && \
+	  echo "dual: demo dashboard ready on http://localhost:3001" && npx next start -p 3001) & \
+	wait
 
 demo:
 	@trap 'kill 0' EXIT; \

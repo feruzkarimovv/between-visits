@@ -51,6 +51,8 @@ make demo         # DEMO_MODE=1: no external keys, replay scenarios
                   # /api/demo/* exists only under make demo (DEMO_MODE=1); outside it the backend refuses
                   # to start with an empty, placeholder or < 24-character TOOL_SHARED_SECRET
                   # DEMO_PROD=1 serves the production frontend build (next build && next start, no dev badge)
+make dual         # live and demo side by side: live dashboard :3000 -> API :8000 (DEMO_MODE=0, app.db) + ngrok tunnel
+                  # (if none running); demo dashboard :3001 (production build) -> API :8001 (DEMO_MODE=1, demo.db)
 make up           # production images (docker-compose.prod.yml), DEMO_MODE=1 by default (BV_DEMO_MODE=0: live API),
                   # no Next dev badge; host ports API_PORT/WEB_PORT (default 8000/3000); health `commit` from GIT_COMMIT
 make secret-scan  # gitleaks (pinned 8.30.1) over the full history of every ref + real-number grep (validation/secret-scan.md)

@@ -207,6 +207,8 @@ make setup && make seed && make demo    # uv sync + npm ci, reset the database, 
 
 Open http://localhost:3000 and follow the [reviewer path](#reviewer-path-3-minutes). The replay drives the same service functions as a live call: answers, provisional grade 3, the urgent page (printed to the backend console in demo mode), acknowledgment, transcript and drafts. `make demo` reseeds the demo database every time it starts. `make demo DEMO_PROD=1` serves the production frontend build instead of the dev server, so screenshots and recordings have no Next.js dev badge.
 
+To show a real call next to the replays, `make dual` runs both at once: the live dashboard on http://localhost:3000 (API :8000, `DEMO_MODE=0`, plus the ngrok tunnel the agents' tools call, unless one is already running) and the demo dashboard on http://localhost:3001 (API :8001, `DEMO_MODE=1`, its own `backend/data/demo.db`, so reseeding it never touches live data). The demo dashboard is a production build and answers about a minute after start.
+
 ### Replay speed
 
 - **The 1x / 2x / 4x control.** The **Speed** control next to **Replay scenario** on Today (default 2x) sends `?speed=1`, `2` or `4` with the replay request. 1x is real time: the Rosa scenario is a 199-second call, so its drafts appear after about 100 s at 2x and about 50 s at 4x.
