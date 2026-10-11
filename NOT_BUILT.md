@@ -35,7 +35,7 @@ These were planned for this submission and were cut. None of them is built, and 
 |---|---|---|---
 | S8, B19, F15 | Blind run with hidden planted count and audited reveal: the command-line run, the demo-only endpoints and the dialog. The `/sites` page has no **Blind run** button. | `not-built`, `statistics` | #21
 | S10 | Synthea roster (language and age mix only, for a labeled sensitivity analysis). The committed study uses the parametric roster frozen at `sap-v1`. | `not-built`, `statistics` | same issue as BL-16 (`docs/backlog.md` §5): #16
-| F17 | Equity panel and single-language toggle in the UI. The equity numbers exist in `monitoring/out/equity.json` and `validation/site_signal/report.md`. | `not-built`, `statistics` | #22
+| F17 | Equity tab with per-site odds ratios and the single-language toggle. The pooled odds ratios are shown in the How well it works tab (CRA, sponsor); per-site numbers are in `monitoring/out/equity.json` and `validation/site_signal/report.md`. | `not-built`, `statistics` | #22
 | B21, F18 | "Site aware N days before next visit" badge on the check-in page, and the recorded-scenario label in the replay picker | `not-built` | #23
 
 ## Human steps the build did not do

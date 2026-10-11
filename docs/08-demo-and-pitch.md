@@ -22,7 +22,7 @@ Every chart or number on screen carries its SIMULATED or MEASURED label.
 
 **The call.** The call is the hero call (V12): a real browser call with a teammate playing the synthetic patient, labeled on screen "Real call; synthetic patient played by a teammate". If the hero call is not available, shot 3 uses the scripted replay `rosa_es_urgent` at 1x, labeled on screen "Scripted replay", and the voiceover says "a scripted replay of the same call".
 
-**Out of the video.** These were cut this round (`NOT_BUILT.md`), so the video does not show them: the blind run, the Equity panel, the "days before next visit" badge and a recorded-scenario label.
+**Out of the video.** These were cut this round (`NOT_BUILT.md`), so the video does not show them: the blind run, the Equity tab, the "days before next visit" badge and a recorded-scenario label.
 
 **Shot list.** Nine shots, 178 s in total, under the 180 s limit.
 

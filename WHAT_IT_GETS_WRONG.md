@@ -148,9 +148,9 @@ An unmatched episode is not an error. The site may have recorded it as medical h
 
 The study on the `/sites` page is one draw (`monitoring/out/`, SIMULATED). Five planted sites, two must-be-grey sites and the rest honest. At Watch, discordance caught 0 planted sites, missed 5 and flagged 0 honest sites. At Look or Watch it caught 2, missed 3 and flagged 0 honest sites. In this draw the plain AE-rate KRI did better at Watch: it caught 2 planted sites (the two gross-loss sites, which discordance placed at Look only), missed 3 and flagged 0 honest sites. Discordance did not compute the language-gap site (too few evaluable episodes), which counts as a miss. simaerep classic caught 0 at Look or Watch. With five positives these counts carry little information; sections 1 to 3 are the evidence.
 
-## 15. Language gaps within a site: low power, no UI panel
+## 15. Language gaps within a site: low power
 
-Within sites, the Mantel-Haenszel odds ratio of capture for Spanish-speaking versus English-speaking patients in the committed study is 1.00 (patient-cluster bootstrap 95% CI [0.580, 1.846], 11 sites with enough episodes in both groups; SIMULATED). Below 1 means lower capture for Spanish-speaking patients. Power is low, and a gap planted at one site is diluted in the pooled estimate. The Equity panel in the UI was cut this round (`NOT_BUILT.md`); the numbers are in `monitoring/out/equity.json` and `validation/site_signal/report.md`.
+Within sites, the Mantel-Haenszel odds ratio of capture for Spanish-speaking versus English-speaking patients in the committed study is 1.00 (patient-cluster bootstrap 95% CI [0.580, 1.846], 11 sites with enough episodes in both groups; SIMULATED). Below 1 means lower capture for Spanish-speaking patients. Power is low, and a gap planted at one site is diluted in the pooled estimate. The separate Equity tab, the per-site odds ratios and the single-language toggle were cut this round (`NOT_BUILT.md`, #22). The pooled odds ratios above are shown to the CRA and sponsor in the Equity block of the How well it works tab; per-site values are in `monitoring/out/equity.json` and `validation/site_signal/report.md`.
 
 ## 16. Other limits
 
