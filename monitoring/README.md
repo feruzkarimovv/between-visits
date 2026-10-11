@@ -56,4 +56,8 @@ uv run --project monitoring python -m bvsignal.seed --show              # sap_ta
 
 ## Third-party attribution
 
-The simaerep classic (legacy) comparator (task S5, after the tag) is a Python port of the original algorithm of openpharma/simaerep, MIT License; its license text will ship as `tests/fixtures/SIMAEREP_LICENSE` with the fixture test.
+The simaerep classic (legacy) comparator, `bvsignal/simaerep_classic.py` (task S5, SAP §10.2), is a Python port of the original (`visit_med75`, `med75_adj`) algorithm of [openpharma/simaerep](https://github.com/openpharma/simaerep), Copyright (c) 2020 F. Hoffmann-La Roche Ltd and simaerep authors, MIT License; the license text is in `tests/fixtures/SIMAEREP_LICENSE`. It is labeled "simaerep classic (legacy)" in every output; simaerep v1.0.0's inframe default is not ported. The port is fixture-tested against the R-computed regression data shipped in the v1.0.0 repository (`R/sysdata.rda`, extracted once by `tests/fixtures/extract_simaerep_fixture.py` into `tests/fixtures/simaerep_*_fixture.csv`; the R-data reader is not a dependency of this project):
+
+```bash
+uv run --project monitoring pytest -q monitoring/tests/test_simaerep_fixture.py   # REQ-028
+```
