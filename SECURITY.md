@@ -35,4 +35,4 @@ There are no releases and no backports. Fixes go to the default branch.
 3. Decide together whether to rewrite history. Nobody rewrites shared history alone.
 4. Re-run `make secret-scan` and record the result in `validation/secret-scan.md`.
 
-Changing the repository's visibility is a separate human decision. Run `make secret-scan` on the final history before that decision.
+Changing the repository's visibility is a separate human decision. Run `make secret-scan` on the final history before that decision. The product-name guard in `data/validate_data.py` covers the working tree only, not git history, and history before 6da3b18 still holds the product brand name and product code: `HUMAN_TODO.md` item 0 removes them (a fresh repository or a history rewrite) and re-runs the guard over `git log -p --all` before any visibility change.

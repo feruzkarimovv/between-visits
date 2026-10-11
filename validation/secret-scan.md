@@ -88,7 +88,10 @@ tar -xzf "$f" gitleaks && sudo install -m 0755 gitleaks /usr/local/bin/gitleaks 
 ```
 
 Before making the repository public (a later human decision), re-run both commands on the final history, on a fresh
-clone with every branch fetched, and add the result here.
+clone with every branch fetched, and add the result here. Neither command looks for product names, and the
+product-name guard (`data/validate_data.py`, run by `make test`) covers the working tree only, not history: history
+before 6da3b18 (the root commit 07f2773) still holds the product brand name and product code, so `HUMAN_TODO.md`
+item 0 (fresh repository or history rewrite, then the guard over `git log -p --all`) comes first.
 
 ## Re-run after the lockfile change
 

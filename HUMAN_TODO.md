@@ -2,6 +2,24 @@
 
 Steps that need a person. Everything around them is done; each item says exactly what to run or click. Ordered by priority (re-ordered at the end of the build).
 
+0. **Before any change of repository visibility (for example a public repository link in item 12's Devpost entry): remove the product name from git history (CLAUDE.md rule 8).** Git history before 6da3b18 (commit 07f2773, the build kit, the root commit) still holds the product brand name and product code: `python3 data/validate_data.py --guard-file` over `git log -p --all` reports 23 denylisted-token lines, added in 07f2773 (`data/red_flags.json` 9, `data/study.json` 1, `docs/05-clinical-rules.md` 1) and removed in 6da3b18 (`data/`) and in d88dc99 and edc3991 (`docs/05`). `origin/main` still holds them at its tip (d29585e) until item 1's merge, and `origin/claude/vibrant-fermi-6vwzie` holds the history too. The product-name guard that `make test` runs covers the working tree only, and `make secret-scan` does not look for product names, so both pass. The build session may not force-push (`docs/KICKOFF.md`), so this needs a person. Choose one:
+   - **Publish a fresh repository from a squashed snapshot** (keeps this private repository, its `sap-v1` tag and GitHub Release unchanged as the pre-registration record):
+     ```bash
+     git fetch origin && mkdir "$TMPDIR/bv-public"
+     git archive origin/main | tar -x -C "$TMPDIR/bv-public"      # after item 1's merge
+     cd "$TMPDIR/bv-public" && git init -b main && git add -A && git commit -m "Between Visits: snapshot of between-visits main"
+     ```
+   - **Or rewrite history** with `git filter-repo` and force-push every branch and tag. This changes every commit sha, including the `sap-v1` tag commit 68838978… from which the evaluation seed is derived (`docs/11` §1.3), so `sap_tag_commit` and `eval_seed` in every committed Site Signal output, the REQ-022 test and the GitHub Release (`docs/11` §17 C1) would no longer match. Decide it with the team (`SECURITY.md`).
+
+   Then, in the repository that is to be made visible, re-run the product-name guard over its whole history and the secret scan, and record both in `validation/secret-scan.md`:
+   ```bash
+   git log -p --all > "$TMPDIR/history.patch"
+   python3 data/validate_data.py --guard-file "$TMPDIR/history.patch"   # expect "product names: 0 hits in 1 files"; today: 23 FAIL lines
+   rm "$TMPDIR/history.patch"
+   make secret-scan                                                      # expect "no leaks found" and "numbers: 0 hits"
+   ```
+   The guard prints only the patch line number of a hit, never the matched text.
+
 1. **Merge `site-signal-build` into `main` with a merge commit (not squash or rebase).** The `sap-v1` tag must stay an ancestor of the evaluation outputs (REQ-022), so the branch history must be kept as is:
    ```bash
    git fetch origin
