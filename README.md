@@ -8,7 +8,7 @@ Between Visits is a voice agent that phones cancer-trial patients in the days af
 
 **Demo video:** added at submission (3:00, unlisted; see [`HUMAN_TODO.md`](HUMAN_TODO.md)).
 
-**Deck:** [`docs/pitch/deck.pdf`](docs/pitch/deck.pdf), 10 slides, exported from [`docs/pitch/deck.html`](docs/pitch/deck.html).
+**Deck:** [`docs/pitch/deck.pdf`](docs/pitch/deck.pdf), 12 slides: the problem, what it does, the architecture, the tech stack and test results.
 
 **Public demo:** https://bv-demo-web.onrender.com (demo mode, synthetic data; Render free instance, so the first load after about 15 idle minutes takes up to a minute). Or run the same demo on your machine with `make demo` ([Quickstart](#quickstart)).
 
@@ -249,7 +249,7 @@ See [`docs/04-voice-agent.md`](docs/04-voice-agent.md) for the Twilio, ElevenLab
 - **Workstreams:** [`WS0`](docs/workstreams/WS0-readiness.md) readiness · [`WS1`](docs/workstreams/WS1-voice.md) voice · [`WS2`](docs/workstreams/WS2-backend.md) backend · [`WS3`](docs/workstreams/WS3-frontend.md) frontend · [`WS4`](docs/workstreams/WS4-data-eval-story.md) data, evaluation, story · [`WS5`](docs/workstreams/WS5-site-signal.md) Site Signal.
 - **Background:** [`ADR-001`](docs/decisions/ADR-001-site-signal.md) (why Site Signal) · [`site-signal-methods`](docs/research/site-signal-methods.md) · [`synthea`](docs/research/synthea.md) · [`backlog`](docs/backlog.md) (not built).
 - **Honesty pages:** [`WHAT_IT_GETS_WRONG.md`](WHAT_IT_GETS_WRONG.md) (limits, with numbers) · [`NOT_BUILT.md`](NOT_BUILT.md) (not built, with issues) · [`HUMAN_TODO.md`](HUMAN_TODO.md) (steps that need a person).
-- **Pitch:** [`docs/pitch/deck.html`](docs/pitch/deck.html) (deck source) · [`docs/08-demo-and-pitch.md`](docs/08-demo-and-pitch.md) (demo script, video storyboard).
+- **Pitch:** [`docs/pitch/deck.pdf`](docs/pitch/deck.pdf) (deck) · [`docs/08-demo-and-pitch.md`](docs/08-demo-and-pitch.md) (demo script, video storyboard).
 
 ## Repository map
 
