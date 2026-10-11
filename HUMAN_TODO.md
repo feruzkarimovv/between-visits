@@ -342,3 +342,11 @@ Steps that need a person. Everything around them is done; each item says exactly
    gh run view <run id> --repo feruzkarimovv/between-visits --log | grep -E "MATCH|MISMATCH|quick check"   # expect "quick check passed: every quick_hashes entry equals summary.json"
    ```
    Then put the run ID and the result line in the WS5-S7 row of `PROGRESS.md` § Final review fixes (the quick-check row). If the macOS runner also prints `MISMATCH power_grid` (a different macOS or Accelerate build than the build machine's), do not change `summary.json` or `validate.py`: add the run ID and the platform (`sw_vers`, printed by the job) to `WHAT_IT_GETS_WRONG.md` §16 and a `docs/11` §17 row, and tell the team lead.
+20. **Check that the CI jobs `gitleaks` and `frontend` are green on GitHub after the FINALFIX push (final review fixes; first run on GitHub runners).** FINALFIX is integrated on `site-signal-build` and passed locally (`make secret-scan` exit 0: 189 commits scanned, no leaks found, numbers 0 hits; `make test` exit 0, including the new `npm test` display-rounding unit test). The `gitleaks` job now uses the two new allowlists in `.gitleaks.toml` (run-log sha256 digests, app record IDs), and the `frontend` job gained the step `cd frontend && npm test`; neither has run on a GitHub runner yet.
+   ```bash
+   gh run list --repo feruzkarimovv/between-visits --workflow CI --branch site-signal-build --limit 1
+   gh run watch <run id from that row> --repo feruzkarimovv/between-visits
+   gh run view <run id> --repo feruzkarimovv/between-visits --json jobs --jq '.jobs[] | select(.name=="gitleaks") | .conclusion'   # "success"
+   gh run view <run id> --repo feruzkarimovv/between-visits --json jobs --jq '.jobs[] | select(.name=="frontend") | .conclusion'   # "success"
+   ```
+   Or on GitHub: **Actions → CI →** the newest run on `site-signal-build` **→ gitleaks** (ends with `no leaks found`) and **→ frontend** (the `npm test` step prints `pass 2`, `fail 0`). If a newer push cancelled that run, check the newest uncancelled one. If `gitleaks` is red, run `make secret-scan` locally on the same commit and record the finding in `validation/secret-scan.md`; never allowlist a real key (rotate it first).
