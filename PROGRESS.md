@@ -37,7 +37,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | A | B14 export and narrative fixes | done | b4e7a34 | pytest tests/test_exports.py 32 passed; demo server :8090 Rosa replay, 3 drafts confirmed, Diarrhea serious -> SAE: ae.csv X-BV-Note "CTCAE v5.0; synthetic data; AEDECOD/AEBODSYS coded downstream by licensed sponsor; ORIGIN is a sponsor-defined column", DictReader fields STUDYID..ORIGIN, AEOUT NOT RECOVERED/NOT RESOLVED = SAE outcome not_recovered, narrative has no "..", ".;" or "(("; cm.csv X-BV-Note set; CORS exposes X-BV-Note, Content-Disposition; make validate --check 18/18 (REQ-020 PASS 32/32), 143/143 tests; make test exit 0; secret-scan no leaks, 0 numbers | |
 | A | B15 replay speed, provenance, health, voice checks | todo | | | |
 | A | F10 demo UX, downloads, /sae list | todo | | | |
-| A | D8 Spanish del fix, product-name guard | todo | | | |
+| A | D8 Spanish del fix, product-name guard | done | 6da3b18 | validate_data exit=0 (product names: 0 hits in 202 files; self-test 16/16 incl. dummy-token guard files exit 1 with guard.txt:3, control exit 0); grep -rn 'de el ' data/ scenarios/ prints nothing; test_disclosure.py 10 passed; red_flags.json rule/level fields unchanged (only sources and _about); make test exit 0 (184 pytest, ruff, data, agent-sync, tsc+eslint); diff has no keys, phone numbers or drug names | |
 | A | D9 boundary tests, mutation probe | todo | | | |
 | A | D10 Clopper-Pearson intervals | todo | | | |
 | B | S2 simulate and roster | todo | | | |
