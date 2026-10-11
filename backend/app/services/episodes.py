@@ -34,16 +34,19 @@ call (dict), any number of subjects in any order:
     date        DateLike  DISPLAY_TZ local date of the call. Same-day calls keep their input order, so
                           pass them in time order.
     status      str       only "completed" calls contribute to episodes (§6.3)
-    grades      dict      primary term -> provisional grade on this call, or None. 1-3 is the `rules.grade()`
-                          grade with grade_basis "rule"; 0 means the patient reported the symptom absent
-                          (the caller maps that: `rules.grade()` never returns 0); None or a missing term
-                          means no gradable answer (needs_clinician, not asked), which skips the call for
-                          that term (§4.2 rule 6). Optional; other terms are ignored.
+    grades      dict      primary term -> g_k, the provisional grade on this call, or None. The caller derives
+                          it from the call's answers exactly as docs/11 §4.2 says (`rules.grade()` never
+                          returns 0): for a term whose items were asked, 0 when `rules.term_present(term,
+                          answers)` is false, else `rules.grade(term, answers, baseline).provisional_grade`
+                          (None when grade_basis is "needs_clinician"); None when the term was not asked or
+                          its only answers are `unknown` / `not_measured`. None or a missing term skips the
+                          call for that term (§4.2 rule 6). Optional; other terms are ignored.
     level       str       highest escalation level raised on the call: "none" | "callback" | "urgent" |
                           "emergency". Optional (default none). cfg `paged.levels` page an episode (§6.2).
-    Live bridge (site 101): date = `timeutil.local_date` of the check-in's start; grades from its Finding
-    rows (provisional_grade when grade_basis is "rule", else None), and 0 for a primary term that was
-    asked and reported absent (no Finding); level = the highest level of its Escalation rows.
+    Live bridge (site 101): date = `timeutil.local_date` of the check-in's start; grades by the §4.2
+    mapping above from the check-in's answers and the patient's baseline (the same mapping the simulator
+    applies, so not from Finding rows alone: a Finding can exist for a term reported absent when a red
+    flag is attributed to it); level = the highest level of its Escalation rows.
 
 site AE row (dict), SDTM-style, `SiteAE` in docs/02:
     site_ae_id  str       copied into `matched_site_ae_id` (read by `classify` only)

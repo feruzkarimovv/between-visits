@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from app import content
-from app.services import episodes
+from app.services import episodes, rules
 
 CFG = content.signal_rules()
 BASE = date(2026, 1, 5)  # study day 0
@@ -385,3 +385,63 @@ def test_imports_are_standard_library_and_app_only():
     modules |= {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
     assert modules == {"bisect", "collections.abc", "datetime", "operator", "typing", "app.services.rules"}
     assert all(m.split(".")[0] in sys.stdlib_module_names or m == "app.services.rules" for m in modules)
+
+
+def sap_g(term: str, answers: dict, baseline: dict) -> int | None:
+    """docs/11 §4.2: g_k from one completed call's answers (what services/site_signal.py and the simulator do).
+
+    Not asked (no answer of the term other than unknown / not_measured) -> None; asked and
+    rules.term_present() false -> 0; otherwise the rules.grade() provisional grade (None if needs_clinician)."""
+    asked = [
+        code for code, a in answers.items()
+        if content.has_item(code) and content.term_of(code) == term and a.option_code not in ("unknown", "not_measured")
+    ]
+    if not asked:
+        return None
+    if not rules.term_present(term, answers):
+        return 0
+    return rules.grade(term, answers, baseline).provisional_grade
+
+
+A = rules.AnswerInput
+STOOLS = "DIARRHEA_STOOLS_PER_DAY"
+BASELINE = {"stools_per_day": 1}
+
+
+@pytest.mark.parametrize(
+    ("term", "answers", "g"),
+    [
+        ("Diarrhea", {"DIARRHEA_FREQ": A("never")}, 0),  # absent: rules.grade() gives None, the mapping gives 0
+        ("Fever", {"FEVER_CHILLS": A("no")}, 0),
+        ("Dyspnea", {"SOB_SEV": A("none")}, 0),
+        ("Diarrhea", {"DIARRHEA_FREQ": A("rarely")}, None),  # present, no stool count: needs_clinician
+        ("Diarrhea", {"DIARRHEA_FREQ": A("sometimes"), STOOLS: A(option_code="unknown")}, None),
+        ("Fever", {"FEVER_CHILLS": A("yes"), "TEMP_HIGHEST": A(option_code="not_measured")}, None),
+        ("Diarrhea", {"DIARRHEA_FREQ": A("unknown")}, None),  # only unknown answers: not asked
+        ("Dyspnea", {"DIARRHEA_FREQ": A("never")}, None),  # term not asked on the call
+        ("Diarrhea", {"DIARRHEA_FREQ": A("often"), STOOLS: A(numeric_value=6, unit="per_day")}, 2),
+        ("Diarrhea", {"DIARRHEA_FREQ": A("often"), STOOLS: A(numeric_value=9, unit="per_day")}, 3),
+    ],
+)
+def test_sap_grade_mapping_on_the_frozen_rules(term, answers, g):
+    """The §4.2 mapping on the frozen grading rules: rules.grade() never returns 0, so absence comes from
+    rules.term_present()."""
+    assert sap_g(term, answers, BASELINE) == g
+    if g == 0:
+        assert rules.grade(term, answers, BASELINE).grade_basis == "needs_clinician"
+
+
+def test_absent_answers_close_episodes_and_ungraded_answers_are_skipped():
+    """§4.2 rules 4 and 6 on mapped grades: a reported-absent call (0) closes the episode, a needs_clinician
+    call (None) is skipped, so the same three calls give two episodes or one."""
+    g2 = sap_g("Diarrhea", {"DIARRHEA_FREQ": A("often"), STOOLS: A(numeric_value=6, unit="per_day")}, BASELINE)
+    absent = sap_g("Diarrhea", {"DIARRHEA_FREQ": A("never")}, BASELINE)
+    ungraded = sap_g("Diarrhea", {"DIARRHEA_FREQ": A("rarely")}, BASELINE)
+    assert (g2, absent, ungraded) == (2, 0, None)
+    middle = {"closed": absent, "skipped": ungraded}
+    got = {
+        name: [e["checkin_ids"] for e in episodes.build_episodes(
+            [call("a", 1, Diarrhea=g2), call("b", 3, Diarrhea=g), call("c", 7, Diarrhea=g2)], CFG)]
+        for name, g in middle.items()
+    }
+    assert got == {"closed": [["a"], ["c"]], "skipped": [["a", "c"]]}
