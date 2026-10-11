@@ -43,7 +43,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | B | S2 simulate and roster | todo | | | |
 | B | S3 match | todo | | | |
 | B | S4 calibrate and indicators | todo | | | |
-| B | S5 simaerep classic port | todo | | | |
+| B | S5 simaerep classic port | done | 0405476 | test_simaerep_fixture.py 10 passed: 10/10 R fixture site p-values (raw + BH) max rel diff 3.45e-15 (< 1e-9); bootstrap prob within docstring MC tolerance 4*sqrt(p(1-p)(1/100+1/100000))+1/100; R set.seed(1..100) draws replayed exactly (prob_low, prob_low_adj, prob 10/10); fixture_pvalue_check() rows 10; monitoring ruff clean, 74 passed 1 skipped; make test exit 0 (ruff, 446 pytest, data + self-test 19/19, agent OK, tsc+eslint); gitleaks no leaks, scan_numbers 0 hits, product-name guard clean; no frozen inputs, monitoring/out or validation/site_signal files touched. Open for S4/B17: module prob = -(1 - BH prob_low) flagged at <= c (SAP 10.2) vs docs/03 5.1 + B16b fixtures positive prob at >= threshold; REQ-028 enters requirements.yaml with D12 | |
 | B | S6 run and report | todo | | | |
 | B | S7 validate | todo | | | |
 | B | S8 blind run CLI | todo | | | |
