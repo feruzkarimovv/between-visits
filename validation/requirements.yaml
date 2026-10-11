@@ -79,3 +79,7 @@ requirements:
     title: Parseable, consistent exports
     text: AE/CM CSVs start with the header row, carry ORIGIN=between_visits, and AEOUT agrees with the SAE report outcome.
     risk: medium
+  - id: REQ-024
+    title: Stream independence
+    text: AE rows with origin=between_visits never match an episode, and red-flag-paged episodes are excluded from O/E and reported as a separate stratum.
+    risk: high

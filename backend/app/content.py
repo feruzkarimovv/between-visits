@@ -66,8 +66,22 @@ def patients_doc() -> dict[str, Any]:
     return _load("patients.json")
 
 
+@lru_cache
+def signal_rules() -> dict[str, Any]:
+    """data/signal_rules.json: Site Signal episode, match, evaluability, paging and minimum-data rules and UI
+    labels (schema: docs/02 § Files behind Site Signal); the `cfg` of services/episodes.py. Do not mutate."""
+    return _load("signal_rules.json")
+
+
+@lru_cache
+def site_queries() -> dict[str, Any]:
+    """data/site_queries.json: approved site query templates, response codes and banned phrases (English)."""
+    return _load("site_queries.json")
+
+
 def reload() -> None:
-    for f in (items_doc, local_items, scripts_doc, red_flags_doc, rules_doc, study_doc, plan_doc, patients_doc):
+    for f in (items_doc, local_items, scripts_doc, red_flags_doc, rules_doc, study_doc, plan_doc, patients_doc,
+              signal_rules, site_queries):
         f.cache_clear()
 
 
