@@ -486,6 +486,6 @@ New record files (not database tables):
 
 | File | Owner | Shape |
 |---|---|---|
-| `eval/results/voice_checks.json` | WS1 (V10) | `{run_at, backend, agent_llm, calls: [{variant, conversation_id, checkin_id, scenario, disclosure_first_turn, red_flag_expected, paged, utterance_to_page_s, page_to_ack_s, grade, rule_id, status?}]}` (`status: "pending"` marks a placeholder row that is not a result), served by `GET /api/eval/voice-checks` (`MEASURED`) |
+| `eval/results/voice_checks.json` | WS1 (V10) | `{run_at, backend, agent_llm, calls: [{variant, conversation_id, checkin_id, scenario, disclosure_first_turn, red_flag_expected, paged, utterance_to_page_s, page_to_ack_s, grade, rule_id, status?, started_at?, page_level?, red_flag_ids?, term?, expected?}]}` (`status: "pending"` marks a placeholder row that is not a result, `"logged"` a real call; `expected` is the plan; IDs cut to prefix + last 4 characters), written by `agent/voice_check.py`, served by `GET /api/eval/voice-checks` (`MEASURED`) |
 | `agent/deployed_snapshot.json` | WS1 (V9) | `{captured_at, variants: {"en-standard": {agent_id_suffix, llm, backup_llms, tts_model, prompt_sha256, tools_sha256, config_sha256}, ...}}`; agent IDs redacted to the last 4 characters |
 | `validation/capa.md` | WS2 | table `id \| found \| root cause \| correction \| prevention (test id) \| commit`: CAPA-001 (AEOUT vs narrative), CAPA-002 (UTC vs local date) |

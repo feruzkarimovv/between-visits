@@ -849,4 +849,25 @@ Values in this example are placeholders that show types and shapes, not results.
 
 A row prepared before its call is made carries `"status":"pending"` (or `"pending":true`). Pending rows are placeholders, not results: the report card never counts them, and when every row is pending (or `calls` is empty) the "Real voice calls" row says "pending: no real calls logged yet". For the logged calls, the report card shows the disclosure and red-flag paging proportions as k/n with a Clopper-Pearson exact 95% interval computed the same way as in `latest.json`.
 
+**How rows are written (V10).** `agent/voice_check.py` writes the file (procedure: `agent/README.md`). The route serves every key as written, so these optional fields pass through:
+
+| Field | Meaning |
+|---|---|
+| `status` | `"pending"`: a placeholder for a planned call, every measurement `null`. `"logged"`: written from a real call. |
+| `expected` | The plan for that call, copied from the WS1 V10 table: `patient_id`, `term`, `grade`, `rule_id`, `paged`, `red_flag_ids`. A plan, never a result. |
+| `started_at` | UTC call start, from the conversation. |
+| `page_level`, `red_flag_ids` | Level of the first paged escalation and the red-flag IDs of all paged escalations. When nothing was paged, `page_level` is `null` and `red_flag_ids` is `[]`. |
+| `term` | The finding that `grade` and `rule_id` belong to. |
+
+- `conversation_id` and `checkin_id` are stored cut to their prefix and last 4 characters (`conv_...9s0t`, `ci_...Q2W1`).
+- Logging a call fills the pending row with the same `scenario` in place, so a planned call is never counted twice. Running the script again for the same conversation updates its row. Another call for a scenario that is already logged is added as an extra row only with `--append`; a logged row is never dropped to hide a failed call.
+- Header: while every row is pending, `run_at` is `null` and `backend` is `"pending"`. Once a call is logged, `run_at` is the earliest logged `started_at` and `backend` is `render-live` or `tunnel`. `agent_llm` is the single `llm` in `agent/deployed_snapshot.json`.
+
+Measurement definitions:
+- `disclosure_first_turn`: the first agent turn with text contains `data/scripts.json` `lines.first_message` for the call's language. `{study_team_name}` is filled from `data/study.json`, and any other `{variable}` (the patient's first name) matches any text. The comparison uses Unicode NFC, case folding, straight quotes and collapsed whitespace.
+- `paged`: an `urgent` or `emergency` escalation of the check-in has a `paged_at`.
+- `utterance_to_page_s`: the first `paged_at` minus the start of the patient turn that triggered the page. That turn is the last patient turn before the first tool call whose result says `escalated: true`; after a read-back it is the patient's confirmation. Without tool results, it is the last patient turn before the page.
+- `page_to_ack_s`: `acknowledged_at − paged_at` of that escalation; `null` until it is acknowledged.
+- `grade`, `rule_id`: from the finding for `expected.term`, or else the finding with the highest provisional grade.
+
 The report card compares `latest.json` `model.agent` with `voice_checks.json` `agent_llm` and states plainly whether they match. When the file is absent or has no `agent_llm`, it says that the deployed model is not recorded yet.
