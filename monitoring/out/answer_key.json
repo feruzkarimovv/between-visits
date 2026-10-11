@@ -1,0 +1,325 @@
+{
+ "_about": "Answer key of the committed study (docs/11 §11.4) and per-indicator confusion at both tiers: an illustration only, never evidence of performance (§12.7; the evidence is validation/site_signal/summary.json). Positives are the planted capture losses; a positive that is not computed is a false negative; the two must-be-grey sites are reported separately under must_be_grey and are in no confusion cell. SIMULATED",
+ "data_origin": "SIMULATED",
+ "sap_tag_commit": "68838978bb305e0f730d30e5cbf3c00bceca5a25",
+ "eval_seed": 92794863,
+ "beacon_round": 6542582,
+ "seed_label": "eval",
+ "seed": 92794863,
+ "code_commit": "9204a1e025443d19150cc4bb7c41c02d485fb620",
+ "generated_at": "2026-10-11T12:18:52Z",
+ "numpy_version": "2.5.4",
+ "scipy_version": "1.18.1",
+ "run_id": "sr_committed",
+ "illustration_only": true,
+ "positive_labels": [
+  "gross_under",
+  "language_gap",
+  "under_25",
+  "under_50"
+ ],
+ "must_be_grey_labels": [
+  "low_coverage",
+  "small_site"
+ ],
+ "answer_key": [
+  {
+   "site_id": "101",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "102",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "103",
+   "label": "under_50",
+   "f": 0.5,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "104",
+   "label": "under_25",
+   "f": 0.25,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "105",
+   "label": "gross_under",
+   "f": 0.9,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "106",
+   "label": "decoy_healthy_casemix",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "107",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "108",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "109",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "110",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "111",
+   "label": "honest_low_diligence",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "112",
+   "label": "small_site",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "113",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "114",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "115",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "116",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "117",
+   "label": "low_coverage",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "118",
+   "label": "gross_under",
+   "f": 0.9,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "119",
+   "label": "language_gap",
+   "f": null,
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "120",
+   "label": "honest",
+   "f": null,
+   "data_origin": "SIMULATED"
+  }
+ ],
+ "confusion": {
+  "discordance": {
+   "watch": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 5,
+    "tn": 13
+   },
+   "look": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 3,
+    "tn": 13
+   }
+  },
+  "rate_kri": {
+   "watch": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 3,
+    "tn": 13
+   },
+   "look": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 3,
+    "tn": 13
+   }
+  },
+  "simaerep_classic": {
+   "watch": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 5,
+    "tn": 13
+   },
+   "look": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 5,
+    "tn": 13
+   }
+  }
+ },
+ "flags": {
+  "discordance": {
+   "watch": {
+    "caught": [],
+    "missed": [
+     "103",
+     "104",
+     "105",
+     "118",
+     "119"
+    ],
+    "false_flags": []
+   },
+   "look": {
+    "caught": [
+     "105",
+     "118"
+    ],
+    "missed": [
+     "103",
+     "104",
+     "119"
+    ],
+    "false_flags": []
+   },
+   "not_computed_positives": [
+    "119"
+   ]
+  },
+  "rate_kri": {
+   "watch": {
+    "caught": [
+     "105",
+     "118"
+    ],
+    "missed": [
+     "103",
+     "104",
+     "119"
+    ],
+    "false_flags": []
+   },
+   "look": {
+    "caught": [
+     "105",
+     "118"
+    ],
+    "missed": [
+     "103",
+     "104",
+     "119"
+    ],
+    "false_flags": []
+   },
+   "not_computed_positives": []
+  },
+  "simaerep_classic": {
+   "watch": {
+    "caught": [],
+    "missed": [
+     "103",
+     "104",
+     "105",
+     "118",
+     "119"
+    ],
+    "false_flags": []
+   },
+   "look": {
+    "caught": [],
+    "missed": [
+     "103",
+     "104",
+     "105",
+     "118",
+     "119"
+    ],
+    "false_flags": []
+   },
+   "not_computed_positives": []
+  }
+ },
+ "must_be_grey": [
+  {
+   "site_id": "112",
+   "label": "small_site",
+   "indicators": {
+    "discordance": {
+     "tier": "not_computed",
+     "not_computed_reason": "insufficient_patients",
+     "expected_reason": "insufficient_patients",
+     "as_expected": true
+    },
+    "rate_kri": {
+     "tier": "not_computed",
+     "not_computed_reason": "insufficient_patients",
+     "expected_reason": "insufficient_patients",
+     "as_expected": true
+    },
+    "simaerep_classic": {
+     "tier": "not_computed",
+     "not_computed_reason": "insufficient_patients",
+     "expected_reason": "insufficient_patients",
+     "as_expected": true
+    }
+   },
+   "data_origin": "SIMULATED"
+  },
+  {
+   "site_id": "117",
+   "label": "low_coverage",
+   "indicators": {
+    "discordance": {
+     "tier": "not_computed",
+     "not_computed_reason": "low_coverage",
+     "expected_reason": "low_coverage",
+     "as_expected": true
+    },
+    "rate_kri": {
+     "tier": "none",
+     "not_computed_reason": null,
+     "expected_reason": null,
+     "as_expected": null
+    },
+    "simaerep_classic": {
+     "tier": "none",
+     "not_computed_reason": null,
+     "expected_reason": null,
+     "as_expected": null
+    }
+   },
+   "data_origin": "SIMULATED"
+  }
+ ]
+}

@@ -1,0 +1,776 @@
+{
+ "_about": "Numbers shown only in validation/site_signal/report.md, never used for a tier and never a UI column: the §8.3 secondary calibrated p-values with Benjamini-Hochberg q-values, the §10.3 AE-to-report ratio ablation, the §6.2 paged stratum and the §4.1 ungraded primary-term reports per site. SIMULATED",
+ "data_origin": "SIMULATED",
+ "sap_tag_commit": "68838978bb305e0f730d30e5cbf3c00bceca5a25",
+ "eval_seed": 92794863,
+ "beacon_round": 6542582,
+ "seed_label": "eval",
+ "seed": 92794863,
+ "code_commit": "9204a1e025443d19150cc4bb7c41c02d485fb620",
+ "generated_at": "2026-10-11T12:18:52Z",
+ "numpy_version": "2.5.4",
+ "scipy_version": "1.18.1",
+ "run_id": "sr_committed",
+ "calibration": {
+  "file": "thresholds.json",
+  "sha256": "2f3b8c4dc13c123c8a125d8bfa77114a2314103d262824dd78acfa3f61b666a0",
+  "seed_label": "eval",
+  "r_null": 2000,
+  "alpha": {
+   "look": 0.05,
+   "watch": 0.1
+  },
+  "achieved": {
+   "discordance": {
+    "look": {
+     "rate": 0.04998543170708019,
+     "mc_se": 0.0010000062105683183
+    },
+    "watch": {
+     "rate": 0.1,
+     "mc_se": 0.00670820393249937
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 0.772,
+     "mc_se": 0.0156726135474497
+    },
+    "n_pooled": 30889,
+    "mean_computed_sites": 15.4445,
+    "studies_without_computed_site": 4
+   },
+   "rate_kri": {
+    "look": {
+     "rate": 0.05,
+     "mc_se": 0.0009581017584211737
+    },
+    "watch": {
+     "rate": 0.1,
+     "mc_se": 0.00670820393249937
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 1.0,
+     "mc_se": 0.01916203516842347
+    },
+    "n_pooled": 40000,
+    "mean_computed_sites": 20.0,
+    "studies_without_computed_site": 0
+   },
+   "simaerep_classic": {
+    "look": {
+     "rate": 0.0231,
+     "mc_se": 0.0014943431770397934
+    },
+    "watch": {
+     "rate": 0.0235,
+     "mc_se": 0.0033873108803297047
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 0.462,
+     "mc_se": 0.029886863540795866
+    },
+    "n_pooled": 40000,
+    "mean_computed_sites": 20.0,
+    "studies_without_computed_site": 0
+   },
+   "ae_report_ratio": {
+    "look": {
+     "rate": 0.04998543170708019,
+     "mc_se": 0.0009803592347026702
+    },
+    "watch": {
+     "rate": 0.1,
+     "mc_se": 0.00670820393249937
+    },
+    "expected_false_look_flags_per_study": {
+     "mean": 0.772,
+     "mc_se": 0.015235618203112583
+    },
+    "n_pooled": 30889,
+    "mean_computed_sites": 15.4445,
+    "studies_without_computed_site": 4
+   }
+  }
+ },
+ "secondary": {
+  "method": "calibrated empirical p_s = (1 + #{null pooled z* <= z*_s}) / (1 + M) from the §9.2 Look pool, Benjamini-Hochberg q-values across computed sites (docs/11 §8.3); report.md only, never tiers",
+  "M": 30889,
+  "null_pool_sha256": "edd941e66c80341084619fcd6cc4bb66d14f1b768bed0e24ade26b1a81b429df",
+  "sites": [
+   {
+    "site_id": "101",
+    "z_adj": 0.28906659511078886,
+    "p_empirical": 0.5955649077371318,
+    "q_bh": 0.8258443940865436,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "102",
+    "z_adj": null,
+    "p_empirical": null,
+    "q_bh": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "103",
+    "z_adj": -0.7671518027339399,
+    "p_empirical": 0.24522499190676594,
+    "q_bh": 0.7639608287471674,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "104",
+    "z_adj": -0.4301427462794102,
+    "p_empirical": 0.34739397863386207,
+    "q_bh": 0.7639608287471674,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "105",
+    "z_adj": -2.2238872268344085,
+    "p_empirical": 0.014438329556490773,
+    "q_bh": 0.20213661379087083,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "106",
+    "z_adj": null,
+    "p_empirical": null,
+    "q_bh": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "107",
+    "z_adj": 1.6429840438814938,
+    "p_empirical": 0.9350275169957916,
+    "q_bh": 0.9350275169957916,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "108",
+    "z_adj": 0.24284715496063622,
+    "p_empirical": 0.5795403043056006,
+    "q_bh": 0.8258443940865436,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "109",
+    "z_adj": null,
+    "p_empirical": null,
+    "q_bh": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "110",
+    "z_adj": -1.4317238889527948,
+    "p_empirical": 0.09093557785691163,
+    "q_bh": 0.424366029998921,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "111",
+    "z_adj": -0.16827633502316391,
+    "p_empirical": 0.4365490449983814,
+    "q_bh": 0.7639608287471674,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "112",
+    "z_adj": null,
+    "p_empirical": null,
+    "q_bh": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "113",
+    "z_adj": -0.4828051159766207,
+    "p_empirical": 0.33078666235027515,
+    "q_bh": 0.7639608287471674,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "114",
+    "z_adj": 0.6365407527348373,
+    "p_empirical": 0.7047588216251214,
+    "q_bh": 0.8258443940865436,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "115",
+    "z_adj": 0.6477750171739545,
+    "p_empirical": 0.7078666235027516,
+    "q_bh": 0.8258443940865436,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "116",
+    "z_adj": -0.22496958546353704,
+    "p_empirical": 0.4159274846228553,
+    "q_bh": 0.7639608287471674,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "117",
+    "z_adj": null,
+    "p_empirical": null,
+    "q_bh": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "118",
+    "z_adj": -1.8762219312594988,
+    "p_empirical": 0.03716413078666235,
+    "q_bh": 0.26014891550663644,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "119",
+    "z_adj": null,
+    "p_empirical": null,
+    "q_bh": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "120",
+    "z_adj": 1.638439829656978,
+    "p_empirical": 0.9342829394626092,
+    "q_bh": 0.9350275169957916,
+    "data_origin": "SIMULATED"
+   }
+  ]
+ },
+ "ablation": {
+  "indicator": "ae_report_ratio",
+  "method": "AE-to-report ratio (docs/11 §10.3): site rows mapping to each primary term against the evaluable non-paged episodes of the term, leave-one-site-out; validation and report.md only",
+  "phi": 4.171299445219053,
+  "thresholds": {
+   "look": -1.8701229701798285,
+   "watch": -2.769710389565622
+  },
+  "sites": [
+   {
+    "site_id": "101",
+    "U": 29.0,
+    "E_U": 24.111534341149863,
+    "z_raw": 0.9955432791554507,
+    "z_adj": 0.48744369919509545,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "102",
+    "U": null,
+    "E_U": null,
+    "z_raw": null,
+    "z_adj": null,
+    "tier": "not_computed",
+    "not_computed_reason": "insufficient_episodes",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "103",
+    "U": 36.0,
+    "E_U": 54.02273556864994,
+    "z_raw": -2.452067520288292,
+    "z_adj": -1.2005955821221874,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "104",
+    "U": 20.0,
+    "E_U": 30.747148288973385,
+    "z_raw": -1.9381653277112318,
+    "z_adj": -0.9489757972076253,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "105",
+    "U": 4.0,
+    "E_U": 26.97159090909091,
+    "z_raw": -4.423212370842742,
+    "z_adj": -2.1657190054039144,
+    "tier": "look",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "106",
+    "U": null,
+    "E_U": null,
+    "z_raw": null,
+    "z_adj": null,
+    "tier": "not_computed",
+    "not_computed_reason": "insufficient_episodes",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "107",
+    "U": 38.0,
+    "E_U": 42.44790874524715,
+    "z_raw": -0.6826965671151902,
+    "z_adj": -0.3342658697718547,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "108",
+    "U": 59.0,
+    "E_U": 46.927196225933955,
+    "z_raw": 1.7623649149977354,
+    "z_adj": 0.8628993751300367,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "109",
+    "U": null,
+    "E_U": null,
+    "z_raw": null,
+    "z_adj": null,
+    "tier": "not_computed",
+    "not_computed_reason": "insufficient_episodes",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "110",
+    "U": 28.0,
+    "E_U": 35.08119710535999,
+    "z_raw": -1.1955547817053451,
+    "z_adj": -0.5853744961034902,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "111",
+    "U": 50.0,
+    "E_U": 63.44050480769231,
+    "z_raw": -1.6874552539163685,
+    "z_adj": -0.8262216705364921,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "112",
+    "U": null,
+    "E_U": null,
+    "z_raw": null,
+    "z_adj": null,
+    "tier": "not_computed",
+    "not_computed_reason": "insufficient_patients",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "113",
+    "U": 54.0,
+    "E_U": 43.03702406564267,
+    "z_raw": 1.6711188739945504,
+    "z_adj": 0.8182229570427876,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "114",
+    "U": 42.0,
+    "E_U": 24.85241730279898,
+    "z_raw": 3.439684325349709,
+    "z_adj": 1.6841582749011204,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "115",
+    "U": 43.0,
+    "E_U": 34.88788910505836,
+    "z_raw": 1.3733983849696532,
+    "z_adj": 0.6724513170397732,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "116",
+    "U": 21.0,
+    "E_U": 22.35471271940144,
+    "z_raw": -0.28652509279704946,
+    "z_adj": -0.14029008489082834,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "117",
+    "U": null,
+    "E_U": null,
+    "z_raw": null,
+    "z_adj": null,
+    "tier": "not_computed",
+    "not_computed_reason": "low_coverage",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "118",
+    "U": 3.0,
+    "E_U": 27.953831394651637,
+    "z_raw": -4.7197235976452045,
+    "z_adj": -2.310898559393852,
+    "tier": "look",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "119",
+    "U": null,
+    "E_U": null,
+    "z_raw": null,
+    "z_adj": null,
+    "tier": "not_computed",
+    "not_computed_reason": "insufficient_episodes",
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "120",
+    "U": 56.0,
+    "E_U": 44.89432884536924,
+    "z_raw": 1.6574829433911218,
+    "z_adj": 0.8115464532739696,
+    "tier": "none",
+    "not_computed_reason": null,
+    "data_origin": "SIMULATED"
+   }
+  ]
+ },
+ "descriptive": {
+  "sites": [
+   {
+    "site_id": "101",
+    "paged_stratum": {
+     "n": 41,
+     "matched": 25
+    },
+    "ungraded_primary_term_reports": {
+     "total": 242,
+     "by_term": {
+      "Diarrhea": 86,
+      "Fever": 78,
+      "Dyspnea": 78
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "102",
+    "paged_stratum": {
+     "n": 40,
+     "matched": 26
+    },
+    "ungraded_primary_term_reports": {
+     "total": 169,
+     "by_term": {
+      "Diarrhea": 53,
+      "Fever": 52,
+      "Dyspnea": 64
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "103",
+    "paged_stratum": {
+     "n": 80,
+     "matched": 32
+    },
+    "ungraded_primary_term_reports": {
+     "total": 222,
+     "by_term": {
+      "Diarrhea": 80,
+      "Fever": 63,
+      "Dyspnea": 79
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "104",
+    "paged_stratum": {
+     "n": 36,
+     "matched": 16
+    },
+    "ungraded_primary_term_reports": {
+     "total": 198,
+     "by_term": {
+      "Diarrhea": 70,
+      "Fever": 62,
+      "Dyspnea": 66
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "105",
+    "paged_stratum": {
+     "n": 45,
+     "matched": 3
+    },
+    "ungraded_primary_term_reports": {
+     "total": 289,
+     "by_term": {
+      "Diarrhea": 103,
+      "Fever": 89,
+      "Dyspnea": 97
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "106",
+    "paged_stratum": {
+     "n": 23,
+     "matched": 14
+    },
+    "ungraded_primary_term_reports": {
+     "total": 278,
+     "by_term": {
+      "Diarrhea": 99,
+      "Fever": 89,
+      "Dyspnea": 90
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "107",
+    "paged_stratum": {
+     "n": 41,
+     "matched": 26
+    },
+    "ungraded_primary_term_reports": {
+     "total": 247,
+     "by_term": {
+      "Diarrhea": 80,
+      "Fever": 93,
+      "Dyspnea": 74
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "108",
+    "paged_stratum": {
+     "n": 66,
+     "matched": 49
+    },
+    "ungraded_primary_term_reports": {
+     "total": 263,
+     "by_term": {
+      "Diarrhea": 93,
+      "Fever": 84,
+      "Dyspnea": 86
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "109",
+    "paged_stratum": {
+     "n": 16,
+     "matched": 10
+    },
+    "ungraded_primary_term_reports": {
+     "total": 237,
+     "by_term": {
+      "Diarrhea": 81,
+      "Fever": 80,
+      "Dyspnea": 76
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "110",
+    "paged_stratum": {
+     "n": 48,
+     "matched": 24
+    },
+    "ungraded_primary_term_reports": {
+     "total": 276,
+     "by_term": {
+      "Diarrhea": 90,
+      "Fever": 92,
+      "Dyspnea": 94
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "111",
+    "paged_stratum": {
+     "n": 77,
+     "matched": 38
+    },
+    "ungraded_primary_term_reports": {
+     "total": 296,
+     "by_term": {
+      "Diarrhea": 103,
+      "Fever": 95,
+      "Dyspnea": 98
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "112",
+    "paged_stratum": {
+     "n": 6,
+     "matched": 4
+    },
+    "ungraded_primary_term_reports": {
+     "total": 14,
+     "by_term": {
+      "Diarrhea": 5,
+      "Fever": 5,
+      "Dyspnea": 4
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "113",
+    "paged_stratum": {
+     "n": 79,
+     "matched": 46
+    },
+    "ungraded_primary_term_reports": {
+     "total": 171,
+     "by_term": {
+      "Diarrhea": 57,
+      "Fever": 63,
+      "Dyspnea": 51
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "114",
+    "paged_stratum": {
+     "n": 46,
+     "matched": 40
+    },
+    "ungraded_primary_term_reports": {
+     "total": 199,
+     "by_term": {
+      "Diarrhea": 58,
+      "Fever": 72,
+      "Dyspnea": 69
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "115",
+    "paged_stratum": {
+     "n": 57,
+     "matched": 32
+    },
+    "ungraded_primary_term_reports": {
+     "total": 268,
+     "by_term": {
+      "Diarrhea": 88,
+      "Fever": 88,
+      "Dyspnea": 92
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "116",
+    "paged_stratum": {
+     "n": 45,
+     "matched": 25
+    },
+    "ungraded_primary_term_reports": {
+     "total": 300,
+     "by_term": {
+      "Diarrhea": 86,
+      "Fever": 99,
+      "Dyspnea": 115
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "117",
+    "paged_stratum": {
+     "n": 22,
+     "matched": 16
+    },
+    "ungraded_primary_term_reports": {
+     "total": 139,
+     "by_term": {
+      "Diarrhea": 40,
+      "Fever": 50,
+      "Dyspnea": 49
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "118",
+    "paged_stratum": {
+     "n": 44,
+     "matched": 0
+    },
+    "ungraded_primary_term_reports": {
+     "total": 243,
+     "by_term": {
+      "Diarrhea": 96,
+      "Fever": 77,
+      "Dyspnea": 70
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "119",
+    "paged_stratum": {
+     "n": 34,
+     "matched": 24
+    },
+    "ungraded_primary_term_reports": {
+     "total": 134,
+     "by_term": {
+      "Diarrhea": 49,
+      "Fever": 38,
+      "Dyspnea": 47
+     }
+    },
+    "data_origin": "SIMULATED"
+   },
+   {
+    "site_id": "120",
+    "paged_stratum": {
+     "n": 49,
+     "matched": 38
+    },
+    "ungraded_primary_term_reports": {
+     "total": 214,
+     "by_term": {
+      "Diarrhea": 75,
+      "Fever": 77,
+      "Dyspnea": 62
+     }
+    },
+    "data_origin": "SIMULATED"
+   }
+  ]
+ }
+}
