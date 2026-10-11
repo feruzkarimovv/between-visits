@@ -254,14 +254,14 @@ Steps that need a person. Everything around them is done; each item says exactly
       Between Visits Site Signal SAP v1 is frozen: sap-v1 = 68838978bb305e0f730d30e5cbf3c00bceca5a25
       https://github.com/feruzkarimovv/between-visits/releases/tag/sap-v1
       ```
-   2. In `docs/11-site-signal-sap.md` §17, add row C3 directly below C2 and above the empty placeholder row `| | | | | | | | | |` (keep the placeholder last: `monitoring/tests/test_seed.py` replaces it in a test). Fill in `<HH:MM>`, `<post link>` and `<UTC time>`. The post is later than both the 10-minute window and the beacon round time, and §1.2 step 6 requires §17 to say so:
+   2. In `docs/11-site-signal-sap.md` §17, add row C4 directly below C3 (S4 took C3; if more rows landed since, use the next free number below the last C row) and above the empty placeholder row `| | | | | | | | | |` (keep the placeholder last: `monitoring/tests/test_seed.py` replaces it in a test). Fill in `<HH:MM>`, `<post link>` and `<UTC time>`. The post is later than both the 10-minute window and the beacon round time, and §1.2 step 6 requires §17 to say so:
       ```
-      | C3 | 2026-10-11 <HH:MM> ET | Commit `SAP v1: organizer timestamp link (docs/11 §17)` | §1.2 step 6 | clarification | Tag sha `68838978bb305e0f730d30e5cbf3c00bceca5a25` and the Release link posted at <post link> at <UTC time>. This post is later than the 10-minute window after the tag push and later than the beacon round time 2026-10-11T08:48:00Z (row C2); the GitHub Release in row C1 (`publishedAt` 08:38:10Z) is the external timestamp that is earlier than the round. | §1.2 step 6 puts both external-timestamp links in a §17 clarification and requires §17 to say when one is not earlier than the beacon round. | No | None on any result. |
+      | C4 | 2026-10-11 <HH:MM> ET | Commit `SAP v1: organizer timestamp link (docs/11 §17)` | §1.2 step 6 | clarification | Tag sha `68838978bb305e0f730d30e5cbf3c00bceca5a25` and the Release link posted at <post link> at <UTC time>. This post is later than the 10-minute window after the tag push and later than the beacon round time 2026-10-11T08:48:00Z (row C2); the GitHub Release in row C1 (`publishedAt` 08:38:10Z) is the external timestamp that is earlier than the round. | §1.2 step 6 puts both external-timestamp links in a §17 clarification and requires §17 to say when one is not earlier than the beacon round. | No | None on any result. |
       ```
    3. Check, commit and push:
       ```bash
       cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
-      grep -c '^| C[123] |' docs/11-site-signal-sap.md                      # expect: 3
+      grep -c '^| C[1234] |' docs/11-site-signal-sap.md                     # expect: 4
       uv run --project monitoring python -m bvsignal.seed --check-frozen     # expect: frozen inputs: OK
       uv run --project monitoring python -m bvsignal.seed --show             # expect: sap_tag_commit=68838978bb305e0f730d30e5cbf3c00bceca5a25 beacon_round=6542582 eval_seed=92794863
       make test
@@ -271,3 +271,17 @@ Steps that need a person. Everything around them is done; each item says exactly
       ```
       sap_tag_commit=68838978bb305e0f730d30e5cbf3c00bceca5a25 beacon_round=6542582 eval_seed=92794863
       ```
+
+13. **Run the committed evaluation-seed calibration once (S4; WS5 sequence step 9, docs/11 §9.2).** S4 (`monitoring/bvsignal/calibrate.py`, `indicators.py`) is integrated on `site-signal-build` in commit 666c618; no evaluation-seed run has been made and `monitoring/out/` does not exist. Run it once, on a clean checkout, after S5 is green (it is) and before S6's `make site-signal`. The first evaluation-seed run of a code commit is the one committed: never rerun it to get different numbers, never commit a `--seed dev` output, and do not quote any threshold until it is in `validation/site_signal/summary.json`.
+   ```bash
+   cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
+   git status --porcelain                                                 # expect: nothing (the run refuses a dirty tree)
+   uv run --project monitoring python -m bvsignal.seed --check-frozen     # expect: frozen inputs: OK
+   time uv run --project monitoring python -m bvsignal.calibrate          # evaluation seed (default), R = 2000; about 22 s on 14 cores
+   jq '{r_null, discordance, rate_kri, simaerep_classic, achieved}' monitoring/out/thresholds.json
+   git status --porcelain   # expect exactly: monitoring/out/thresholds.json, monitoring/out/null_pool.json, validation/site_signal/run_log.jsonl
+   git add monitoring/out/thresholds.json monitoring/out/null_pool.json validation/site_signal/run_log.jsonl
+   git commit -m "WS5-S4: evaluation-seed calibration (thresholds.json, null_pool.json, run log)"
+   git push origin site-signal-build                                      # never rebase or amend this commit afterwards
+   ```
+   If the run refuses or fails, do not edit any output by hand; record the error and stop.
