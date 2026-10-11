@@ -1,0 +1,42 @@
+# Production images, both services (WS0 R5). Run with `make up`, which passes GIT_COMMIT=$(git rev-parse --short HEAD)
+# for /api/health (the images have no .git). Unlike docker-compose.yml (dev servers, source mounts), nothing is mounted:
+# the code, data and frontend build are baked into the images and the backend seeds its database on first start.
+#
+# Demo mode by default (DEMO_MODE=1: no external keys, replay scenarios). BV_DEMO_MODE=0 runs the live API instead;
+# it then needs the secrets from .env (read at runtime, never copied into an image). The variable has its own name so
+# the DEMO_MODE=0 line of a .env copied from .env.example cannot switch `make up` out of demo mode.
+#
+# Host ports: API_PORT (default 8000) and WEB_PORT (default 3000), e.g. `API_PORT=8117 WEB_PORT=3117 make up`.
+# The dashboard's API URL is inlined at build time, so a different API_PORT rebuilds the frontend image.
+name: between-visits-prod
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: between-visits-backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DEMO_MODE: "${BV_DEMO_MODE:-1}"
+      PORT: "8000"
+      CORS_ORIGINS: "http://localhost:${WEB_PORT:-3000}"
+      GIT_COMMIT: "${GIT_COMMIT:-}"
+    ports:
+      - "${API_PORT:-8000}:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: "http://localhost:${API_PORT:-8000}"
+    image: between-visits-web
+    environment:
+      PORT: "3000"
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - backend

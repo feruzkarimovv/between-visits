@@ -7,7 +7,7 @@ ENV_GET = $$(grep -E "^$(1)=" .env 2>/dev/null | head -1 | cut -d= -f2- | sed -E
 # Pinned gitleaks release (WS0 R1); the CI job `gitleaks` downloads and checksum-verifies exactly this version.
 GITLEAKS_VERSION := 8.30.1
 
-.PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo secret-scan
+.PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo secret-scan up
 
 # Clean setup (WS0 R2): Python 3.12 from .python-version; `npm ci` installs exactly frontend/package-lock.json
 # and never rewrites it, so the tree stays clean. Add or upgrade frontend deps with `npm install` in frontend/.
@@ -64,8 +64,23 @@ secret-scan:
 	@v="$$(gitleaks version)"; case "$$v" in $(GITLEAKS_VERSION)|v$(GITLEAKS_VERSION)) ;; *) echo "secret-scan: gitleaks $$v found, pinned $(GITLEAKS_VERSION); install the pinned release (validation/secret-scan.md)" >&2; exit 1;; esac
 	gitleaks git --redact --log-opts="--all" -v . && python3 validation/scan_numbers.py
 
+# `make demo DEMO_PROD=1` serves the production frontend build (next build && next start), so screenshots and
+# recordings have no Next.js dev badge. next start prints a notice about output: "standalone" (that setting is for
+# the image); it serves the same production build.
+ifeq ($(DEMO_PROD),1)
+DEMO_FRONTEND := npm run build && npm run start
+else
+DEMO_FRONTEND := npm run dev
+endif
+
 demo:
 	@trap 'kill 0' EXIT; \
 	(cd backend && DEMO_MODE=1 uv run python -m app.seed && DEMO_MODE=1 uv run uvicorn app.main:app --port 8000) & \
-	(cd frontend && npm run dev) & \
+	(cd frontend && $(DEMO_FRONTEND)) & \
 	wait
+
+# Production images (WS0 R5): docker-compose.prod.yml, both services, DEMO_MODE=1 by default (BV_DEMO_MODE=0 runs
+# the live API). Host ports API_PORT (8000) and WEB_PORT (3000). COMPOSE=docker-compose for the standalone binary.
+COMPOSE ?= docker compose
+up:
+	GIT_COMMIT=$$(git rev-parse --short HEAD 2>/dev/null) $(COMPOSE) -f docker-compose.prod.yml up --build

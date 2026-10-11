@@ -21,9 +21,18 @@ VERSION = "0.1.0"
 log = logging.getLogger("bv")
 
 
+# Commit for /api/health when there is no .git (container images), first match wins, shortened to 7 characters:
+# GIT_COMMIT (docker-compose.prod.yml, from `make up`), then RENDER_GIT_COMMIT (set by Render on every service at
+# build time and runtime, "The commit SHA for a service or deploy": render.com/docs/environment-variables,
+# checked Oct 11 2026).
+COMMIT_ENV_VARS = ("GIT_COMMIT", "RENDER_GIT_COMMIT")
+
+
 def git_commit() -> str:
-    if os.environ.get("GIT_COMMIT"):
-        return os.environ["GIT_COMMIT"][:7]
+    for var in COMMIT_ENV_VARS:
+        value = os.environ.get(var, "").strip()
+        if value:
+            return value[:7]
     try:
         return subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True, timeout=2
