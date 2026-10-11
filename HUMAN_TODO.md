@@ -232,3 +232,29 @@ Steps that need a person. Everything around them is done; each item says exactly
    3. **Deck PDF:** open `docs/pitch/deck.html` in Chrome, **Print**, Destination **Save as PDF**, Margins **None**, **Background graphics** on, save as `docs/pitch/deck.pdf`, and commit it (the README already links that path).
    4. **Video:** follow the storyboard and recording checklist in `docs/08-demo-and-pitch.md` (hero call V12, item 11, first; if it is not recorded, shot 3 uses the scripted replay `rosa_es_urgent` at 1x with its on-screen label, as `docs/08` says). Upload to YouTube as unlisted. Replace README line 9 with `**Demo video:** <YouTube link> (3:00, unlisted).`, then commit and push.
    5. **Devpost:** text from the README; links to the repository, the video, the deck PDF and the public demo; all contributors; screenshot the confirmation. Then update the lines in `NOT_BUILT.md` § Human steps (R6, V10, V12, D15, D16) that are done. The remaining human steps listed there are item 5 (Render deploy), item 10 (V10 real calls) and item 11 (V12 hero call); R11 replaces "pending R11" in `NOT_BUILT.md` with the issue numbers.
+
+13. **A second teammate ticks the provenance table at the foot of `WHAT_IT_GETS_WRONG.md` (FILL; D13/D14 acceptance; footer item 4 of that page).** FILL rendered every Site Signal number in `WHAT_IT_GETS_WRONG.md`, `README.md`, `docs/pitch/deck.html`, `docs/08-demo-and-pitch.md` and `docs/10-site-signal.md` §10.1 (400 values; item 12 steps 1 and 3 are done apart from this tick and item 14). Someone who did not write the story files does this, from the main checkout root:
+   ```bash
+   git checkout site-signal-build && git pull --ff-only
+   python3 validation/render_numbers.py --check WHAT_IT_GETS_WRONG.md README.md docs/pitch/deck.html docs/08-demo-and-pitch.md docs/10-site-signal.md   # last line: check: OK, 0 tokens left in 5 files; 400 rendered values ...
+   ```
+   Then open `WHAT_IT_GETS_WRONG.md` § "How every number was checked" and, row by row (at least every row on deck slides and in the README, and a sample of the rest), look the JSON path up in the source file and confirm the value and that the sentence on the listed line says what the number says. Selector paths become a jq `select`, for example row 5:
+   ```bash
+   jq '.power[] | select(.indicator=="discordance" and .tier=="look" and .design_row==true and .f==0.25) | .power' validation/site_signal/summary.json   # 0.15
+   jq '.design.n_sites' validation/site_signal/summary.json   # 20
+   ```
+   Pay attention to the claims FILL reworded because the numbers contradict the drafts: discordance is ahead of the plain AE-rate KRI only for a 50% gap at Watch and behind it for a gross loss; at mu = 0.5 discordance never computes the planted site (power 0.00); in the committed study discordance caught 0 of 5 planted sites at Watch and the KRI caught the two gross-loss sites. If a value is wrong, do not type a new one: restore the tokenised source (`git show 93d9333:<file>`), fix the path inside the token and re-render with `python3 validation/render_numbers.py --in-place <files>`. When every row is ticked, change footer item 4 of `WHAT_IT_GETS_WRONG.md` to say who checked it and when, then:
+   ```bash
+   git add WHAT_IT_GETS_WRONG.md && git commit -m "WS4-D13: provenance table checked by a second teammate" && git push origin site-signal-build
+   ```
+
+14. **Re-export the deck PDF after the F19 screenshots land (FILL; D14; after F19).** Today slides 5 and 7 of `docs/pitch/deck.pdf` show dashed frames with the expected paths, because `docs/screenshots/` does not exist yet. Once `docs/screenshots/{call,nurse-ack,review,sites-funnel,site-drilldown,site-inbox}.png` are committed, from the main checkout root:
+   ```bash
+   git checkout site-signal-build && git pull --ff-only
+   ls docs/screenshots/*.png
+   uv run --no-project --with playwright==1.63.0 python docs/pitch/export_pdf.py   # export: .../docs/pitch/deck.pdf (... bytes): 10 pages, 10 slides in deck.html
+   # first run on a machine only: uv run --no-project --with playwright==1.63.0 playwright install chromium
+   open docs/pitch/deck.pdf   # check slides 5 and 7 show the screenshots, not dashed frames
+   git add docs/pitch/deck.pdf && git commit -m "WS4-D14: re-export deck PDF with screenshots" && git push origin site-signal-build
+   ```
+   The script exits 1 if the deck still has a token or the page count differs from the slide count; this replaces item 12 step 3 (Chrome Print).
