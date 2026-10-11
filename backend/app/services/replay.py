@@ -1,19 +1,23 @@
 """Demo replay (docs/01 Flow D): play scenarios/<id>.json through the same service functions as a live call.
 
 Events: call_started · tool (record_answer, report_red_flag, ...) · page_ack · call_ended · post_call.
-checkin_id is injected into every tool body. REPLAY_SPEED (env, default 1.0) scales the timing.
+checkin_id is injected into every tool body. Timing is scaled by the playback multiplier (docs/03 §6.2): the
+`?speed=` parameter, then REPLAY_SPEED, then 2 in demo mode. Scenario provenance (scripted or recorded) is
+reported by list_scenarios().
 """
 
 import json
 import logging
-import os
+import re
 import threading
 import time
+from datetime import date
+from pathlib import Path
 from typing import Any
 
 from sqlmodel import Session, select
 
-from app.config import SCENARIOS_DIR
+from app.config import SCENARIOS_DIR, get_settings
 from app.db import new_session
 from app.errors import ApiError
 from app.models import CheckIn, Escalation, Patient
@@ -23,6 +27,68 @@ from app.timeutil import utcnow
 
 log = logging.getLogger("bv.replay")
 
+DEMO_DEFAULT_SPEED = 2.0  # docs/03 §6.2: default multiplier in demo mode
+REAL_TIME_SPEED = 1.0  # outside demo mode (direct service calls), unless a speed is given
+# Scenario labels (docs/03 §6.2). A scenario that is not marked `recorded: true` is always "Scripted", so a
+# scripted replay is never presented as a real call (docs/10 § data_origin).
+SCRIPTED_LABEL = "Scripted"
+RECORDED_LABEL = "Recorded real call; synthetic patient played by a teammate"
+_SAFE_ID = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def resolve_speed(requested: float | None = None) -> float:
+    """Playback multiplier: `requested` (the ?speed= value), then REPLAY_SPEED, then 2 in demo mode.
+
+    Outside demo mode (tests and scripts calling start() directly) the fallback is real time.
+    """
+    if requested is not None:
+        return float(requested)
+    settings = get_settings()
+    if settings.replay_speed is not None:
+        return settings.replay_speed
+    return DEMO_DEFAULT_SPEED if settings.demo_mode else REAL_TIME_SPEED
+
+
+def audio_path(scenario_id: str) -> Path | None:
+    """`scenarios/audio/<id>.mp3` (gitignored, never committed), or None for an ID that is not a plain slug."""
+    if not _SAFE_ID.match(scenario_id):
+        return None
+    return SCENARIOS_DIR / "audio" / f"{scenario_id}.mp3"
+
+
+def audio_url(scenario_id: str) -> str | None:
+    """The scenario audio route (docs/03 §6.2), only when the mp3 exists on this server."""
+    path = audio_path(scenario_id)
+    if path is None or not path.is_file():
+        return None
+    return f"/api/demo/scenarios/{scenario_id}/audio"
+
+
+def _recorded_at(value: Any, scenario_id: str) -> date | None:
+    if value is None:
+        return None
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except ValueError:
+        log.warning("scenario_recorded_at_invalid scenario=%s value=%r", scenario_id, value)
+        return None
+
+
+def provenance(scenario_id: str, sc: dict[str, Any]) -> dict[str, Any]:
+    """`recorded`, `recorded_at`, `label`, `audio_url` for one scenario file (docs/03 §6.2)."""
+    recorded = sc.get("recorded") is True
+    label = sc.get("label")
+    if not recorded:
+        label = SCRIPTED_LABEL
+    elif not isinstance(label, str) or not label.strip():
+        label = RECORDED_LABEL
+    return {
+        "recorded": recorded,
+        "recorded_at": _recorded_at(sc.get("recorded_at"), scenario_id) if recorded else None,
+        "label": label,
+        "audio_url": audio_url(scenario_id),
+    }
+
 
 def list_scenarios() -> list[dict[str, Any]]:
     out = []
@@ -31,10 +97,12 @@ def list_scenarios() -> list[dict[str, Any]]:
             d = json.loads(p.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             continue
-        if "events" not in d:
+        if not isinstance(d, dict) or "events" not in d:
             continue
-        out.append({"id": d["id"], "title": d.get("title", d["id"]), "patient_id": d["patient_id"],
-                    "duration_s": max((e.get("t", 0) for e in d["events"]), default=0)})
+        sid = d.get("id", p.stem)
+        out.append({"id": sid, "title": d.get("title", sid), "patient_id": d["patient_id"],
+                    "duration_s": max((e.get("t", 0) for e in d["events"]), default=0),
+                    **provenance(sid, d)})
     return out
 
 
@@ -46,6 +114,10 @@ def load(scenario_id: str) -> dict[str, Any]:
 
 
 def start(session: Session, scenario_id: str, speed: float | None = None, run_async: bool = True) -> str:
+    """Create the replay check-in and play the scenario; `speed` None means resolve_speed()'s fallbacks."""
+    speed = resolve_speed(speed)
+    if not speed > 0:
+        raise ValueError(f"replay speed must be positive, got {speed!r}")
     sc = load(scenario_id)
     patient = session.get(Patient, sc["patient_id"])
     if patient is None:
@@ -60,7 +132,7 @@ def start(session: Session, scenario_id: str, speed: float | None = None, run_as
     session.add(c)
     session.commit()
     gemini.KNOWN_TRANSLATIONS.update(sc.get("translations_en", {}))
-    speed = speed or float(os.environ.get("REPLAY_SPEED", "1.0"))
+    log.info("replay_started checkin_id=%s scenario=%s speed=%s", c.id, scenario_id, speed)
     if run_async:
         threading.Thread(target=_run, args=(c.id, sc, speed), daemon=True, name=f"replay-{c.id}").start()
     else:

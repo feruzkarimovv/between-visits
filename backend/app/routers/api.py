@@ -1,8 +1,12 @@
 """Dashboard API (/api). Thin: logic lives in app/services/*."""
 
 import json
+import logging
+import threading
 from collections.abc import Callable
 from datetime import date
+from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.responses import PlainTextResponse
@@ -42,10 +46,12 @@ from app.schemas import (
     Role,
     SAEOut,
     SAEPatchIn,
+    SiteSignalHealth,
     SponsorInboxItem,
     StudyOut,
     TermTimeline,
     TimelinePoint,
+    VoiceChecksOut,
     WebSession,
     WebStartedIn,
 )
@@ -58,6 +64,7 @@ from app.services import export as export_svc
 from app.timeutil import local_date, utcnow
 
 router = APIRouter(prefix="/api", tags=["api"])
+log = logging.getLogger("bv.api")
 
 
 class Actor:
@@ -106,6 +113,55 @@ def _get(session: Session, model, id_: str, what: str):  # noqa: ANN001, ANN202
 # ---- health and reference -----------------------------------------------------------------------------
 
 
+SIGNAL_RUN_FILE = "signal_run.json"
+_signal_run_cache: dict[Path, tuple[tuple[int, int], dict[str, Any] | None]] = {}
+_signal_run_lock = threading.Lock()
+
+
+def _signal_run_meta(doc: Any) -> dict[str, Any]:
+    """`{sap_tag_commit, generated_at}` from a loaded signal_run.json, or ValueError when it is not
+    `{run, sites, rows, ...}` (docs/02 § Files behind Site Signal)."""
+    if not isinstance(doc, dict):
+        raise ValueError("signal_run.json is not a JSON object")
+    run = doc.get("run")
+    if not isinstance(run, dict) or not isinstance(doc.get("sites"), list) or not isinstance(doc.get("rows"), list):
+        raise ValueError("signal_run.json needs a run object and sites and rows lists")
+    meta = {k: run.get(k) for k in ("sap_tag_commit", "generated_at")}
+    if any(v is not None and not isinstance(v, str) for v in meta.values()):
+        raise ValueError("run.sap_tag_commit and run.generated_at must be strings or null")
+    return meta
+
+
+def site_signal_health() -> SiteSignalHealth:
+    """`health.site_signal` (docs/03 §6.7): available only when MONITORING_OUT/signal_run.json exists and loads.
+
+    Read-only and never raises: a missing, unreadable or malformed file means `available: false`. The result is
+    cached per file mtime and size, so polling health does not re-parse the run. Nothing on the safety path reads it.
+    """
+    path = get_settings().monitoring_out / SIGNAL_RUN_FILE
+    meta: dict[str, Any] | None = None
+    try:
+        st = path.stat()
+        key = (st.st_mtime_ns, st.st_size)
+        with _signal_run_lock:
+            cached = _signal_run_cache.get(path)
+        if cached is not None and cached[0] == key:
+            meta = cached[1]
+        else:
+            try:
+                meta = _signal_run_meta(json.loads(path.read_text(encoding="utf-8")))
+            except (OSError, ValueError) as exc:  # unreadable, not JSON (JSONDecodeError is a ValueError), bad shape
+                log.warning("site_signal_unavailable path=%s reason=%s", path, exc)
+            with _signal_run_lock:
+                _signal_run_cache[path] = (key, meta)
+    except OSError:  # missing (the normal state until the committed study exists)
+        meta = None
+    if meta is None:
+        return SiteSignalHealth(available=False, sap_tag_commit=None, generated_at=None, data_origin="SIMULATED")
+    return SiteSignalHealth(available=True, sap_tag_commit=meta["sap_tag_commit"], generated_at=meta["generated_at"],
+                            data_origin="SIMULATED")
+
+
 @router.get("/health", response_model=Health)
 def health(request: Request) -> Health:
     s = get_settings()
@@ -113,7 +169,8 @@ def health(request: Request) -> Health:
     return Health(ok=True, demo_mode=s.demo_mode, version=request.app.version, commit=request.app.state.commit,
                   app_env=s.app_env, pager_channel=s.effective_pager_channel,
                   phone_calls_enabled=ready["phone"] is None, browser_calls_enabled=ready["web"] is None,
-                  phone_calls_note=ready["phone"], browser_calls_note=ready["web"])
+                  phone_calls_note=ready["phone"], browser_calls_note=ready["web"],
+                  site_signal=site_signal_health())
 
 
 @router.get("/study", response_model=StudyOut)
@@ -467,6 +524,14 @@ def _read_json(path: str, code: str) -> dict:
 @router.get("/eval/latest")
 def eval_latest() -> dict:
     return _read_json("eval/results/latest.json", "no_eval_run")
+
+
+@router.get("/eval/voice-checks", response_model=VoiceChecksOut, response_model_exclude_unset=True)
+def eval_voice_checks() -> VoiceChecksOut:
+    """Any role (docs/03 §6.11): real browser calls against the live backend, labeled MEASURED; never pooled
+    with the text-mode evaluation. 404 `no_voice_checks` when the file is absent."""
+    doc = _read_json("eval/results/voice_checks.json", "no_voice_checks")
+    return VoiceChecksOut.model_validate({**doc, "data_origin": "MEASURED"})
 
 
 @router.get("/validation/latest")

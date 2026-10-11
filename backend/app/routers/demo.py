@@ -1,12 +1,12 @@
 """Demo controls (enabled only when DEMO_MODE=1; otherwise 404 demo_disabled)."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
 from app.config import get_settings
 from app.db import get_session
 from app.errors import ApiError
-from app.schemas import OkOut, ReplayOut, ScenarioOut
+from app.schemas import OkOut, ReplayOut, ReplaySpeed, ScenarioOut
 from app.services import replay
 
 router = APIRouter(prefix="/api/demo", tags=["demo"])
@@ -23,8 +23,15 @@ def scenarios() -> list[ScenarioOut]:
 
 
 @router.post("/replay/{scenario_id}", response_model=ReplayOut, dependencies=[Depends(require_demo)])
-def replay_scenario(scenario_id: str, session: Session = Depends(get_session)) -> ReplayOut:
-    return ReplayOut(checkin_id=replay.start(session, scenario_id))
+def replay_scenario(
+    scenario_id: str,
+    speed: ReplaySpeed | None = Query(
+        default=None, description="Playback multiplier: 1, 2 or 4 (2 = twice real time). Default: REPLAY_SPEED, else 2."
+    ),
+    session: Session = Depends(get_session),
+) -> ReplayOut:
+    """Starts the replay in the background (docs/03 §6.2); any speed other than 1, 2 or 4 is 422 validation_error."""
+    return ReplayOut(checkin_id=replay.start(session, scenario_id, speed=None if speed is None else float(speed)))
 
 
 @router.post("/reset", response_model=OkOut, dependencies=[Depends(require_demo)])

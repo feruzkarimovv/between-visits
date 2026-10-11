@@ -1,6 +1,7 @@
 """Request/response models for every endpoint in docs/03-api-contracts.md (they define /openapi.json)."""
 
 from datetime import date, datetime
+from enum import IntEnum
 from typing import Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -78,6 +79,16 @@ class ErrorOut(BaseModel):
     error: ErrorBody
 
 
+class SiteSignalHealth(BaseModel):
+    """`health.site_signal` (docs/03 §6.7). `available` is true only when MONITORING_OUT/signal_run.json exists and
+    loads; `sap_tag_commit` and `generated_at` then come from its `run` object, otherwise they are null."""
+
+    available: bool
+    sap_tag_commit: str | None
+    generated_at: str | None
+    data_origin: Literal["SIMULATED"]
+
+
 class Health(BaseModel):
     ok: bool
     demo_mode: bool
@@ -89,6 +100,7 @@ class Health(BaseModel):
     browser_calls_enabled: bool = False
     phone_calls_note: str | None = None
     browser_calls_note: str | None = None
+    site_signal: SiteSignalHealth
 
 
 class StudyOut(BaseModel):
@@ -471,11 +483,58 @@ class AuditVerifyOut(BaseModel):
 
 
 class ScenarioOut(BaseModel):
+    """`GET /api/demo/scenarios` item (docs/03 §6.2). A scripted scenario is always labeled "Scripted";
+    `audio_url` is set only when `scenarios/audio/<id>.mp3` exists on the server (audio is never in git)."""
+
     id: str
     title: str
     duration_s: float
     patient_id: str
+    recorded: bool
+    recorded_at: date | None
+    label: str
+    audio_url: str | None
+
+
+class ReplaySpeed(IntEnum):
+    """`POST /api/demo/replay/{id}?speed=`: playback multiplier (2 = twice real time); anything else is 422."""
+
+    X1 = 1
+    X2 = 2
+    X4 = 4
 
 
 class ReplayOut(BaseModel):
     checkin_id: str
+
+
+# ---- real-voice evidence (docs/03 §6.11) -----------------------------------------------------------------
+
+
+class VoiceCheckCall(BaseModel):
+    """One real browser call against the deployed live backend (V10). Unknown keys in the file pass through."""
+
+    model_config = ConfigDict(extra="allow")
+    variant: str | None = None
+    conversation_id: str | None = None
+    checkin_id: str | None = None
+    scenario: str | None = None
+    disclosure_first_turn: bool | None = None
+    red_flag_expected: bool | None = None
+    paged: bool | None = None
+    utterance_to_page_s: float | None = None
+    page_to_ack_s: float | None = None
+    grade: int | None = None
+    rule_id: str | None = None
+
+
+class VoiceChecksOut(BaseModel):
+    """`GET /api/eval/voice-checks`: `eval/results/voice_checks.json` plus `data_origin: "MEASURED"`. Served with
+    exclude_unset, so the body is the file as written (never pooled with text-mode evaluation results)."""
+
+    model_config = ConfigDict(extra="allow")
+    run_at: str | None = None
+    backend: str | None = None
+    agent_llm: str | None = None
+    data_origin: Literal["MEASURED"]
+    calls: list[VoiceCheckCall] = Field(default_factory=list)

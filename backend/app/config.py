@@ -1,9 +1,12 @@
 """Settings from the repo-root .env (see .env.example). Every variable in .env.example is read here."""
 
 import logging
+import math
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -11,6 +14,8 @@ ROOT = BACKEND_DIR.parent
 DATA_DIR = ROOT / "data"
 SCENARIOS_DIR = ROOT / "scenarios"
 AGENT_DIR = ROOT / "agent"
+# Committed Site Signal outputs (docs/03 §6.9, MONITORING_OUT); written by `make site-signal`.
+DEFAULT_MONITORING_OUT = ROOT / "monitoring" / "out"
 
 # The .env.example placeholder for TOOL_SHARED_SECRET; refused outside demo mode (docs/03 §6.3).
 TOOL_SECRET_PLACEHOLDER = "change-me-long-random-string"
@@ -70,9 +75,40 @@ class Settings(BaseSettings):
     backup_investigator_name: str = "Dr. on call"
     backup_investigator_phone: str = ""
 
+    # demo replay (docs/03 §6.2): default playback multiplier; the ?speed= parameter overrides it.
+    # Unset means 2 in demo mode. An empty, non-numeric or non-positive value is ignored with a warning.
+    replay_speed: float | None = None
+
+    # Site Signal (docs/03 §6.9): directory of the committed outputs. Relative paths are from the repo root.
+    monitoring_out: Path = DEFAULT_MONITORING_OUT
+
     # frontend (read so config is complete; unused by the backend)
     next_public_api_base_url: str = "http://localhost:8000"
     next_public_use_fixtures: str = "0"
+
+    @field_validator("replay_speed", mode="before")
+    @classmethod
+    def _replay_speed(cls, value: Any) -> float | None:
+        """A bad REPLAY_SPEED never stops the backend from starting: it is ignored (logged) instead."""
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return None
+        try:
+            speed = float(value)
+        except (TypeError, ValueError):
+            log.warning("REPLAY_SPEED=%r is not a number; ignored", value)
+            return None
+        if not (math.isfinite(speed) and speed > 0):
+            log.warning("REPLAY_SPEED=%r is not a positive number; ignored", value)
+            return None
+        return speed
+
+    @field_validator("monitoring_out", mode="before")
+    @classmethod
+    def _monitoring_out(cls, value: Any) -> Path:
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return DEFAULT_MONITORING_OUT
+        path = Path(value).expanduser()
+        return path if path.is_absolute() else ROOT / path
 
     @property
     def cors_origin_list(self) -> list[str]:
