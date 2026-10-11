@@ -265,6 +265,58 @@ function StatusLine({ label, status }: { label: string; status: string | null })
   );
 }
 
+/** "<=12" -> "≤ 12", "13-16" -> "13–16" (the K bin labels of summary.json, display only). */
+function kBinLabel(bin: string | null): string {
+  return bin === null ? "—" : bin.replace("<=", "≤ ").replace(">=", "≥ ").replace("-", "–");
+}
+
+/** Capture discordance's null rates by number of computed sites K (docs/11 §12.1, `null.by_k_bin`). */
+function NullByKBin({ v }: { v: SiteSignalValidation }) {
+  const bins = asArr(pick(v.null, "by_k_bin"));
+  if (!bins.length) return null;
+  return (
+    <>
+      <h3 className="px-4 pt-3 text-sm font-semibold text-ink">Capture discordance by number of computed sites K</h3>
+      <p className="px-4 pt-1 pb-2 text-sm text-ink-muted">
+        The Watch target holds on average over the null studies. The Watch threshold is one study-wide cut-off, so a study
+        with more computed sites has more chances of a false Watch flag.
+      </p>
+      <Table>
+        <caption className="sr-only">Null false-flag rates of capture discordance by number of computed sites, with Monte Carlo standard errors</caption>
+        <thead>
+          <tr>
+            <Th>Computed sites K</Th>
+            <Th>Null studies</Th>
+            <Th>Any Watch per study</Th>
+            <Th>False Look flags per study</Th>
+            <Th>False Look per site</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {bins.map((b, i) => {
+            const bin = asStr(pick(b, "k_bin"));
+            return (
+              <tr key={bin ?? i} data-k-bin={bin ?? undefined}>
+                <Td className="font-medium whitespace-nowrap text-ink">{kBinLabel(bin)}</Td>
+                <Td className="tabular">{fmtCount(asNum(pick(b, "n_studies")))}</Td>
+                <Td>
+                  <Est r={readRateSe(pick(b, "watch_fwer"))} ci />
+                </Td>
+                <Td>
+                  <Est r={readRateSe(pick(b, "look_per_study"))} />
+                </Td>
+                <Td>
+                  <Est r={readRateSe(pick(b, "look_per_site"))} />
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
+    </>
+  );
+}
+
 /** Null false-flag rates of every indicator with MC SE and the REQ-023 outcome (docs/11 §12.1). */
 export function NullRatesTable({ v }: { v: SiteSignalValidation }) {
   const acc = pick(v.null, "acceptance");
@@ -289,7 +341,8 @@ export function NullRatesTable({ v }: { v: SiteSignalValidation }) {
           {nominalLook !== null && nominalWatch !== null ? (
             <>
               {" "}
-              Targets: Look {fmtProp(nominalLook)} per site; any Watch in at most {fmtProp(nominalWatch)} of studies.
+              Targets: Look {fmtProp(nominalLook)} per site; any Watch in {fmtProp(nominalWatch)} of studies, on average over
+              the design (by number of computed sites below).
             </>
           ) : null}
         </>
@@ -362,6 +415,7 @@ export function NullRatesTable({ v }: { v: SiteSignalValidation }) {
               })}
             </tbody>
           </Table>
+          <NullByKBin v={v} />
           <div className="space-y-1 px-4 py-3 text-sm text-ink-muted">
             {computedMean !== null ? (
               <p>

@@ -7,7 +7,7 @@ This page lists the limits of Between Visits and of Site Signal, its sponsor-sid
 - **No real voice-call (MEASURED) numbers yet.** `eval/results/voice_checks.json` holds only pending rows until the real calls are made (task V10, a human step), so this page quotes none.
 - **How each number was checked** is at the end of this page.
 
-Site Signal measures **capture discordance**. It compares the episodes a site's own patients reported on their between-visit calls with the site's AE log, relative to the other sites, and flags sites at two tiers. **Look** is a per-site 5% tier. **Watch** is a study-wide tier: at most a 10% chance of any false Watch flag per study under the pre-registered null. A flag is a reason to look, not a finding. A site with no flag reads "No signal at this sample size", never anything stronger.
+Site Signal measures **capture discordance**. It compares the episodes a site's own patients reported on their between-visit calls with the site's AE log, relative to the other sites, and flags sites at two tiers. **Look** is a per-site 5% tier. **Watch** is a study-wide tier, set for a 10% chance of any false Watch flag per study under the pre-registered null. That 10% is an average over null studies at the `sap-v1` design; the chance rises in studies with more computed sites (section 2). A flag is a reason to look, not a finding. A site with no flag reads "No signal at this sample size", never anything stronger.
 
 ## 1. Moderate capture gaps are mostly invisible at the Watch tier
 
@@ -54,6 +54,16 @@ These come from 2000 fresh null studies at the `sap-v1` design, with no planted 
 |---|---|---|---|---|---|
 | False Look per site | 0.05 | 0.001 | 0.05 | 0.053 | met (conservative: below the nominal rate) |
 | Any false Watch per study | 0.11 (Clopper-Pearson 95% CI [0.095, 0.122]) | 0.007 | 0.10 | 0.119 | met |
+
+**By number of computed sites.** The Watch rate above is an average over the null studies. The Watch threshold is one cut-off for the whole design, so a study with more computed sites has more chances of a false Watch flag. The same null studies, binned by the number of sites where discordance is computed (*K*; SIMULATED, `docs/11` §12.1):
+
+| Computed sites *K* | Null studies | Any false Watch per study | MC SE | Clopper-Pearson 95% CI | False Look flags per study |
+|---|---|---|---|---|---|
+| <=12 | 138 | 0.05 | 0.019 | [0.021, 0.102] | 0.49 (MC SE 0.049) |
+| 13-16 | 1242 | 0.10 | 0.009 | [0.084, 0.119] | 0.71 (MC SE 0.019) |
+| >=17 | 620 | 0.14 | 0.014 | [0.110, 0.165] | 0.87 (MC SE 0.029) |
+
+In the *K* >=17 bin the false Watch rate is 0.14, and its 95% CI [0.110, 0.165] excludes the 10% target, under a correctly specified null; in the *K* <=12 bin it is 0.05. So the 10% holds on average at the design, not for every study size: a study with many computed sites gets a false Watch flag more often than that.
 
 A rate below nominal is conservative, not a failure. **Size calibration** checks the false Look rate by expected site size (tertiles of *E*). Each tertile must be within the nominal rate ± 0.02 (SIMULATED):
 
@@ -182,7 +192,7 @@ Every Site Signal result here comes from our own simulator. The test that does n
 4. **A second teammate ticks the table below against the source files** before the deck and the video use these numbers.
 
 <!-- ss-provenance:start -->
-Rendered by `validation/render_numbers.py` from `validation/site_signal/ and monitoring/out/` (`sap_tag_commit` 68838978bb305e0f730d30e5cbf3c00bceca5a25, `eval_seed` 92794863, `code_commit` 9204a1e025443d19150cc4bb7c41c02d485fb620, `generated_at` 2026-10-11T08:18:52-04:00; `_about`: Site Signal operating characteristics (docs/11-site-signal-sap.md §12). Every number is SIMULATED; capture discordance is a reason to look, not a finding. Values are unrounded; round only for display.). 421 values, every one SIMULATED. The path column is the path actually read; a path after `//` in the token was a fallback.
+Rendered by `validation/render_numbers.py` from `validation/site_signal/ and monitoring/out/` (`sap_tag_commit` 68838978bb305e0f730d30e5cbf3c00bceca5a25, `eval_seed` 92794863, `code_commit` 9204a1e025443d19150cc4bb7c41c02d485fb620, `generated_at` 2026-10-11T08:18:52-04:00; `_about`: Site Signal operating characteristics (docs/11-site-signal-sap.md §12). Every number is SIMULATED; capture discordance is a reason to look, not a finding. Values are unrounded; round only for display.). 447 values, every one SIMULATED. The path column is the path actually read; a path after `//` in the token was a fallback.
 
 | # | Where | Value | Source file | JSON path | Format | Used |
 |---|---|---|---|---|---|---|
@@ -262,349 +272,375 @@ Rendered by `validation/render_numbers.py` from `validation/site_signal/ and mon
 | 74 | `WHAT_IT_GETS_WRONG.md`:56 | `0.10` | `derived (docs/11 §12.1)` | `req023.watch.nominal` | `p2` | `first` |
 | 75 | `WHAT_IT_GETS_WRONG.md`:56 | `0.119` | `derived (docs/11 §12.1)` | `req023.watch.bound` | `f3` | `first` |
 | 76 | `WHAT_IT_GETS_WRONG.md`:56 | `met` | `derived (docs/11 §12.1)` | `req023.watch.outcome` | `text` | `first` |
-| 77 | `WHAT_IT_GETS_WRONG.md`:58 | `0.02` | `derived (docs/11 §12.1)` | `size.tolerance` | `p2` | `first` |
-| 78 | `WHAT_IT_GETS_WRONG.md`:62 | `0.03` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].rate` | `p2` | `first` |
-| 79 | `WHAT_IT_GETS_WRONG.md`:62 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
-| 80 | `WHAT_IT_GETS_WRONG.md`:62 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].rate` | `p2` | `first` |
-| 81 | `WHAT_IT_GETS_WRONG.md`:62 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
-| 82 | `WHAT_IT_GETS_WRONG.md`:62 | `0.06` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].rate` | `p2` | `first` |
-| 83 | `WHAT_IT_GETS_WRONG.md`:62 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
-| 84 | `WHAT_IT_GETS_WRONG.md`:62 | `met` | `derived (docs/11 §12.1)` | `size.outcome` | `text` | `first` |
-| 85 | `WHAT_IT_GETS_WRONG.md`:68 | `0.05` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.tertile_rates[0]` | `p2` | `first` |
-| 86 | `WHAT_IT_GETS_WRONG.md`:68 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.rate_kri.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
-| 87 | `WHAT_IT_GETS_WRONG.md`:68 | `0.01` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.tertile_rates[1]` | `p2` | `first` |
-| 88 | `WHAT_IT_GETS_WRONG.md`:68 | `0.001` | `validation/site_signal/summary.json` | `null.comparators.rate_kri.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
-| 89 | `WHAT_IT_GETS_WRONG.md`:68 | `0.00` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.tertile_rates[2]` | `p2` | `first` |
-| 90 | `WHAT_IT_GETS_WRONG.md`:68 | `0.000` | `validation/site_signal/summary.json` | `null.comparators.rate_kri.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
-| 91 | `WHAT_IT_GETS_WRONG.md`:68 | `failure` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.status` | `text` | `first` |
-| 92 | `WHAT_IT_GETS_WRONG.md`:69 | `0.03` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.tertile_rates[0]` | `p2` | `first` |
-| 93 | `WHAT_IT_GETS_WRONG.md`:69 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.simaerep_classic.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
-| 94 | `WHAT_IT_GETS_WRONG.md`:69 | `0.01` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.tertile_rates[1]` | `p2` | `first` |
-| 95 | `WHAT_IT_GETS_WRONG.md`:69 | `0.001` | `validation/site_signal/summary.json` | `null.comparators.simaerep_classic.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
-| 96 | `WHAT_IT_GETS_WRONG.md`:69 | `0.00` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.tertile_rates[2]` | `p2` | `first` |
-| 97 | `WHAT_IT_GETS_WRONG.md`:69 | `0.000` | `validation/site_signal/summary.json` | `null.comparators.simaerep_classic.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
-| 98 | `WHAT_IT_GETS_WRONG.md`:69 | `failure` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.status` | `text` | `first` |
-| 99 | `WHAT_IT_GETS_WRONG.md`:70 | `0.03` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.tertile_rates[0]` | `p2` | `first` |
-| 100 | `WHAT_IT_GETS_WRONG.md`:70 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.ae_report_ratio.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
-| 101 | `WHAT_IT_GETS_WRONG.md`:70 | `0.05` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.tertile_rates[1]` | `p2` | `first` |
-| 102 | `WHAT_IT_GETS_WRONG.md`:70 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.ae_report_ratio.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
-| 103 | `WHAT_IT_GETS_WRONG.md`:70 | `0.08` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.tertile_rates[2]` | `p2` | `first` |
-| 104 | `WHAT_IT_GETS_WRONG.md`:70 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.ae_report_ratio.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
-| 105 | `WHAT_IT_GETS_WRONG.md`:70 | `failure` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.status` | `text` | `first` |
-| 106 | `WHAT_IT_GETS_WRONG.md`:78 | `0.6` | `validation/site_signal/summary.json` | `failure_case.between_site_sd_logit` | `f1` | `first` |
-| 107 | `WHAT_IT_GETS_WRONG.md`:78 | `0.2` | `validation/site_signal/summary.json` | `failure_case.casemix_sd_log` | `f1` | `first` |
-| 108 | `WHAT_IT_GETS_WRONG.md`:84 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
-| 109 | `WHAT_IT_GETS_WRONG.md`:84 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 110 | `WHAT_IT_GETS_WRONG.md`:84 | `0.04` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].power` | `p2` | `first` |
-| 111 | `WHAT_IT_GETS_WRONG.md`:84 | `0.011` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].mc_se` | `f3` | `first` |
-| 112 | `WHAT_IT_GETS_WRONG.md`:85 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
-| 113 | `WHAT_IT_GETS_WRONG.md`:85 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 114 | `WHAT_IT_GETS_WRONG.md`:85 | `0.36` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].power` | `p2` | `first` |
-| 115 | `WHAT_IT_GETS_WRONG.md`:85 | `0.028` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].mc_se` | `f3` | `first` |
-| 116 | `WHAT_IT_GETS_WRONG.md`:86 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 117 | `WHAT_IT_GETS_WRONG.md`:86 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].power` | `p2` | `first` |
-| 118 | `WHAT_IT_GETS_WRONG.md`:86 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].mc_se` | `f3` | `first` |
-| 119 | `WHAT_IT_GETS_WRONG.md`:86 | `0.48` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].power` | `p2` | `first` |
-| 120 | `WHAT_IT_GETS_WRONG.md`:86 | `0.029` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].mc_se` | `f3` | `first` |
-| 121 | `WHAT_IT_GETS_WRONG.md`:87 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 122 | `WHAT_IT_GETS_WRONG.md`:87 | `1.00` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].power` | `p2` | `first` |
-| 123 | `WHAT_IT_GETS_WRONG.md`:87 | `0.000` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].mc_se` | `f3` | `first` |
-| 124 | `WHAT_IT_GETS_WRONG.md`:87 | `0.99` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].power` | `p2` | `first` |
-| 125 | `WHAT_IT_GETS_WRONG.md`:87 | `0.005` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].mc_se` | `f3` | `first` |
-| 126 | `WHAT_IT_GETS_WRONG.md`:89 | `0.05` | `derived (docs/11 §12.1)` | `req023.look.nominal` | `p2` | `first` |
-| 127 | `WHAT_IT_GETS_WRONG.md`:89 | `0.10` | `derived (docs/11 §12.1)` | `req023.watch.nominal` | `p2` | `first` |
-| 128 | `WHAT_IT_GETS_WRONG.md`:93 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.rate` | `p2` | `first` |
-| 129 | `WHAT_IT_GETS_WRONG.md`:93 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.mc_se` | `f3` | `first` |
-| 130 | `WHAT_IT_GETS_WRONG.md`:93 | `0.15` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.rate` | `p2` | `first` |
-| 131 | `WHAT_IT_GETS_WRONG.md`:93 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.mc_se` | `f3` | `first` |
-| 132 | `WHAT_IT_GETS_WRONG.md`:94 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.rate` | `p2` | `first` |
-| 133 | `WHAT_IT_GETS_WRONG.md`:94 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.mc_se` | `f3` | `first` |
-| 134 | `WHAT_IT_GETS_WRONG.md`:94 | `0.21` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.rate` | `p2` | `first` |
-| 135 | `WHAT_IT_GETS_WRONG.md`:94 | `0.013` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.mc_se` | `f3` | `first` |
-| 136 | `WHAT_IT_GETS_WRONG.md`:106 | `0.04` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.look_per_site.rate` | `p2` | `first` |
-| 137 | `WHAT_IT_GETS_WRONG.md`:106 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.look_per_site.mc_se` | `f3` | `first` |
-| 138 | `WHAT_IT_GETS_WRONG.md`:106 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.watch_fwer.rate` | `p2` | `first` |
-| 139 | `WHAT_IT_GETS_WRONG.md`:106 | `0.013` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.watch_fwer.mc_se` | `f3` | `first` |
-| 140 | `WHAT_IT_GETS_WRONG.md`:107 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.look_per_site.rate` | `p2` | `first` |
-| 141 | `WHAT_IT_GETS_WRONG.md`:107 | `0.002` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.look_per_site.mc_se` | `f3` | `first` |
-| 142 | `WHAT_IT_GETS_WRONG.md`:107 | `0.14` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.watch_fwer.rate` | `p2` | `first` |
-| 143 | `WHAT_IT_GETS_WRONG.md`:107 | `0.020` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.watch_fwer.mc_se` | `f3` | `first` |
-| 144 | `WHAT_IT_GETS_WRONG.md`:108 | `0.06` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.look_per_site.rate` | `p2` | `first` |
-| 145 | `WHAT_IT_GETS_WRONG.md`:108 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.look_per_site.mc_se` | `f3` | `first` |
-| 146 | `WHAT_IT_GETS_WRONG.md`:108 | `0.15` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.watch_fwer.rate` | `p2` | `first` |
-| 147 | `WHAT_IT_GETS_WRONG.md`:108 | `0.021` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.watch_fwer.mc_se` | `f3` | `first` |
-| 148 | `WHAT_IT_GETS_WRONG.md`:109 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.look_per_site.rate` | `p2` | `first` |
-| 149 | `WHAT_IT_GETS_WRONG.md`:109 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.look_per_site.mc_se` | `f3` | `first` |
-| 150 | `WHAT_IT_GETS_WRONG.md`:109 | `0.11` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.watch_fwer.rate` | `p2` | `first` |
-| 151 | `WHAT_IT_GETS_WRONG.md`:109 | `0.018` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.watch_fwer.mc_se` | `f3` | `first` |
-| 152 | `WHAT_IT_GETS_WRONG.md`:110 | `0.04` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.look_per_site.rate` | `p2` | `first` |
-| 153 | `WHAT_IT_GETS_WRONG.md`:110 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.look_per_site.mc_se` | `f3` | `first` |
-| 154 | `WHAT_IT_GETS_WRONG.md`:110 | `0.09` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.watch_fwer.rate` | `p2` | `first` |
-| 155 | `WHAT_IT_GETS_WRONG.md`:110 | `0.017` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.watch_fwer.mc_se` | `f3` | `first` |
-| 156 | `WHAT_IT_GETS_WRONG.md`:116 | `1.5` | `validation/site_signal/summary.json` | `design.mu` | `f1` | `first` |
-| 157 | `WHAT_IT_GETS_WRONG.md`:148 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.look_per_site.rate` | `p2` | `first` |
-| 158 | `WHAT_IT_GETS_WRONG.md`:148 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.look_per_site.mc_se` | `f3` | `first` |
-| 159 | `WHAT_IT_GETS_WRONG.md`:148 | `0.10` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.watch_fwer.rate` | `p2` | `first` |
-| 160 | `WHAT_IT_GETS_WRONG.md`:148 | `0.017` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.watch_fwer.mc_se` | `f3` | `first` |
-| 161 | `WHAT_IT_GETS_WRONG.md`:149 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.look_per_site.rate` | `p2` | `first` |
-| 162 | `WHAT_IT_GETS_WRONG.md`:149 | `0.002` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.look_per_site.mc_se` | `f3` | `first` |
-| 163 | `WHAT_IT_GETS_WRONG.md`:149 | `0.09` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.watch_fwer.rate` | `p2` | `first` |
-| 164 | `WHAT_IT_GETS_WRONG.md`:149 | `0.016` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.watch_fwer.mc_se` | `f3` | `first` |
-| 165 | `WHAT_IT_GETS_WRONG.md`:155 | `0.00` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest_low_diligence].rate` | `p2` | `first` |
-| 166 | `WHAT_IT_GETS_WRONG.md`:155 | `0.001` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest_low_diligence].mc_se` | `f3` | `first` |
-| 167 | `WHAT_IT_GETS_WRONG.md`:155 | `0.00` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=watch,label=honest_low_diligence].rate` | `p2` | `first` |
-| 168 | `WHAT_IT_GETS_WRONG.md`:155 | `0.000` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=watch,label=honest_low_diligence].mc_se` | `f3` | `first` |
-| 169 | `WHAT_IT_GETS_WRONG.md`:155 | `0.00` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest].rate` | `p2` | `first` |
-| 170 | `WHAT_IT_GETS_WRONG.md`:155 | `0.000` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest].mc_se` | `f3` | `first` |
-| 171 | `WHAT_IT_GETS_WRONG.md`:159 | `0` | `monitoring/out/answer_key.json` | `confusion.discordance.watch.tp` | `int` | `first` |
-| 172 | `WHAT_IT_GETS_WRONG.md`:159 | `5` | `monitoring/out/answer_key.json` | `confusion.discordance.watch.fn` | `int` | `first` |
-| 173 | `WHAT_IT_GETS_WRONG.md`:159 | `0` | `monitoring/out/answer_key.json` | `confusion.discordance.watch.fp` | `int` | `first` |
-| 174 | `WHAT_IT_GETS_WRONG.md`:159 | `2` | `monitoring/out/answer_key.json` | `confusion.discordance.look.tp` | `int` | `first` |
-| 175 | `WHAT_IT_GETS_WRONG.md`:159 | `3` | `monitoring/out/answer_key.json` | `confusion.discordance.look.fn` | `int` | `first` |
-| 176 | `WHAT_IT_GETS_WRONG.md`:159 | `0` | `monitoring/out/answer_key.json` | `confusion.discordance.look.fp` | `int` | `first` |
-| 177 | `WHAT_IT_GETS_WRONG.md`:159 | `2` | `monitoring/out/answer_key.json` | `confusion.rate_kri.watch.tp` | `int` | `first` |
-| 178 | `WHAT_IT_GETS_WRONG.md`:159 | `3` | `monitoring/out/answer_key.json` | `confusion.rate_kri.watch.fn` | `int` | `first` |
-| 179 | `WHAT_IT_GETS_WRONG.md`:159 | `0` | `monitoring/out/answer_key.json` | `confusion.rate_kri.watch.fp` | `int` | `first` |
-| 180 | `WHAT_IT_GETS_WRONG.md`:159 | `0` | `monitoring/out/answer_key.json` | `confusion.simaerep_classic.look.tp` | `int` | `first` |
-| 181 | `WHAT_IT_GETS_WRONG.md`:163 | `1.00` | `monitoring/out/equity.json` | `language.mh_or` | `f2` | `first` |
-| 182 | `WHAT_IT_GETS_WRONG.md`:163 | `[0.580, 1.846]` | `monitoring/out/equity.json` | `language.ci95` | `ci3` | `first` |
-| 183 | `WHAT_IT_GETS_WRONG.md`:163 | `11` | `monitoring/out/equity.json` | `language.n_sites_used` | `int` | `first` |
-| 184 | `README.md`:75 | `92794863` | `validation/site_signal/summary.json` | `eval_seed` | `int` | `first` |
-| 185 | `README.md`:75 | `68838978bb305e0f730d30e5cbf3c00bceca5a25` | `validation/site_signal/summary.json` | `sap_tag_commit` | `text` | `first` |
-| 186 | `README.md`:148 | `0.15` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
-| 187 | `README.md`:148 | `0.021` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 188 | `README.md`:148 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
-| 189 | `README.md`:148 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 190 | `README.md`:149 | `0.51` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
-| 191 | `README.md`:149 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 192 | `README.md`:149 | `0.22` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
-| 193 | `README.md`:149 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 194 | `README.md`:150 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 195 | `README.md`:150 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 196 | `README.md`:150 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 197 | `README.md`:150 | `0.70` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
-| 198 | `README.md`:150 | `0.026` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 199 | `README.md`:154 | `0.09` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].power_diff` | `f2` | `first` |
-| 200 | `README.md`:154 | `0.029` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].paired_mc_se` | `f3` | `first` |
-| 201 | `README.md`:154 | `0.99` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 202 | `README.md`:154 | `0.005` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 203 | `README.md`:154 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].p_computed` | `p2` | `first` |
-| 204 | `README.md`:156 | `2000` | `validation/site_signal/summary.json` | `null.r` | `int` | `first` |
-| 205 | `README.md`:158 | `0.05` | `derived (docs/11 §12.1)` | `req023.look.nominal` | `p2` | `first` |
-| 206 | `README.md`:158 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site.rate` | `p2` | `first` |
-| 207 | `README.md`:158 | `0.001` | `validation/site_signal/summary.json` | `null.look_per_site.mc_se` | `f3` | `first` |
-| 208 | `README.md`:158 | `met (conservative: below the nominal rate)` | `derived (docs/11 §12.1)` | `req023.look.outcome` | `text` | `first` |
-| 209 | `README.md`:159 | `0.10` | `derived (docs/11 §12.1)` | `req023.watch.nominal` | `p2` | `first` |
-| 210 | `README.md`:159 | `0.11` | `validation/site_signal/summary.json` | `null.watch_fwer.rate` | `p2` | `first` |
-| 211 | `README.md`:159 | `[0.095, 0.122]` | `validation/site_signal/summary.json` | `null.watch_fwer.ci95` | `ci3` | `first` |
-| 212 | `README.md`:159 | `0.007` | `validation/site_signal/summary.json` | `null.watch_fwer.mc_se` | `f3` | `first` |
-| 213 | `README.md`:159 | `met` | `derived (docs/11 §12.1)` | `req023.watch.outcome` | `text` | `first` |
-| 214 | `README.md`:163 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
-| 215 | `README.md`:163 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 216 | `README.md`:163 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
-| 217 | `README.md`:163 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 218 | `README.md`:164 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.rate` | `p2` | `first` |
-| 219 | `README.md`:164 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.mc_se` | `f3` | `first` |
-| 220 | `README.md`:164 | `0.15` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.rate` | `p2` | `first` |
-| 221 | `README.md`:164 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.mc_se` | `f3` | `first` |
-| 222 | `deck.html`:261 | `14` | `monitoring/out/signal_run.json` | `run.n_computed_sites` | `int` | `first` |
-| 223 | `deck.html`:261 | `0.8` | `monitoring/out/thresholds.json` | `expected_false_look_flags_per_study` | `f1` | `first` |
-| 224 | `deck.html`:298 | `0.15` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
-| 225 | `deck.html`:298 | `0.021` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 226 | `deck.html`:298 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
-| 227 | `deck.html`:298 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 228 | `deck.html`:299 | `0.51` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
-| 229 | `deck.html`:299 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 230 | `deck.html`:299 | `0.22` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
-| 231 | `deck.html`:299 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 232 | `deck.html`:300 | `90%` | `validation/site_signal/summary.json` | `design.gross_f` | `pct2` | `first` |
-| 233 | `deck.html`:300 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 234 | `deck.html`:300 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 235 | `deck.html`:300 | `0.70` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
-| 236 | `deck.html`:300 | `0.026` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 237 | `deck.html`:301 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site.rate` | `p2` | `first` |
-| 238 | `deck.html`:301 | `0.001` | `validation/site_signal/summary.json` | `null.look_per_site.mc_se` | `f3` | `first` |
-| 239 | `deck.html`:301 | `0.05` | `derived (docs/11 §12.1)` | `req023.look.nominal` | `p2` | `first` |
-| 240 | `deck.html`:302 | `0.11` | `validation/site_signal/summary.json` | `null.watch_fwer.rate` | `p2` | `first` |
-| 241 | `deck.html`:302 | `0.007` | `validation/site_signal/summary.json` | `null.watch_fwer.mc_se` | `f3` | `first` |
-| 242 | `deck.html`:302 | `0.10` | `derived (docs/11 §12.1)` | `req023.watch.nominal` | `p2` | `first` |
-| 243 | `deck.html`:305 | `0.99` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 244 | `deck.html`:305 | `0.005` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 245 | `deck.html`:305 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].p_computed` | `p2` | `first` |
-| 246 | `deck.html`:305 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
-| 247 | `deck.html`:305 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 248 | `deck.html`:305 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
-| 249 | `deck.html`:305 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 250 | `08-demo-and-pitch.md`:37 | `70%` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `pct2` | `first` |
-| 251 | `08-demo-and-pitch.md`:37 | `22%` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `pct2` | `first` |
-| 252 | `08-demo-and-pitch.md`:37 | `3%` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `pct2` | `first` |
-| 253 | `10-site-signal.md`:306 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site.rate` | `p2` | `first` |
-| 254 | `10-site-signal.md`:306 | `0.001` | `validation/site_signal/summary.json` | `null.look_per_site.mc_se` | `f3` | `first` |
-| 255 | `10-site-signal.md`:306 | `0.053` | `derived (docs/11 §12.1)` | `req023.look.bound` | `f3` | `first` |
-| 256 | `10-site-signal.md`:306 | `met (conservative: below the nominal rate)` | `derived (docs/11 §12.1)` | `req023.look.outcome` | `text` | `first` |
-| 257 | `10-site-signal.md`:306 | `0.03` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].rate` | `p2` | `first` |
-| 258 | `10-site-signal.md`:306 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
-| 259 | `10-site-signal.md`:306 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].rate` | `p2` | `first` |
-| 260 | `10-site-signal.md`:306 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
-| 261 | `10-site-signal.md`:306 | `0.06` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].rate` | `p2` | `first` |
-| 262 | `10-site-signal.md`:306 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
-| 263 | `10-site-signal.md`:306 | `met` | `derived (docs/11 §12.1)` | `size.outcome` | `text` | `first` |
-| 264 | `10-site-signal.md`:307 | `0.11` | `validation/site_signal/summary.json` | `null.watch_fwer.rate` | `p2` | `first` |
-| 265 | `10-site-signal.md`:307 | `0.007` | `validation/site_signal/summary.json` | `null.watch_fwer.mc_se` | `f3` | `first` |
-| 266 | `10-site-signal.md`:307 | `[0.095, 0.122]` | `validation/site_signal/summary.json` | `null.watch_fwer.ci95` | `ci3` | `first` |
-| 267 | `10-site-signal.md`:307 | `0.119` | `derived (docs/11 §12.1)` | `req023.watch.bound` | `f3` | `first` |
-| 268 | `10-site-signal.md`:307 | `met` | `derived (docs/11 §12.1)` | `req023.watch.outcome` | `text` | `first` |
-| 269 | `10-site-signal.md`:308 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 270 | `10-site-signal.md`:308 | `0.70` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
-| 271 | `10-site-signal.md`:308 | `0.026` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 272 | `10-site-signal.md`:308 | `0.22` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
-| 273 | `10-site-signal.md`:308 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 274 | `10-site-signal.md`:308 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
-| 275 | `10-site-signal.md`:308 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 276 | `10-site-signal.md`:309 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 277 | `10-site-signal.md`:309 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 278 | `10-site-signal.md`:309 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 279 | `10-site-signal.md`:309 | `0.51` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
-| 280 | `10-site-signal.md`:309 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 281 | `10-site-signal.md`:309 | `0.15` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
-| 282 | `10-site-signal.md`:309 | `0.021` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 283 | `10-site-signal.md`:309 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].p_computed` | `p2` | `first` |
-| 284 | `10-site-signal.md`:310 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 285 | `10-site-signal.md`:310 | `0.99` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 286 | `10-site-signal.md`:310 | `0.005` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 287 | `10-site-signal.md`:310 | `0.50` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
-| 288 | `10-site-signal.md`:310 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 289 | `10-site-signal.md`:310 | `0.19` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
-| 290 | `10-site-signal.md`:310 | `0.023` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 291 | `10-site-signal.md`:310 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 292 | `10-site-signal.md`:310 | `0.78` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
-| 293 | `10-site-signal.md`:310 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 294 | `10-site-signal.md`:310 | `0.13` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
-| 295 | `10-site-signal.md`:310 | `0.019` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 296 | `10-site-signal.md`:310 | `0.02` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
-| 297 | `10-site-signal.md`:310 | `0.007` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 298 | `10-site-signal.md`:311 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 299 | `10-site-signal.md`:311 | `-0.22` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.9].power_diff` | `f2` | `first` |
-| 300 | `10-site-signal.md`:311 | `0.025` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.9].paired_mc_se` | `f3` | `first` |
-| 301 | `10-site-signal.md`:311 | `0.01` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.5].power_diff` | `f2` | `first` |
-| 302 | `10-site-signal.md`:311 | `0.043` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.5].paired_mc_se` | `f3` | `first` |
-| 303 | `10-site-signal.md`:311 | `-0.04` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.25].power_diff` | `f2` | `first` |
-| 304 | `10-site-signal.md`:311 | `0.031` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.25].paired_mc_se` | `f3` | `first` |
-| 305 | `10-site-signal.md`:311 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 306 | `10-site-signal.md`:311 | `-0.08` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.9].power_diff` | `f2` | `first` |
-| 307 | `10-site-signal.md`:311 | `0.033` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.9].paired_mc_se` | `f3` | `first` |
-| 308 | `10-site-signal.md`:311 | `0.09` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].power_diff` | `f2` | `first` |
-| 309 | `10-site-signal.md`:311 | `0.029` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].paired_mc_se` | `f3` | `first` |
-| 310 | `10-site-signal.md`:311 | `0.01` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.25].power_diff` | `f2` | `first` |
-| 311 | `10-site-signal.md`:311 | `0.012` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.25].paired_mc_se` | `f3` | `first` |
-| 312 | `10-site-signal.md`:312 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 313 | `10-site-signal.md`:312 | `0.12` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 314 | `10-site-signal.md`:312 | `0.019` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 315 | `10-site-signal.md`:312 | `0.14` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
-| 316 | `10-site-signal.md`:312 | `0.020` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 317 | `10-site-signal.md`:312 | `0.07` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
-| 318 | `10-site-signal.md`:312 | `0.014` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 319 | `10-site-signal.md`:312 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 320 | `10-site-signal.md`:312 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
-| 321 | `10-site-signal.md`:312 | `0.010` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 322 | `10-site-signal.md`:312 | `0.04` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
-| 323 | `10-site-signal.md`:312 | `0.012` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 324 | `10-site-signal.md`:312 | `0.02` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
-| 325 | `10-site-signal.md`:312 | `0.008` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 326 | `10-site-signal.md`:313 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 327 | `10-site-signal.md`:313 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
-| 328 | `10-site-signal.md`:313 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 329 | `10-site-signal.md`:313 | `0.53` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
-| 330 | `10-site-signal.md`:313 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 331 | `10-site-signal.md`:313 | `0.17` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
-| 332 | `10-site-signal.md`:313 | `0.022` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 333 | `10-site-signal.md`:313 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 334 | `10-site-signal.md`:313 | `0.69` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
-| 335 | `10-site-signal.md`:313 | `0.027` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
-| 336 | `10-site-signal.md`:313 | `0.21` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
-| 337 | `10-site-signal.md`:313 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
-| 338 | `10-site-signal.md`:313 | `0.02` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
-| 339 | `10-site-signal.md`:313 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
-| 340 | `10-site-signal.md`:314 | `20` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].n_sites` | `int` | `first` |
-| 341 | `10-site-signal.md`:314 | `60` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].patients_per_site` | `int` | `first` |
-| 342 | `10-site-signal.md`:314 | `0.00` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].p_computed` | `p2` | `first` |
-| 343 | `10-site-signal.md`:314 | `0.00` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].power` | `p2` | `first` |
-| 344 | `10-site-signal.md`:314 | `0.000` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].mc_se` | `f3` | `first` |
-| 345 | `10-site-signal.md`:314 | `0.46` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].power` | `p2` | `first` |
-| 346 | `10-site-signal.md`:314 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].mc_se` | `f3` | `first` |
-| 347 | `10-site-signal.md`:314 | `0.13` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].power` | `p2` | `first` |
-| 348 | `10-site-signal.md`:314 | `0.019` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].mc_se` | `f3` | `first` |
-| 349 | `10-site-signal.md`:314 | `0.55` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].power` | `p2` | `first` |
-| 350 | `10-site-signal.md`:314 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].mc_se` | `f3` | `first` |
-| 351 | `10-site-signal.md`:314 | `0.23` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].power` | `p2` | `first` |
-| 352 | `10-site-signal.md`:314 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].mc_se` | `f3` | `first` |
-| 353 | `10-site-signal.md`:315 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
-| 354 | `10-site-signal.md`:315 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 355 | `10-site-signal.md`:315 | `0.04` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].power` | `p2` | `first` |
-| 356 | `10-site-signal.md`:315 | `0.011` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].mc_se` | `f3` | `first` |
-| 357 | `10-site-signal.md`:315 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
-| 358 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 359 | `10-site-signal.md`:315 | `0.36` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].power` | `p2` | `first` |
-| 360 | `10-site-signal.md`:315 | `0.028` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].mc_se` | `f3` | `first` |
-| 361 | `10-site-signal.md`:315 | `0.81` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.5].power` | `p2` | `first` |
-| 362 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 363 | `10-site-signal.md`:315 | `0.02` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.5].power` | `p2` | `first` |
-| 364 | `10-site-signal.md`:315 | `0.008` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.5].mc_se` | `f3` | `first` |
-| 365 | `10-site-signal.md`:315 | `0.38` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.5].power` | `p2` | `first` |
-| 366 | `10-site-signal.md`:315 | `0.028` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.5].mc_se` | `f3` | `first` |
-| 367 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.5].power` | `p2` | `first` |
-| 368 | `10-site-signal.md`:315 | `0.014` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.5].mc_se` | `f3` | `first` |
-| 369 | `10-site-signal.md`:315 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
-| 370 | `10-site-signal.md`:315 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].power` | `p2` | `first` |
-| 371 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].mc_se` | `f3` | `first` |
-| 372 | `10-site-signal.md`:315 | `0.48` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].power` | `p2` | `first` |
-| 373 | `10-site-signal.md`:315 | `0.029` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].mc_se` | `f3` | `first` |
-| 374 | `10-site-signal.md`:315 | `1.00` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].power` | `p2` | `first` |
-| 375 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].mc_se` | `f3` | `first` |
-| 376 | `10-site-signal.md`:315 | `0.99` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].power` | `p2` | `first` |
-| 377 | `10-site-signal.md`:315 | `0.005` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].mc_se` | `f3` | `first` |
-| 378 | `10-site-signal.md`:315 | `1.00` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.9].power` | `p2` | `first` |
-| 379 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.9].mc_se` | `f3` | `first` |
-| 380 | `10-site-signal.md`:315 | `0.03` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.9].power` | `p2` | `first` |
-| 381 | `10-site-signal.md`:315 | `0.010` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.9].mc_se` | `f3` | `first` |
-| 382 | `10-site-signal.md`:315 | `0.81` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.9].power` | `p2` | `first` |
-| 383 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.9].mc_se` | `f3` | `first` |
-| 384 | `10-site-signal.md`:315 | `0.55` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.9].power` | `p2` | `first` |
-| 385 | `10-site-signal.md`:315 | `0.029` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.9].mc_se` | `f3` | `first` |
-| 386 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.rate` | `p2` | `first` |
-| 387 | `10-site-signal.md`:315 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.mc_se` | `f3` | `first` |
-| 388 | `10-site-signal.md`:315 | `0.15` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.rate` | `p2` | `first` |
-| 389 | `10-site-signal.md`:315 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.mc_se` | `f3` | `first` |
-| 390 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.rate` | `p2` | `first` |
-| 391 | `10-site-signal.md`:315 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.mc_se` | `f3` | `first` |
-| 392 | `10-site-signal.md`:315 | `0.21` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.rate` | `p2` | `first` |
-| 393 | `10-site-signal.md`:315 | `0.013` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.mc_se` | `f3` | `first` |
-| 394 | `10-site-signal.md`:315 | `0.00` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].look_per_site.rate` | `p2` | `first` |
-| 395 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].look_per_site.mc_se` | `f3` | `first` |
-| 396 | `10-site-signal.md`:315 | `0.00` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].watch_fwer.rate` | `p2` | `first` |
-| 397 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].watch_fwer.mc_se` | `f3` | `first` |
-| 398 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].look_per_site.rate` | `p2` | `first` |
-| 399 | `10-site-signal.md`:315 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].look_per_site.mc_se` | `f3` | `first` |
-| 400 | `10-site-signal.md`:315 | `0.16` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].watch_fwer.rate` | `p2` | `first` |
-| 401 | `10-site-signal.md`:315 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].watch_fwer.mc_se` | `f3` | `first` |
-| 402 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.watch.tp` | `int` | `first` |
-| 403 | `10-site-signal.md`:316 | `5` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.watch.fn` | `int` | `first` |
-| 404 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.watch.fp` | `int` | `first` |
-| 405 | `10-site-signal.md`:316 | `2` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.look.tp` | `int` | `first` |
-| 406 | `10-site-signal.md`:316 | `3` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.look.fn` | `int` | `first` |
-| 407 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.look.fp` | `int` | `first` |
-| 408 | `10-site-signal.md`:316 | `2` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.watch.tp` | `int` | `first` |
-| 409 | `10-site-signal.md`:316 | `3` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.watch.fn` | `int` | `first` |
-| 410 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.watch.fp` | `int` | `first` |
-| 411 | `10-site-signal.md`:316 | `2` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.look.tp` | `int` | `first` |
-| 412 | `10-site-signal.md`:316 | `3` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.look.fn` | `int` | `first` |
-| 413 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.look.fp` | `int` | `first` |
-| 414 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.watch.tp` | `int` | `first` |
-| 415 | `10-site-signal.md`:316 | `5` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.watch.fn` | `int` | `first` |
-| 416 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.watch.fp` | `int` | `first` |
-| 417 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.look.tp` | `int` | `first` |
-| 418 | `10-site-signal.md`:316 | `5` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.look.fn` | `int` | `first` |
-| 419 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.look.fp` | `int` | `first` |
-| 420 | `10-site-signal.md`:317 | `0.000` | `validation/site_signal/summary.json` | `simaerep_fixture.max_rel_diff` | `f3` | `first` |
-| 421 | `10-site-signal.md`:317 | `10` | `validation/site_signal/summary.json` | `simaerep_fixture.rows` | `int` | `first` |
+| 77 | `WHAT_IT_GETS_WRONG.md`:62 | `<=12` | `validation/site_signal/summary.json` | `null.by_k_bin[0].k_bin` | `text` | `first` |
+| 78 | `WHAT_IT_GETS_WRONG.md`:62 | `138` | `validation/site_signal/summary.json` | `null.by_k_bin[0].n_studies` | `int` | `first` |
+| 79 | `WHAT_IT_GETS_WRONG.md`:62 | `0.05` | `validation/site_signal/summary.json` | `null.by_k_bin[0].watch_fwer.rate` | `p2` | `first` |
+| 80 | `WHAT_IT_GETS_WRONG.md`:62 | `0.019` | `validation/site_signal/summary.json` | `null.by_k_bin[0].watch_fwer.mc_se` | `f3` | `first` |
+| 81 | `WHAT_IT_GETS_WRONG.md`:62 | `[0.021, 0.102]` | `validation/site_signal/summary.json` | `null.by_k_bin[0].watch_fwer.ci95` | `ci3` | `first` |
+| 82 | `WHAT_IT_GETS_WRONG.md`:62 | `0.49` | `validation/site_signal/summary.json` | `null.by_k_bin[0].look_per_study.rate` | `p2` | `first` |
+| 83 | `WHAT_IT_GETS_WRONG.md`:62 | `0.049` | `validation/site_signal/summary.json` | `null.by_k_bin[0].look_per_study.mc_se` | `f3` | `first` |
+| 84 | `WHAT_IT_GETS_WRONG.md`:63 | `13-16` | `validation/site_signal/summary.json` | `null.by_k_bin[1].k_bin` | `text` | `first` |
+| 85 | `WHAT_IT_GETS_WRONG.md`:63 | `1242` | `validation/site_signal/summary.json` | `null.by_k_bin[1].n_studies` | `int` | `first` |
+| 86 | `WHAT_IT_GETS_WRONG.md`:63 | `0.10` | `validation/site_signal/summary.json` | `null.by_k_bin[1].watch_fwer.rate` | `p2` | `first` |
+| 87 | `WHAT_IT_GETS_WRONG.md`:63 | `0.009` | `validation/site_signal/summary.json` | `null.by_k_bin[1].watch_fwer.mc_se` | `f3` | `first` |
+| 88 | `WHAT_IT_GETS_WRONG.md`:63 | `[0.084, 0.119]` | `validation/site_signal/summary.json` | `null.by_k_bin[1].watch_fwer.ci95` | `ci3` | `first` |
+| 89 | `WHAT_IT_GETS_WRONG.md`:63 | `0.71` | `validation/site_signal/summary.json` | `null.by_k_bin[1].look_per_study.rate` | `p2` | `first` |
+| 90 | `WHAT_IT_GETS_WRONG.md`:63 | `0.019` | `validation/site_signal/summary.json` | `null.by_k_bin[1].look_per_study.mc_se` | `f3` | `first` |
+| 91 | `WHAT_IT_GETS_WRONG.md`:64 | `>=17` | `validation/site_signal/summary.json` | `null.by_k_bin[2].k_bin` | `text` | `first` |
+| 92 | `WHAT_IT_GETS_WRONG.md`:64 | `620` | `validation/site_signal/summary.json` | `null.by_k_bin[2].n_studies` | `int` | `first` |
+| 93 | `WHAT_IT_GETS_WRONG.md`:64 | `0.14` | `validation/site_signal/summary.json` | `null.by_k_bin[2].watch_fwer.rate` | `p2` | `first` |
+| 94 | `WHAT_IT_GETS_WRONG.md`:64 | `0.014` | `validation/site_signal/summary.json` | `null.by_k_bin[2].watch_fwer.mc_se` | `f3` | `first` |
+| 95 | `WHAT_IT_GETS_WRONG.md`:64 | `[0.110, 0.165]` | `validation/site_signal/summary.json` | `null.by_k_bin[2].watch_fwer.ci95` | `ci3` | `first` |
+| 96 | `WHAT_IT_GETS_WRONG.md`:64 | `0.87` | `validation/site_signal/summary.json` | `null.by_k_bin[2].look_per_study.rate` | `p2` | `first` |
+| 97 | `WHAT_IT_GETS_WRONG.md`:64 | `0.029` | `validation/site_signal/summary.json` | `null.by_k_bin[2].look_per_study.mc_se` | `f3` | `first` |
+| 98 | `WHAT_IT_GETS_WRONG.md`:66 | `>=17` | `validation/site_signal/summary.json` | `null.by_k_bin[2].k_bin` | `text` | `first` |
+| 99 | `WHAT_IT_GETS_WRONG.md`:66 | `0.14` | `validation/site_signal/summary.json` | `null.by_k_bin[2].watch_fwer.rate` | `p2` | `first` |
+| 100 | `WHAT_IT_GETS_WRONG.md`:66 | `[0.110, 0.165]` | `validation/site_signal/summary.json` | `null.by_k_bin[2].watch_fwer.ci95` | `ci3` | `first` |
+| 101 | `WHAT_IT_GETS_WRONG.md`:66 | `<=12` | `validation/site_signal/summary.json` | `null.by_k_bin[0].k_bin` | `text` | `first` |
+| 102 | `WHAT_IT_GETS_WRONG.md`:66 | `0.05` | `validation/site_signal/summary.json` | `null.by_k_bin[0].watch_fwer.rate` | `p2` | `first` |
+| 103 | `WHAT_IT_GETS_WRONG.md`:68 | `0.02` | `derived (docs/11 §12.1)` | `size.tolerance` | `p2` | `first` |
+| 104 | `WHAT_IT_GETS_WRONG.md`:72 | `0.03` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].rate` | `p2` | `first` |
+| 105 | `WHAT_IT_GETS_WRONG.md`:72 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
+| 106 | `WHAT_IT_GETS_WRONG.md`:72 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].rate` | `p2` | `first` |
+| 107 | `WHAT_IT_GETS_WRONG.md`:72 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
+| 108 | `WHAT_IT_GETS_WRONG.md`:72 | `0.06` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].rate` | `p2` | `first` |
+| 109 | `WHAT_IT_GETS_WRONG.md`:72 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
+| 110 | `WHAT_IT_GETS_WRONG.md`:72 | `met` | `derived (docs/11 §12.1)` | `size.outcome` | `text` | `first` |
+| 111 | `WHAT_IT_GETS_WRONG.md`:78 | `0.05` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.tertile_rates[0]` | `p2` | `first` |
+| 112 | `WHAT_IT_GETS_WRONG.md`:78 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.rate_kri.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
+| 113 | `WHAT_IT_GETS_WRONG.md`:78 | `0.01` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.tertile_rates[1]` | `p2` | `first` |
+| 114 | `WHAT_IT_GETS_WRONG.md`:78 | `0.001` | `validation/site_signal/summary.json` | `null.comparators.rate_kri.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
+| 115 | `WHAT_IT_GETS_WRONG.md`:78 | `0.00` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.tertile_rates[2]` | `p2` | `first` |
+| 116 | `WHAT_IT_GETS_WRONG.md`:78 | `0.000` | `validation/site_signal/summary.json` | `null.comparators.rate_kri.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
+| 117 | `WHAT_IT_GETS_WRONG.md`:78 | `failure` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.rate_kri.size_calibration.status` | `text` | `first` |
+| 118 | `WHAT_IT_GETS_WRONG.md`:79 | `0.03` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.tertile_rates[0]` | `p2` | `first` |
+| 119 | `WHAT_IT_GETS_WRONG.md`:79 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.simaerep_classic.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
+| 120 | `WHAT_IT_GETS_WRONG.md`:79 | `0.01` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.tertile_rates[1]` | `p2` | `first` |
+| 121 | `WHAT_IT_GETS_WRONG.md`:79 | `0.001` | `validation/site_signal/summary.json` | `null.comparators.simaerep_classic.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
+| 122 | `WHAT_IT_GETS_WRONG.md`:79 | `0.00` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.tertile_rates[2]` | `p2` | `first` |
+| 123 | `WHAT_IT_GETS_WRONG.md`:79 | `0.000` | `validation/site_signal/summary.json` | `null.comparators.simaerep_classic.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
+| 124 | `WHAT_IT_GETS_WRONG.md`:79 | `failure` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.simaerep_classic.size_calibration.status` | `text` | `first` |
+| 125 | `WHAT_IT_GETS_WRONG.md`:80 | `0.03` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.tertile_rates[0]` | `p2` | `first` |
+| 126 | `WHAT_IT_GETS_WRONG.md`:80 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.ae_report_ratio.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
+| 127 | `WHAT_IT_GETS_WRONG.md`:80 | `0.05` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.tertile_rates[1]` | `p2` | `first` |
+| 128 | `WHAT_IT_GETS_WRONG.md`:80 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.ae_report_ratio.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
+| 129 | `WHAT_IT_GETS_WRONG.md`:80 | `0.08` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.tertile_rates[2]` | `p2` | `first` |
+| 130 | `WHAT_IT_GETS_WRONG.md`:80 | `0.002` | `validation/site_signal/summary.json` | `null.comparators.ae_report_ratio.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
+| 131 | `WHAT_IT_GETS_WRONG.md`:80 | `failure` | `validation/site_signal/summary.json` | `null.acceptance.by_indicator.ae_report_ratio.size_calibration.status` | `text` | `first` |
+| 132 | `WHAT_IT_GETS_WRONG.md`:88 | `0.6` | `validation/site_signal/summary.json` | `failure_case.between_site_sd_logit` | `f1` | `first` |
+| 133 | `WHAT_IT_GETS_WRONG.md`:88 | `0.2` | `validation/site_signal/summary.json` | `failure_case.casemix_sd_log` | `f1` | `first` |
+| 134 | `WHAT_IT_GETS_WRONG.md`:94 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
+| 135 | `WHAT_IT_GETS_WRONG.md`:94 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 136 | `WHAT_IT_GETS_WRONG.md`:94 | `0.04` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].power` | `p2` | `first` |
+| 137 | `WHAT_IT_GETS_WRONG.md`:94 | `0.011` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].mc_se` | `f3` | `first` |
+| 138 | `WHAT_IT_GETS_WRONG.md`:95 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
+| 139 | `WHAT_IT_GETS_WRONG.md`:95 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 140 | `WHAT_IT_GETS_WRONG.md`:95 | `0.36` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].power` | `p2` | `first` |
+| 141 | `WHAT_IT_GETS_WRONG.md`:95 | `0.028` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].mc_se` | `f3` | `first` |
+| 142 | `WHAT_IT_GETS_WRONG.md`:96 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 143 | `WHAT_IT_GETS_WRONG.md`:96 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].power` | `p2` | `first` |
+| 144 | `WHAT_IT_GETS_WRONG.md`:96 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].mc_se` | `f3` | `first` |
+| 145 | `WHAT_IT_GETS_WRONG.md`:96 | `0.48` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].power` | `p2` | `first` |
+| 146 | `WHAT_IT_GETS_WRONG.md`:96 | `0.029` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].mc_se` | `f3` | `first` |
+| 147 | `WHAT_IT_GETS_WRONG.md`:97 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 148 | `WHAT_IT_GETS_WRONG.md`:97 | `1.00` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].power` | `p2` | `first` |
+| 149 | `WHAT_IT_GETS_WRONG.md`:97 | `0.000` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].mc_se` | `f3` | `first` |
+| 150 | `WHAT_IT_GETS_WRONG.md`:97 | `0.99` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].power` | `p2` | `first` |
+| 151 | `WHAT_IT_GETS_WRONG.md`:97 | `0.005` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].mc_se` | `f3` | `first` |
+| 152 | `WHAT_IT_GETS_WRONG.md`:99 | `0.05` | `derived (docs/11 §12.1)` | `req023.look.nominal` | `p2` | `first` |
+| 153 | `WHAT_IT_GETS_WRONG.md`:99 | `0.10` | `derived (docs/11 §12.1)` | `req023.watch.nominal` | `p2` | `first` |
+| 154 | `WHAT_IT_GETS_WRONG.md`:103 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.rate` | `p2` | `first` |
+| 155 | `WHAT_IT_GETS_WRONG.md`:103 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.mc_se` | `f3` | `first` |
+| 156 | `WHAT_IT_GETS_WRONG.md`:103 | `0.15` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.rate` | `p2` | `first` |
+| 157 | `WHAT_IT_GETS_WRONG.md`:103 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.mc_se` | `f3` | `first` |
+| 158 | `WHAT_IT_GETS_WRONG.md`:104 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.rate` | `p2` | `first` |
+| 159 | `WHAT_IT_GETS_WRONG.md`:104 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.mc_se` | `f3` | `first` |
+| 160 | `WHAT_IT_GETS_WRONG.md`:104 | `0.21` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.rate` | `p2` | `first` |
+| 161 | `WHAT_IT_GETS_WRONG.md`:104 | `0.013` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.mc_se` | `f3` | `first` |
+| 162 | `WHAT_IT_GETS_WRONG.md`:116 | `0.04` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.look_per_site.rate` | `p2` | `first` |
+| 163 | `WHAT_IT_GETS_WRONG.md`:116 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.look_per_site.mc_se` | `f3` | `first` |
+| 164 | `WHAT_IT_GETS_WRONG.md`:116 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.watch_fwer.rate` | `p2` | `first` |
+| 165 | `WHAT_IT_GETS_WRONG.md`:116 | `0.013` | `validation/site_signal/summary.json` | `sensitivity[id=SE9].null.watch_fwer.mc_se` | `f3` | `first` |
+| 166 | `WHAT_IT_GETS_WRONG.md`:117 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.look_per_site.rate` | `p2` | `first` |
+| 167 | `WHAT_IT_GETS_WRONG.md`:117 | `0.002` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.look_per_site.mc_se` | `f3` | `first` |
+| 168 | `WHAT_IT_GETS_WRONG.md`:117 | `0.14` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.watch_fwer.rate` | `p2` | `first` |
+| 169 | `WHAT_IT_GETS_WRONG.md`:117 | `0.020` | `validation/site_signal/summary.json` | `sensitivity[id=SE10].null.watch_fwer.mc_se` | `f3` | `first` |
+| 170 | `WHAT_IT_GETS_WRONG.md`:118 | `0.06` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.look_per_site.rate` | `p2` | `first` |
+| 171 | `WHAT_IT_GETS_WRONG.md`:118 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.look_per_site.mc_se` | `f3` | `first` |
+| 172 | `WHAT_IT_GETS_WRONG.md`:118 | `0.15` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.watch_fwer.rate` | `p2` | `first` |
+| 173 | `WHAT_IT_GETS_WRONG.md`:118 | `0.021` | `validation/site_signal/summary.json` | `sensitivity[id=SE11].null.watch_fwer.mc_se` | `f3` | `first` |
+| 174 | `WHAT_IT_GETS_WRONG.md`:119 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.look_per_site.rate` | `p2` | `first` |
+| 175 | `WHAT_IT_GETS_WRONG.md`:119 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.look_per_site.mc_se` | `f3` | `first` |
+| 176 | `WHAT_IT_GETS_WRONG.md`:119 | `0.11` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.watch_fwer.rate` | `p2` | `first` |
+| 177 | `WHAT_IT_GETS_WRONG.md`:119 | `0.018` | `validation/site_signal/summary.json` | `sensitivity[id=SE12].null.watch_fwer.mc_se` | `f3` | `first` |
+| 178 | `WHAT_IT_GETS_WRONG.md`:120 | `0.04` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.look_per_site.rate` | `p2` | `first` |
+| 179 | `WHAT_IT_GETS_WRONG.md`:120 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.look_per_site.mc_se` | `f3` | `first` |
+| 180 | `WHAT_IT_GETS_WRONG.md`:120 | `0.09` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.watch_fwer.rate` | `p2` | `first` |
+| 181 | `WHAT_IT_GETS_WRONG.md`:120 | `0.017` | `validation/site_signal/summary.json` | `sensitivity[id=SE13].null.watch_fwer.mc_se` | `f3` | `first` |
+| 182 | `WHAT_IT_GETS_WRONG.md`:126 | `1.5` | `validation/site_signal/summary.json` | `design.mu` | `f1` | `first` |
+| 183 | `WHAT_IT_GETS_WRONG.md`:158 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.look_per_site.rate` | `p2` | `first` |
+| 184 | `WHAT_IT_GETS_WRONG.md`:158 | `0.003` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.look_per_site.mc_se` | `f3` | `first` |
+| 185 | `WHAT_IT_GETS_WRONG.md`:158 | `0.10` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.watch_fwer.rate` | `p2` | `first` |
+| 186 | `WHAT_IT_GETS_WRONG.md`:158 | `0.017` | `validation/site_signal/summary.json` | `sensitivity[id=SE14].null.watch_fwer.mc_se` | `f3` | `first` |
+| 187 | `WHAT_IT_GETS_WRONG.md`:159 | `0.05` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.look_per_site.rate` | `p2` | `first` |
+| 188 | `WHAT_IT_GETS_WRONG.md`:159 | `0.002` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.look_per_site.mc_se` | `f3` | `first` |
+| 189 | `WHAT_IT_GETS_WRONG.md`:159 | `0.09` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.watch_fwer.rate` | `p2` | `first` |
+| 190 | `WHAT_IT_GETS_WRONG.md`:159 | `0.016` | `validation/site_signal/summary.json` | `sensitivity[id=SE15].null.watch_fwer.mc_se` | `f3` | `first` |
+| 191 | `WHAT_IT_GETS_WRONG.md`:165 | `0.00` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest_low_diligence].rate` | `p2` | `first` |
+| 192 | `WHAT_IT_GETS_WRONG.md`:165 | `0.001` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest_low_diligence].mc_se` | `f3` | `first` |
+| 193 | `WHAT_IT_GETS_WRONG.md`:165 | `0.00` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=watch,label=honest_low_diligence].rate` | `p2` | `first` |
+| 194 | `WHAT_IT_GETS_WRONG.md`:165 | `0.000` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=watch,label=honest_low_diligence].mc_se` | `f3` | `first` |
+| 195 | `WHAT_IT_GETS_WRONG.md`:165 | `0.00` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest].rate` | `p2` | `first` |
+| 196 | `WHAT_IT_GETS_WRONG.md`:165 | `0.000` | `validation/site_signal/summary.json` | `full_mix.false_flags[indicator=discordance,tier=look,label=honest].mc_se` | `f3` | `first` |
+| 197 | `WHAT_IT_GETS_WRONG.md`:169 | `0` | `monitoring/out/answer_key.json` | `confusion.discordance.watch.tp` | `int` | `first` |
+| 198 | `WHAT_IT_GETS_WRONG.md`:169 | `5` | `monitoring/out/answer_key.json` | `confusion.discordance.watch.fn` | `int` | `first` |
+| 199 | `WHAT_IT_GETS_WRONG.md`:169 | `0` | `monitoring/out/answer_key.json` | `confusion.discordance.watch.fp` | `int` | `first` |
+| 200 | `WHAT_IT_GETS_WRONG.md`:169 | `2` | `monitoring/out/answer_key.json` | `confusion.discordance.look.tp` | `int` | `first` |
+| 201 | `WHAT_IT_GETS_WRONG.md`:169 | `3` | `monitoring/out/answer_key.json` | `confusion.discordance.look.fn` | `int` | `first` |
+| 202 | `WHAT_IT_GETS_WRONG.md`:169 | `0` | `monitoring/out/answer_key.json` | `confusion.discordance.look.fp` | `int` | `first` |
+| 203 | `WHAT_IT_GETS_WRONG.md`:169 | `2` | `monitoring/out/answer_key.json` | `confusion.rate_kri.watch.tp` | `int` | `first` |
+| 204 | `WHAT_IT_GETS_WRONG.md`:169 | `3` | `monitoring/out/answer_key.json` | `confusion.rate_kri.watch.fn` | `int` | `first` |
+| 205 | `WHAT_IT_GETS_WRONG.md`:169 | `0` | `monitoring/out/answer_key.json` | `confusion.rate_kri.watch.fp` | `int` | `first` |
+| 206 | `WHAT_IT_GETS_WRONG.md`:169 | `0` | `monitoring/out/answer_key.json` | `confusion.simaerep_classic.look.tp` | `int` | `first` |
+| 207 | `WHAT_IT_GETS_WRONG.md`:173 | `1.00` | `monitoring/out/equity.json` | `language.mh_or` | `f2` | `first` |
+| 208 | `WHAT_IT_GETS_WRONG.md`:173 | `[0.580, 1.846]` | `monitoring/out/equity.json` | `language.ci95` | `ci3` | `first` |
+| 209 | `WHAT_IT_GETS_WRONG.md`:173 | `11` | `monitoring/out/equity.json` | `language.n_sites_used` | `int` | `first` |
+| 210 | `README.md`:75 | `92794863` | `validation/site_signal/summary.json` | `eval_seed` | `int` | `first` |
+| 211 | `README.md`:75 | `68838978bb305e0f730d30e5cbf3c00bceca5a25` | `validation/site_signal/summary.json` | `sap_tag_commit` | `text` | `first` |
+| 212 | `README.md`:148 | `0.15` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
+| 213 | `README.md`:148 | `0.021` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 214 | `README.md`:148 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
+| 215 | `README.md`:148 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 216 | `README.md`:149 | `0.51` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
+| 217 | `README.md`:149 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 218 | `README.md`:149 | `0.22` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
+| 219 | `README.md`:149 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 220 | `README.md`:150 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 221 | `README.md`:150 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 222 | `README.md`:150 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 223 | `README.md`:150 | `0.70` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
+| 224 | `README.md`:150 | `0.026` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 225 | `README.md`:154 | `0.09` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].power_diff` | `f2` | `first` |
+| 226 | `README.md`:154 | `0.029` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].paired_mc_se` | `f3` | `first` |
+| 227 | `README.md`:154 | `0.99` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 228 | `README.md`:154 | `0.005` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 229 | `README.md`:154 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].p_computed` | `p2` | `first` |
+| 230 | `README.md`:156 | `2000` | `validation/site_signal/summary.json` | `null.r` | `int` | `first` |
+| 231 | `README.md`:158 | `0.05` | `derived (docs/11 §12.1)` | `req023.look.nominal` | `p2` | `first` |
+| 232 | `README.md`:158 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site.rate` | `p2` | `first` |
+| 233 | `README.md`:158 | `0.001` | `validation/site_signal/summary.json` | `null.look_per_site.mc_se` | `f3` | `first` |
+| 234 | `README.md`:158 | `met (conservative: below the nominal rate)` | `derived (docs/11 §12.1)` | `req023.look.outcome` | `text` | `first` |
+| 235 | `README.md`:159 | `0.10` | `derived (docs/11 §12.1)` | `req023.watch.nominal` | `p2` | `first` |
+| 236 | `README.md`:159 | `0.11` | `validation/site_signal/summary.json` | `null.watch_fwer.rate` | `p2` | `first` |
+| 237 | `README.md`:159 | `[0.095, 0.122]` | `validation/site_signal/summary.json` | `null.watch_fwer.ci95` | `ci3` | `first` |
+| 238 | `README.md`:159 | `0.007` | `validation/site_signal/summary.json` | `null.watch_fwer.mc_se` | `f3` | `first` |
+| 239 | `README.md`:159 | `met` | `derived (docs/11 §12.1)` | `req023.watch.outcome` | `text` | `first` |
+| 240 | `README.md`:163 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
+| 241 | `README.md`:163 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 242 | `README.md`:163 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
+| 243 | `README.md`:163 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 244 | `README.md`:164 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.rate` | `p2` | `first` |
+| 245 | `README.md`:164 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.mc_se` | `f3` | `first` |
+| 246 | `README.md`:164 | `0.15` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.rate` | `p2` | `first` |
+| 247 | `README.md`:164 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.mc_se` | `f3` | `first` |
+| 248 | `deck.html`:261 | `14` | `monitoring/out/signal_run.json` | `run.n_computed_sites` | `int` | `first` |
+| 249 | `deck.html`:261 | `0.8` | `monitoring/out/thresholds.json` | `expected_false_look_flags_per_study` | `f1` | `first` |
+| 250 | `deck.html`:298 | `0.15` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
+| 251 | `deck.html`:298 | `0.021` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 252 | `deck.html`:298 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
+| 253 | `deck.html`:298 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 254 | `deck.html`:299 | `0.51` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
+| 255 | `deck.html`:299 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 256 | `deck.html`:299 | `0.22` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
+| 257 | `deck.html`:299 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 258 | `deck.html`:300 | `90%` | `validation/site_signal/summary.json` | `design.gross_f` | `pct2` | `first` |
+| 259 | `deck.html`:300 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 260 | `deck.html`:300 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 261 | `deck.html`:300 | `0.70` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
+| 262 | `deck.html`:300 | `0.026` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 263 | `deck.html`:301 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site.rate` | `p2` | `first` |
+| 264 | `deck.html`:301 | `0.001` | `validation/site_signal/summary.json` | `null.look_per_site.mc_se` | `f3` | `first` |
+| 265 | `deck.html`:301 | `0.05` | `derived (docs/11 §12.1)` | `req023.look.nominal` | `p2` | `first` |
+| 266 | `deck.html`:302 | `0.11` | `validation/site_signal/summary.json` | `null.watch_fwer.rate` | `p2` | `first` |
+| 267 | `deck.html`:302 | `0.007` | `validation/site_signal/summary.json` | `null.watch_fwer.mc_se` | `f3` | `first` |
+| 268 | `deck.html`:302 | `0.10` | `derived (docs/11 §12.1)` | `req023.watch.nominal` | `p2` | `first` |
+| 269 | `deck.html`:305 | `0.99` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 270 | `deck.html`:305 | `0.005` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 271 | `deck.html`:305 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].p_computed` | `p2` | `first` |
+| 272 | `deck.html`:305 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
+| 273 | `deck.html`:305 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 274 | `deck.html`:305 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
+| 275 | `deck.html`:305 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 276 | `08-demo-and-pitch.md`:37 | `70%` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `pct2` | `first` |
+| 277 | `08-demo-and-pitch.md`:37 | `22%` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `pct2` | `first` |
+| 278 | `08-demo-and-pitch.md`:37 | `3%` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `pct2` | `first` |
+| 279 | `10-site-signal.md`:306 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site.rate` | `p2` | `first` |
+| 280 | `10-site-signal.md`:306 | `0.001` | `validation/site_signal/summary.json` | `null.look_per_site.mc_se` | `f3` | `first` |
+| 281 | `10-site-signal.md`:306 | `0.053` | `derived (docs/11 §12.1)` | `req023.look.bound` | `f3` | `first` |
+| 282 | `10-site-signal.md`:306 | `met (conservative: below the nominal rate)` | `derived (docs/11 §12.1)` | `req023.look.outcome` | `text` | `first` |
+| 283 | `10-site-signal.md`:306 | `0.03` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].rate` | `p2` | `first` |
+| 284 | `10-site-signal.md`:306 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=1].mc_se` | `f3` | `first` |
+| 285 | `10-site-signal.md`:306 | `0.05` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].rate` | `p2` | `first` |
+| 286 | `10-site-signal.md`:306 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=2].mc_se` | `f3` | `first` |
+| 287 | `10-site-signal.md`:306 | `0.06` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].rate` | `p2` | `first` |
+| 288 | `10-site-signal.md`:306 | `0.002` | `validation/site_signal/summary.json` | `null.look_per_site_by_e_tertile[tertile=3].mc_se` | `f3` | `first` |
+| 289 | `10-site-signal.md`:306 | `met` | `derived (docs/11 §12.1)` | `size.outcome` | `text` | `first` |
+| 290 | `10-site-signal.md`:307 | `0.11` | `validation/site_signal/summary.json` | `null.watch_fwer.rate` | `p2` | `first` |
+| 291 | `10-site-signal.md`:307 | `0.007` | `validation/site_signal/summary.json` | `null.watch_fwer.mc_se` | `f3` | `first` |
+| 292 | `10-site-signal.md`:307 | `[0.095, 0.122]` | `validation/site_signal/summary.json` | `null.watch_fwer.ci95` | `ci3` | `first` |
+| 293 | `10-site-signal.md`:307 | `0.119` | `derived (docs/11 §12.1)` | `req023.watch.bound` | `f3` | `first` |
+| 294 | `10-site-signal.md`:307 | `met` | `derived (docs/11 §12.1)` | `req023.watch.outcome` | `text` | `first` |
+| 295 | `10-site-signal.md`:308 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 296 | `10-site-signal.md`:308 | `0.70` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
+| 297 | `10-site-signal.md`:308 | `0.026` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 298 | `10-site-signal.md`:308 | `0.22` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
+| 299 | `10-site-signal.md`:308 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 300 | `10-site-signal.md`:308 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
+| 301 | `10-site-signal.md`:308 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 302 | `10-site-signal.md`:309 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 303 | `10-site-signal.md`:309 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 304 | `10-site-signal.md`:309 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 305 | `10-site-signal.md`:309 | `0.51` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
+| 306 | `10-site-signal.md`:309 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 307 | `10-site-signal.md`:309 | `0.15` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
+| 308 | `10-site-signal.md`:309 | `0.021` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 309 | `10-site-signal.md`:309 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,design_row=true,f=0.9].p_computed` | `p2` | `first` |
+| 310 | `10-site-signal.md`:310 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 311 | `10-site-signal.md`:310 | `0.99` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 312 | `10-site-signal.md`:310 | `0.005` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 313 | `10-site-signal.md`:310 | `0.50` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
+| 314 | `10-site-signal.md`:310 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 315 | `10-site-signal.md`:310 | `0.19` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
+| 316 | `10-site-signal.md`:310 | `0.023` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 317 | `10-site-signal.md`:310 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 318 | `10-site-signal.md`:310 | `0.78` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
+| 319 | `10-site-signal.md`:310 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 320 | `10-site-signal.md`:310 | `0.13` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
+| 321 | `10-site-signal.md`:310 | `0.019` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 322 | `10-site-signal.md`:310 | `0.02` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
+| 323 | `10-site-signal.md`:310 | `0.007` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 324 | `10-site-signal.md`:311 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 325 | `10-site-signal.md`:311 | `-0.22` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.9].power_diff` | `f2` | `first` |
+| 326 | `10-site-signal.md`:311 | `0.025` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.9].paired_mc_se` | `f3` | `first` |
+| 327 | `10-site-signal.md`:311 | `0.01` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.5].power_diff` | `f2` | `first` |
+| 328 | `10-site-signal.md`:311 | `0.043` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.5].paired_mc_se` | `f3` | `first` |
+| 329 | `10-site-signal.md`:311 | `-0.04` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.25].power_diff` | `f2` | `first` |
+| 330 | `10-site-signal.md`:311 | `0.031` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=look,design_row=true,f=0.25].paired_mc_se` | `f3` | `first` |
+| 331 | `10-site-signal.md`:311 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 332 | `10-site-signal.md`:311 | `-0.08` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.9].power_diff` | `f2` | `first` |
+| 333 | `10-site-signal.md`:311 | `0.033` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.9].paired_mc_se` | `f3` | `first` |
+| 334 | `10-site-signal.md`:311 | `0.09` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].power_diff` | `f2` | `first` |
+| 335 | `10-site-signal.md`:311 | `0.029` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.5].paired_mc_se` | `f3` | `first` |
+| 336 | `10-site-signal.md`:311 | `0.01` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.25].power_diff` | `f2` | `first` |
+| 337 | `10-site-signal.md`:311 | `0.012` | `validation/site_signal/summary.json` | `head_to_head.grid[comparator=rate_kri,tier=watch,design_row=true,f=0.25].paired_mc_se` | `f3` | `first` |
+| 338 | `10-site-signal.md`:312 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 339 | `10-site-signal.md`:312 | `0.12` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 340 | `10-site-signal.md`:312 | `0.019` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 341 | `10-site-signal.md`:312 | `0.14` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
+| 342 | `10-site-signal.md`:312 | `0.020` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 343 | `10-site-signal.md`:312 | `0.07` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
+| 344 | `10-site-signal.md`:312 | `0.014` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 345 | `10-site-signal.md`:312 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 346 | `10-site-signal.md`:312 | `0.03` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
+| 347 | `10-site-signal.md`:312 | `0.010` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 348 | `10-site-signal.md`:312 | `0.04` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
+| 349 | `10-site-signal.md`:312 | `0.012` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 350 | `10-site-signal.md`:312 | `0.02` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
+| 351 | `10-site-signal.md`:312 | `0.008` | `validation/site_signal/summary.json` | `power[indicator=simaerep_classic,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 352 | `10-site-signal.md`:313 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 353 | `10-site-signal.md`:313 | `0.77` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.9].power` | `p2` | `first` |
+| 354 | `10-site-signal.md`:313 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 355 | `10-site-signal.md`:313 | `0.53` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.5].power` | `p2` | `first` |
+| 356 | `10-site-signal.md`:313 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 357 | `10-site-signal.md`:313 | `0.17` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.25].power` | `p2` | `first` |
+| 358 | `10-site-signal.md`:313 | `0.022` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=look,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 359 | `10-site-signal.md`:313 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 360 | `10-site-signal.md`:313 | `0.69` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.9].power` | `p2` | `first` |
+| 361 | `10-site-signal.md`:313 | `0.027` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.9].mc_se` | `f3` | `first` |
+| 362 | `10-site-signal.md`:313 | `0.21` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.5].power` | `p2` | `first` |
+| 363 | `10-site-signal.md`:313 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.5].mc_se` | `f3` | `first` |
+| 364 | `10-site-signal.md`:313 | `0.02` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.25].power` | `p2` | `first` |
+| 365 | `10-site-signal.md`:313 | `0.009` | `validation/site_signal/summary.json` | `power[indicator=ae_report_ratio,tier=watch,design_row=true,f=0.25].mc_se` | `f3` | `first` |
+| 366 | `10-site-signal.md`:314 | `20` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].n_sites` | `int` | `first` |
+| 367 | `10-site-signal.md`:314 | `60` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].patients_per_site` | `int` | `first` |
+| 368 | `10-site-signal.md`:314 | `0.00` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].p_computed` | `p2` | `first` |
+| 369 | `10-site-signal.md`:314 | `0.00` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].power` | `p2` | `first` |
+| 370 | `10-site-signal.md`:314 | `0.000` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].mc_se` | `f3` | `first` |
+| 371 | `10-site-signal.md`:314 | `0.46` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].power` | `p2` | `first` |
+| 372 | `10-site-signal.md`:314 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=look,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].mc_se` | `f3` | `first` |
+| 373 | `10-site-signal.md`:314 | `0.13` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].power` | `p2` | `first` |
+| 374 | `10-site-signal.md`:314 | `0.019` | `validation/site_signal/summary.json` | `power[indicator=rate_kri,tier=watch,n_sites=20,patients_per_site=60,mu=0.5,f=0.5].mc_se` | `f3` | `first` |
+| 375 | `10-site-signal.md`:314 | `0.55` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].power` | `p2` | `first` |
+| 376 | `10-site-signal.md`:314 | `0.029` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=look,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].mc_se` | `f3` | `first` |
+| 377 | `10-site-signal.md`:314 | `0.23` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].power` | `p2` | `first` |
+| 378 | `10-site-signal.md`:314 | `0.024` | `validation/site_signal/summary.json` | `power[indicator=discordance,tier=watch,n_sites=20,patients_per_site=60,mu=1.5,f=0.5].mc_se` | `f3` | `first` |
+| 379 | `10-site-signal.md`:315 | `0.30` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].power` | `p2` | `first` |
+| 380 | `10-site-signal.md`:315 | `0.026` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 381 | `10-site-signal.md`:315 | `0.04` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].power` | `p2` | `first` |
+| 382 | `10-site-signal.md`:315 | `0.011` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.5].mc_se` | `f3` | `first` |
+| 383 | `10-site-signal.md`:315 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power` | `p2` | `first` |
+| 384 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 385 | `10-site-signal.md`:315 | `0.36` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].power` | `p2` | `first` |
+| 386 | `10-site-signal.md`:315 | `0.028` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.5].mc_se` | `f3` | `first` |
+| 387 | `10-site-signal.md`:315 | `0.81` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.5].power` | `p2` | `first` |
+| 388 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 389 | `10-site-signal.md`:315 | `0.02` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.5].power` | `p2` | `first` |
+| 390 | `10-site-signal.md`:315 | `0.008` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.5].mc_se` | `f3` | `first` |
+| 391 | `10-site-signal.md`:315 | `0.38` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.5].power` | `p2` | `first` |
+| 392 | `10-site-signal.md`:315 | `0.028` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.5].mc_se` | `f3` | `first` |
+| 393 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.5].power` | `p2` | `first` |
+| 394 | `10-site-signal.md`:315 | `0.014` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.5].mc_se` | `f3` | `first` |
+| 395 | `10-site-signal.md`:315 | `0.90` | `validation/site_signal/summary.json` | `design.gross_f` | `p2` | `first` |
+| 396 | `10-site-signal.md`:315 | `0.82` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].power` | `p2` | `first` |
+| 397 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=look,f=0.9].mc_se` | `f3` | `first` |
+| 398 | `10-site-signal.md`:315 | `0.48` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].power` | `p2` | `first` |
+| 399 | `10-site-signal.md`:315 | `0.029` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=discordance,tier=watch,f=0.9].mc_se` | `f3` | `first` |
+| 400 | `10-site-signal.md`:315 | `1.00` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].power` | `p2` | `first` |
+| 401 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=look,f=0.9].mc_se` | `f3` | `first` |
+| 402 | `10-site-signal.md`:315 | `0.99` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].power` | `p2` | `first` |
+| 403 | `10-site-signal.md`:315 | `0.005` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=rate_kri,tier=watch,f=0.9].mc_se` | `f3` | `first` |
+| 404 | `10-site-signal.md`:315 | `1.00` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.9].power` | `p2` | `first` |
+| 405 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=look,f=0.9].mc_se` | `f3` | `first` |
+| 406 | `10-site-signal.md`:315 | `0.03` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.9].power` | `p2` | `first` |
+| 407 | `10-site-signal.md`:315 | `0.010` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=simaerep_classic,tier=watch,f=0.9].mc_se` | `f3` | `first` |
+| 408 | `10-site-signal.md`:315 | `0.81` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.9].power` | `p2` | `first` |
+| 409 | `10-site-signal.md`:315 | `0.022` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=look,f=0.9].mc_se` | `f3` | `first` |
+| 410 | `10-site-signal.md`:315 | `0.55` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.9].power` | `p2` | `first` |
+| 411 | `10-site-signal.md`:315 | `0.029` | `validation/site_signal/summary.json` | `failure_case.a.power[indicator=ae_report_ratio,tier=watch,f=0.9].mc_se` | `f3` | `first` |
+| 412 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.rate` | `p2` | `first` |
+| 413 | `10-site-signal.md`:315 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].look_per_site.mc_se` | `f3` | `first` |
+| 414 | `10-site-signal.md`:315 | `0.15` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.rate` | `p2` | `first` |
+| 415 | `10-site-signal.md`:315 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=discordance].watch_fwer.mc_se` | `f3` | `first` |
+| 416 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.rate` | `p2` | `first` |
+| 417 | `10-site-signal.md`:315 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].look_per_site.mc_se` | `f3` | `first` |
+| 418 | `10-site-signal.md`:315 | `0.21` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.rate` | `p2` | `first` |
+| 419 | `10-site-signal.md`:315 | `0.013` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=rate_kri].watch_fwer.mc_se` | `f3` | `first` |
+| 420 | `10-site-signal.md`:315 | `0.00` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].look_per_site.rate` | `p2` | `first` |
+| 421 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].look_per_site.mc_se` | `f3` | `first` |
+| 422 | `10-site-signal.md`:315 | `0.00` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].watch_fwer.rate` | `p2` | `first` |
+| 423 | `10-site-signal.md`:315 | `0.000` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=simaerep_classic].watch_fwer.mc_se` | `f3` | `first` |
+| 424 | `10-site-signal.md`:315 | `0.06` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].look_per_site.rate` | `p2` | `first` |
+| 425 | `10-site-signal.md`:315 | `0.001` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].look_per_site.mc_se` | `f3` | `first` |
+| 426 | `10-site-signal.md`:315 | `0.16` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].watch_fwer.rate` | `p2` | `first` |
+| 427 | `10-site-signal.md`:315 | `0.011` | `validation/site_signal/summary.json` | `failure_case.b.null[indicator=ae_report_ratio].watch_fwer.mc_se` | `f3` | `first` |
+| 428 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.watch.tp` | `int` | `first` |
+| 429 | `10-site-signal.md`:316 | `5` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.watch.fn` | `int` | `first` |
+| 430 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.watch.fp` | `int` | `first` |
+| 431 | `10-site-signal.md`:316 | `2` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.look.tp` | `int` | `first` |
+| 432 | `10-site-signal.md`:316 | `3` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.look.fn` | `int` | `first` |
+| 433 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.discordance.look.fp` | `int` | `first` |
+| 434 | `10-site-signal.md`:316 | `2` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.watch.tp` | `int` | `first` |
+| 435 | `10-site-signal.md`:316 | `3` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.watch.fn` | `int` | `first` |
+| 436 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.watch.fp` | `int` | `first` |
+| 437 | `10-site-signal.md`:316 | `2` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.look.tp` | `int` | `first` |
+| 438 | `10-site-signal.md`:316 | `3` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.look.fn` | `int` | `first` |
+| 439 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.rate_kri.look.fp` | `int` | `first` |
+| 440 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.watch.tp` | `int` | `first` |
+| 441 | `10-site-signal.md`:316 | `5` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.watch.fn` | `int` | `first` |
+| 442 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.watch.fp` | `int` | `first` |
+| 443 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.look.tp` | `int` | `first` |
+| 444 | `10-site-signal.md`:316 | `5` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.look.fn` | `int` | `first` |
+| 445 | `10-site-signal.md`:316 | `0` | `validation/site_signal/summary.json` | `eval_study.confusion.simaerep_classic.look.fp` | `int` | `first` |
+| 446 | `10-site-signal.md`:317 | `0.000` | `validation/site_signal/summary.json` | `simaerep_fixture.max_rel_diff` | `f3` | `first` |
+| 447 | `10-site-signal.md`:317 | `10` | `validation/site_signal/summary.json` | `simaerep_fixture.rows` | `int` | `first` |
 <!-- ss-provenance:end -->
