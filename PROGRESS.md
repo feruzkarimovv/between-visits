@@ -24,7 +24,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 | A | R1 full-history secret scan | todo | | | |
 | A | R2 toolchain pins and clean setup | todo | | | |
 | A | R3 local dates | done | a0e57f2 | test_local_dates.py 7 passed; make validate --check exit 0, 16/16 REQs, REQ-016 PASS (7/7); make test exit 0 (93 pytest, ruff, data, agent-sync, tsc+eslint) | |
-| A | R4 safe startup, demo-only routes | todo | | | |
+| A | R4 safe startup, demo-only routes | done (human step pending) | cb467ff | placeholder secret with DEMO_MODE=0: refusal line, exit=1; APP_ENV=dev DEMO_MODE=0 + generated secret: /api/demo/scenarios 404 demo_disabled; DEMO_MODE=1: 200; test_security_guards.py 17 passed; make validate --check 17/17 REQs, REQ-017 PASS (17/17); make test exit 0 (111 pytest, ruff, data, agent-sync, tsc+eslint) | Any machine running with DEMO_MODE=0 needs a TOOL_SHARED_SECRET of 24+ characters in .env (HUMAN_TODO 2); this checkout's .env already passes |
 | A | R5 production Dockerfiles and compose | todo | | | |
 | A | R6 Render blueprint and deploy doc | todo | | | |
 | A | R7 SECURITY.md and privacy-security | todo | | | |
