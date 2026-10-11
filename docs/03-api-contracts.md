@@ -236,7 +236,7 @@ Backward-compatible additions; `GET /openapi.json` is the exact schema (`make ty
 
 ## 5. Site Signal and readiness additions (planned, Sun Oct 11)
 
-**Status: planned, not built.** This is the interface contract for the sponsor-side Site Signal layer: router `backend/app/routers/site_signal.py`, services `backend/app/services/site_signal.py`, `episodes.py` and `site_queries.py` (tasks B16–B21 in `workstreams/WS2-backend.md`). Product requirements are in `10-site-signal.md`. Statistics (episode, match, evaluability, O/E, null model, thresholds, blind-run design) are in `11-site-signal-sap.md`, which wins on any statistical detail. Tables and file-backed models are in `02-data-model.md` § Site Signal. The new readiness routes (`GET /api/audit/verify`, `GET /api/eval/voice-checks`, scenario audio) and the changes to existing endpoints at Checkpoint A are in §6. `backend/tests/test_contract_routes.py` (B20) checks that every route in §5 and §6 exists in `/openapi.json`.
+**Status: planned, not built.** This is the interface contract for the sponsor-side Site Signal layer: router `backend/app/routers/site_signal.py`, services `backend/app/services/site_signal.py`, `episodes.py` and `site_queries.py` (tasks B16–B21 in `workstreams/WS2-backend.md`). Product requirements are in `10-site-signal.md`. Statistics (episode, match, evaluability, O/E, null model, thresholds, blind-run design) are in `11-site-signal-sap.md`, which wins on any statistical detail. Tables and file-backed models are in `02-data-model.md` § Site Signal. The new readiness routes (`GET /api/audit/verify`, `GET /api/eval/voice-checks`, scenario audio) and the changes to existing endpoints at Checkpoint A are in §6. `backend/tests/test_contract_routes.py` (B20) checks that every built route in §5.2 and §6 exists in `/openapi.json` with the documented method; the rows marked not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)) are not checked, and the blind-run routes among them must be absent.
 
 ### 5.1 Conventions
 
@@ -274,11 +274,11 @@ Backward-compatible additions; `GET /openapi.json` is the exact schema (`make ty
 | POST | `/api/site-queries/{query_id}/approve` | cra | no | `site_query.approved` | B18 |
 | POST | `/api/site-queries/{query_id}/respond` | coordinator | no | `site_query.answered` | B18 |
 | POST | `/api/site-queries/{query_id}/close` | cra | no | `site_query.closed` | B18 |
-| POST | `/api/site-signal/blind-run` | cra, sponsor | yes | `signal.blind_run.created` | B19 |
-| GET | `/api/site-signal/blind-run/{run_id}` | cra, sponsor | yes | none | B19 |
-| POST | `/api/site-signal/blind-run/{run_id}/reveal` | cra, sponsor | yes | `signal.blind_run.revealed` (first reveal only) | B19 |
-| GET | `/api/site-signal/blind-run-seeds` | cra, sponsor | yes | none | B19 |
-| GET | `/api/checkins/{checkin_id}` (field added) | any | no | none | B21 (Checkpoint C) |
+| POST | `/api/site-signal/blind-run` | cra, sponsor | yes | `signal.blind_run.created` | B19: **not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md))** |
+| GET | `/api/site-signal/blind-run/{run_id}` | cra, sponsor | yes | none | B19: **not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md))** |
+| POST | `/api/site-signal/blind-run/{run_id}/reveal` | cra, sponsor | yes | `signal.blind_run.revealed` (first reveal only) | B19: **not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md))** |
+| GET | `/api/site-signal/blind-run-seeds` | cra, sponsor | yes | none | B19: **not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md))** |
+| GET | `/api/checkins/{checkin_id}` (field added) | any | no | none | B21 (Checkpoint C): **not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md))** |
 
 On "demo only" routes the backend checks `DEMO_MODE=1` before the role. When demo mode is off, every caller gets 404 `demo_disabled`, so a live instance does not reveal the routes.
 
@@ -526,9 +526,13 @@ Request `{"note":"Explained; no entry needed"}` (`note` optional, stored as `clo
 
 ### 5.5 Blind run (DEMO_MODE only)
 
+**Status: not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)).** The four routes below (tasks S8, B19, F15) are the planned contract; none of them exists in this submission and `/openapi.json` does not list them.
+
 A user types any seed string. The backend generates a fresh simulated study at the `sap-v1` design, with a hidden planted count of 0–3 sites, and ranks it against the fixed `sap-v1` thresholds. The answer key stays hidden until an audited reveal (REQ-029). The design is in `11-site-signal-sap.md` § Blind run.
 
-#### `POST /api/site-signal/blind-run` (cra, sponsor; demo only)
+#### `POST /api/site-signal/blind-run` (cra, sponsor; demo only): not built
+
+Not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)).
 
 ```json
 // request
@@ -557,12 +561,16 @@ A user types any seed string. The backend generates a fresh simulated study at t
   - 503 `blind_run_unavailable` when the subprocess fails or exceeds the timeout. This is the only error body with an extra field: `{"error":{"code":"blind_run_unavailable","message":"...","precomputed_seeds":["aurora","basalt","..."]}}`.
 - Audit: `signal.blind_run.created`, entity `SignalRun`, with `after` = `{"seed_label","seed_int","source"}`.
 
-#### `GET /api/site-signal/blind-run/{run_id}` (cra, sponsor; demo only)
+#### `GET /api/site-signal/blind-run/{run_id}` (cra, sponsor; demo only): not built
+
+Not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)).
 
 Same shape as the POST response. `planted_count`, `answer_key`, `confusion`, `revealed_at` and `revealed_by` are filled only after reveal.
 - Errors: 404 `demo_disabled` or `signal_run_not_found`; 403 `wrong_role`.
 
-#### `POST /api/site-signal/blind-run/{run_id}/reveal` (cra, sponsor; demo only)
+#### `POST /api/site-signal/blind-run/{run_id}/reveal` (cra, sponsor; demo only): not built
+
+Not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)).
 
 Request `{}`.
 
@@ -580,7 +588,9 @@ Request `{}`.
 - Errors: 404 `demo_disabled` or `signal_run_not_found`; 403 `wrong_role`.
 - Audit: `signal.blind_run.revealed`, with `after` = `{"planted_count","answer_key"}`.
 
-#### `GET /api/site-signal/blind-run-seeds` (cra, sponsor; demo only)
+#### `GET /api/site-signal/blind-run-seeds` (cra, sponsor; demo only): not built
+
+Not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)).
 
 Returns the 10 precomputed fallback seeds shipped in `monitoring/out/blind_precomputed/`.
 
@@ -629,6 +639,8 @@ Every action is written with `actor` = `X-BV-User` and `role` = `X-BV-Role` into
 
 ### 5.8 Timeliness evidence (Checkpoint C, B21)
 
+**Status: not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)).** The two fields below (tasks B21, F18) are the planned contract; `GET /api/checkins/{checkin_id}` does not return them in this submission.
+
 `GET /api/checkins/{checkin_id}` adds two fields: `days_before_next_visit` (int or null, `MEASURED`) and `site_aware_basis` (`"page_ack"` | `"call_end"` | null).
 - `days_before_next_visit` = the patient's next dose date after the call, minus the `DISPLAY_TZ` local date the site was made aware.
 - The site was made aware at the first acknowledgment of an escalation on this check-in. If none was acknowledged, it is the call end (`ended_at`), and `site_aware_basis` says which one applied.
@@ -660,7 +672,7 @@ A role-restricted action called with any other role now returns **403** `wrong_r
 | `POST /api/site-queries`, `PATCH /api/site-queries/{id}`, `.../approve`, `.../close` | cra |
 | `POST /api/site-queries/{id}/respond` | coordinator |
 | `GET /api/site-queries`, `GET /api/site-queries/{id}` | cra, sponsor, coordinator |
-| `/api/site-signal/blind-run*` (demo only) | cra, sponsor |
+| `/api/site-signal/blind-run*` (demo only, §5.5): not built (cut for time, Sun Oct 11; see [NOT_BUILT.md](../NOT_BUILT.md)) | cra, sponsor |
 | Every other `/api/*` route | any role (unchanged) |
 
 ### 6.2 Demo controls only in demo mode; replay speed; recorded scenarios (R4, B15, V11, REQ-017)
