@@ -42,11 +42,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:  # build_traceability.py also runs the monitoring suite, whose REQ-022 test needs the history and the sap-v1 tag
+          fetch-depth: 0
+          fetch-tags: true
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - name: Install
-        run: cd backend && uv sync
+      - name: Install (monitoring first; numpy and scipy live only there)
+        run: |
+          uv sync --project monitoring
+          cd backend && uv sync
       - name: Lint
         run: cd backend && uv run ruff check app tests
       - name: Data validation
@@ -57,7 +62,7 @@ jobs:
         run: python3 agent/test_export_scenario.py
       - name: Deployed agent config matches git (agent/deployed_snapshot.json, offline)
         run: python3 agent/check_config_hash.py
-      - name: Tests + requirement traceability
+      - name: Tests (backend + monitoring suites) + requirement traceability
         run: uv run --project backend python validation/build_traceability.py --check
 
   # WS5 Site Signal statistics (monitoring/, its own uv project). Full history and tags: test_sap_order.py

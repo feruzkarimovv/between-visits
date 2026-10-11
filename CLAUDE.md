@@ -80,7 +80,7 @@ make cohort                # S10 (optional): Synthea roster, language/age mix on
 
 **Monitoring (Site Signal, `monitoring/`):** numpy/scipy only in `monitoring/`; the backend reads `monitoring/out/*.json` and shells out only for the blind run; evaluation seed from `sap-v1`; no edit to `params.yaml` or `data/signal_rules.json` after the tag without a Deviations entry (`docs/11` §17); every output object carries `data_origin`.
 
-**Tests:** pytest in `backend/tests/`. Tag tests that prove a requirement: `@pytest.mark.req("REQ-005")` (list in `validation/requirements.yaml`). Rules and interview engine get table-driven tests.
+**Tests:** pytest in `backend/tests/`. Tag tests that prove a requirement: `@pytest.mark.req("REQ-005")` (list in `validation/requirements.yaml`). Rules and interview engine get table-driven tests. Monitoring tests live in `monitoring/tests`, carry `@pytest.mark.req` and are merged into traceability (`make validate` runs both suites).
 
 **Commits:** one task per commit, message `WSn-Xn: summary`. Pull/rebase before pushing. Run `make test` first.
 

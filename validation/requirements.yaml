@@ -1,5 +1,5 @@
 # Between Visits requirements (GxP-lite traceability)
-# Each requirement must have at least one pytest test tagged @pytest.mark.req("REQ-xxx").
+# Each requirement must have at least one pytest test tagged @pytest.mark.req("REQ-xxx") (backend/tests or monitoring/tests).
 # `make validate` builds validation/traceability.md and validation/summary.json from these.
 version: 1
 requirements:
@@ -87,6 +87,10 @@ requirements:
     title: No LLM on the statistics path
     text: Site flags, thresholds and tiers are computed only by pre-specified code in monitoring/ and services/site_signal.py; neither imports an LLM client.
     risk: high
+  - id: REQ-022
+    title: Pre-registration order
+    text: "The sap-v1 tag exists; its commit is an ancestor of every commit that added evaluation outputs; the eval seed equals the derivation from the tag commit and the recorded beacon round (docs/11 §1.3), and a NIST or empty beacon value is backed by failed attempts past the §1.3 deadlines in monitoring/seed_beacon.json; every committed evaluation output's sha256 is in validation/site_signal/run_log.jsonl and no log line predates the tag."
+    risk: high
   - id: REQ-023
     title: Calibrated thresholds
     text: "Look and Watch thresholds are read only from monitoring/out/thresholds.json; on fresh null seeds the Look per-site rate is ≤ 0.05 and the Watch family-wise rate ≤ 0.10, each + 2·√(SE_cal² + SE_val²), one-sided (docs/11 §12.1); validate --quick --check reproduces the committed per-replicate hashes exactly."
@@ -107,6 +111,10 @@ requirements:
     title: Human-approved, audited site queries
     text: A site query reaches the site inbox only after CRA approval; draft, edit, approve, answer and close each write an AuditEvent; text comes from data/site_queries.json and contains subject IDs only.
     risk: high
+  - id: REQ-028
+    title: Comparators on identical data
+    text: "The gsm-style rate KRI, simaerep classic (legacy) and the AE-to-report ratio ablation are computed on the same simulated study and calibrated by the same null procedure; the port reproduces the R fixture p-values (max relative difference < 1e-9)."
+    risk: medium
   - id: REQ-030
     title: SIMULATED / MEASURED labeling
     text: Every Site Signal run, row and episode payload carries data_origin (SIMULATED, MEASURED, or MIXED for the site 101 card and mixed queries), no statistic pools SIMULATED with MEASURED data, and simulated quotes are marked source synthetic.
