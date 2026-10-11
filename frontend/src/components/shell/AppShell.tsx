@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   BellRing,
   ClipboardCheck,
+  FileWarning,
   Users,
   ListChecks,
   Gauge,
@@ -24,6 +25,7 @@ const NAV = [
   { href: "/", label: "Today", icon: CalendarCheck },
   { href: "/escalations", label: "Escalations", icon: BellRing },
   { href: "/review", label: "Review", icon: ClipboardCheck },
+  { href: "/sae", label: "Serious events", icon: FileWarning },
   { href: "/patients", label: "Patients", icon: Users },
   { href: "/plan", label: "Plan", icon: ListChecks },
   { href: "/report-card", label: "Report card", icon: Gauge },
@@ -33,8 +35,7 @@ const NAV = [
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/" || pathname.startsWith("/checkins");
-  if (href === "/review") return pathname.startsWith("/review") || pathname.startsWith("/sae");
-  return pathname.startsWith(href);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -108,12 +109,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </p>
         </nav>
         <nav aria-label="Main (mobile)" className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-line bg-white md:hidden">
-          {NAV.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={cn("flex min-w-20 flex-col items-center gap-0.5 px-2 py-2 text-sm", isActive(pathname, href) ? "text-accent-800" : "text-ink-muted")}>
-              <Icon className="size-4" aria-hidden />
-              {label}
-            </Link>
-          ))}
+          {NAV.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn("flex min-w-20 flex-col items-center gap-0.5 px-2 py-2 text-sm whitespace-nowrap", active ? "text-accent-800" : "text-ink-muted")}
+              >
+                <Icon className="size-4" aria-hidden />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
         <main id="main" className={cn("min-w-0 flex-1 px-4 py-6 pb-24 md:px-6 md:pb-8 lg:px-8", sponsor && "bg-sponsor-50")}>
           <div className="mx-auto max-w-[1400px]">{children}</div>

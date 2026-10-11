@@ -8,6 +8,8 @@ import { formatAbsolute, formatSpan, parseTs } from "@/lib/format";
 import { RELATEDNESS_LABELS, SERIOUSNESS_LABELS } from "@/lib/labels";
 import { EmptyState, ErrorState, LoadingRows, cn } from "@/components/ui/primitives";
 import { GradeBadge } from "@/components/GradeBadge";
+import { OriginTag } from "@/components/chips";
+import { ExportDownloads } from "@/components/DownloadButton";
 import { RelativeTime } from "@/components/RelativeTime";
 
 const CHECKS: { key: keyof ValidCaseChecks; label: string }[] = [
@@ -34,7 +36,7 @@ export default function SponsorInboxPage() {
             <ShieldCheck className="size-5" aria-hidden />
           </span>
           <div>
-            <div className="text-lg font-semibold tracking-tight">Pharmacovigilance Intake</div>
+            <h1 className="text-lg font-semibold tracking-tight">Pharmacovigilance Intake</h1>
             <div className="text-sm text-indigo-200">Sponsor safety team (mock) · Individual case safety reports</div>
           </div>
         </div>
@@ -44,8 +46,13 @@ export default function SponsorInboxPage() {
         </span>
       </div>
 
-      <div className="border-b border-indigo-100 bg-indigo-50/60 px-5 py-2.5 text-sm text-indigo-950">
-        Received initial reports from investigator sites. Site-only data (patient names, phone numbers) is never shared: cases are identified by subject ID.
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-indigo-100 bg-indigo-50/60 px-5 py-2.5 text-sm text-indigo-950">
+        <p className="min-w-0 flex-1 basis-80">
+          Received initial reports from investigator sites. Site-only data (patient names, phone numbers) is never shared: cases are identified by subject ID.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportDownloads />
+        </div>
       </div>
 
       {inbox.isPending ? (
@@ -82,6 +89,7 @@ function InboxRow({ item, open, onToggle }: { item: SponsorInboxItem; open: bool
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-ink">{item.event_term}</span>
             <GradeBadge grade={item.provisional_grade} />
+            <OriginTag />
           </div>
           <div className="mt-0.5 text-sm text-ink-muted">
             <span className="font-mono">{item.subject_id}</span> · {item.study} · site {item.site} · {item.seriousness_criteria.map((c) => SERIOUSNESS_LABELS[c]).join(", ") || "seriousness not given"}

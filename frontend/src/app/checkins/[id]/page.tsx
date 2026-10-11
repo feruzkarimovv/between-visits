@@ -16,7 +16,7 @@ import {
   Radio,
   ListChecks,
 } from "lucide-react";
-import { apiFetch, isApiError } from "@/lib/api";
+import { apiFetch, hasErrorCode } from "@/lib/api";
 import { useApiMutation } from "@/lib/queries";
 import { useNow } from "@/lib/hooks";
 import type { Answer, CheckIn, CheckInDetail, DraftEntry, Finding, TranscriptTurn } from "@/lib/types";
@@ -55,7 +55,7 @@ export default function CheckInPage() {
     queryKey: ["checkin", id],
     queryFn: () => apiFetch<CheckInDetail>(`/api/checkins/${encodeURIComponent(id)}`),
     enabled: !!id,
-    retry: (n, e) => !(isApiError(e) && e.status === 404) && n < 2,
+    retry: (n, e) => !hasErrorCode(e, "checkin_not_found") && n < 2,
     // 1 s while the call is live, then 5 s for 30 s while the post-call pipeline lands, then stop.
     refetchInterval: (query) => {
       const status = query.state.data?.checkin.status;
@@ -71,7 +71,7 @@ export default function CheckInPage() {
 
   if (q.isPending) return <LoadingCheckIn />;
   if (q.isError && !q.data) {
-    if (isApiError(q.error) && q.error.status === 404)
+    if (hasErrorCode(q.error, "checkin_not_found"))
       return (
         <Card>
           <EmptyState title="Check-in not found" action={<ButtonLink href="/">Back to Today</ButtonLink>}>

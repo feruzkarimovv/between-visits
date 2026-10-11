@@ -151,6 +151,7 @@ export function useSaeList() {
   return useQuery({
     queryKey: ["sae-list"],
     queryFn: () => apiFetch<SAEReport[]>("/api/sae"),
+    refetchInterval: 10_000,
     retry,
   });
 }
@@ -198,10 +199,12 @@ export function useValidation() {
   });
 }
 
-export function useScenarios() {
+/** Demo replay scenarios; only fetched when `GET /api/health` says `demo_mode: true` (otherwise 404 `demo_disabled`). */
+export function useScenarios(enabled: boolean) {
   return useQuery({
     queryKey: ["demo-scenarios"],
     queryFn: () => apiFetch<DemoScenario[]>("/api/demo/scenarios"),
+    enabled,
     staleTime: 5 * 60_000,
     retry: false,
   });

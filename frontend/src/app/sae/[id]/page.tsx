@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Download, PenLine, Save, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, PenLine, Save, Send } from "lucide-react";
 import type { SAEReport } from "@/lib/types";
 import { useApiMutation, useSae } from "@/lib/queries";
 import { useIdentity } from "@/lib/role";
-import { API_BASE_URL, USE_FIXTURES, isApiError } from "@/lib/api";
+import { hasErrorCode } from "@/lib/api";
 import { formatAbsolute, formatClock, formatDay, formatSpan, humanize, parseTs } from "@/lib/format";
 import { RELATEDNESS_LABELS, SERIOUSNESS_LABELS } from "@/lib/labels";
 import { Button, ButtonLink, Card, CardHeader, EmptyState, ErrorState, Field, Label, Skeleton, inputClass } from "@/components/ui/primitives";
@@ -15,6 +15,7 @@ import { Chip, SaeStatusChip } from "@/components/chips";
 import { CountdownClock } from "@/components/CountdownClock";
 import { GradeBadge } from "@/components/GradeBadge";
 import { AiBlock, AiLabel } from "@/components/AiLabel";
+import { DownloadButton } from "@/components/DownloadButton";
 
 export default function SaePage() {
   const params = useParams<{ id: string }>();
@@ -29,10 +30,10 @@ export default function SaePage() {
       </div>
     );
   if (q.isError) {
-    if (isApiError(q.error) && q.error.status === 404)
+    if (hasErrorCode(q.error, "sae_not_found"))
       return (
         <Card>
-          <EmptyState title="Report not found" action={<ButtonLink href="/review">Back to review</ButtonLink>}>
+          <EmptyState title="Report not found" action={<ButtonLink href="/sae">All serious-event reports</ButtonLink>}>
             No serious-event report with ID <code className="font-mono">{id}</code>.
           </EmptyState>
         </Card>
@@ -74,9 +75,9 @@ function SaeView({ sae }: { sae: SAEReport }) {
 
   return (
     <div className="space-y-4">
-      <Link href="/review?status=confirmed" className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
+      <Link href="/sae" className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
         <ArrowLeft className="size-4" aria-hidden />
-        Review queue
+        Serious-event reports
       </Link>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
@@ -212,12 +213,9 @@ function SaeView({ sae }: { sae: SAEReport }) {
           <Button variant="success" onClick={() => send.mutate()} loading={send.isPending} disabled={sae.status !== "signed" || busy} icon={<Send className="size-4" aria-hidden />}>
             {sent ? "Sent to sponsor" : "Send to sponsor"}
           </Button>
-          {!USE_FIXTURES ? (
-            <a href={`${API_BASE_URL}/api/export/sae/${encodeURIComponent(sae.id)}.json`} className="ml-auto inline-flex items-center gap-1.5 text-sm font-medium text-accent-700 hover:underline" target="_blank" rel="noreferrer">
-              <Download className="size-4" aria-hidden />
-              CIOMS JSON
-            </a>
-          ) : null}
+          <DownloadButton path={`/api/export/sae/${encodeURIComponent(sae.id)}.json`} filename={`${sae.id}.json`} variant="ghost" size="md" className="ml-auto">
+            Download CIOMS JSON
+          </DownloadButton>
           {sent ? (
             <Link href="/sponsor" className="text-sm font-medium text-accent-700 hover:underline">
               View in sponsor inbox

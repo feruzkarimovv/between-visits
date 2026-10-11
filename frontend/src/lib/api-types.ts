@@ -464,6 +464,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audit/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit Verify
+         * @description Any role; always 200. Walks the hash chain in seq order and names the first event that no longer matches.
+         */
+        get: operations["audit_verify_api_audit_verify_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/eval/latest": {
         parameters: {
             query?: never;
@@ -473,6 +493,27 @@ export interface paths {
         };
         /** Eval Latest */
         get: operations["eval_latest_api_eval_latest_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/eval/voice-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Eval Voice Checks
+         * @description Any role (docs/03 §6.11): real browser calls against the live backend, labeled MEASURED; never pooled
+         *     with the text-mode evaluation. 404 `no_voice_checks` when the file is absent.
+         */
+        get: operations["eval_voice_checks_api_eval_voice_checks_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -697,7 +738,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Replay Scenario */
+        /**
+         * Replay Scenario
+         * @description Starts the replay in the background (docs/03 §6.2); any speed other than 1, 2 or 4 is 422 validation_error.
+         */
         post: operations["replay_scenario_api_demo_replay__scenario_id__post"];
         delete?: never;
         options?: never;
@@ -789,6 +833,28 @@ export interface components {
             } | null;
             /** Note */
             note: string | null;
+            /** Seq */
+            seq: number;
+            /** Prev Hash */
+            prev_hash: string;
+            /** Hash */
+            hash: string;
+        };
+        /**
+         * AuditVerifyOut
+         * @description `GET /api/audit/verify` (docs/03 §6.6): always 200; a broken chain is ok:false.
+         */
+        AuditVerifyOut: {
+            /** Ok */
+            ok: boolean;
+            /** N Events */
+            n_events: number;
+            /** Head Hash */
+            head_hash: string;
+            /** First Bad Id */
+            first_bad_id: string | null;
+            /** First Bad Seq */
+            first_bad_seq: number | null;
         };
         /** CheckInDetail */
         CheckInDetail: {
@@ -929,6 +995,12 @@ export interface components {
             /** Sae Report Id */
             sae_report_id?: string | null;
             patient?: components["schemas"]["PatientBrief"] | null;
+            /**
+             * Origin
+             * @default between_visits
+             * @constant
+             */
+            origin: "between_visits";
         };
         /** DraftPatchIn */
         DraftPatchIn: {
@@ -1070,6 +1142,7 @@ export interface components {
             phone_calls_note?: string | null;
             /** Browser Calls Note */
             browser_calls_note?: string | null;
+            site_signal: components["schemas"]["SiteSignalHealth"];
         };
         /** InterviewStateOut */
         InterviewStateOut: {
@@ -1366,6 +1439,12 @@ export interface components {
             /** Checkin Id */
             checkin_id: string;
         };
+        /**
+         * ReplaySpeed
+         * @description `POST /api/demo/replay/{id}?speed=`: playback multiplier (2 = twice real time); anything else is 422.
+         * @enum {integer}
+         */
+        ReplaySpeed: 1 | 2 | 4;
         /** ReportRedFlagIn */
         ReportRedFlagIn: {
             /** Checkin Id */
@@ -1462,7 +1541,11 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
-        /** ScenarioOut */
+        /**
+         * ScenarioOut
+         * @description `GET /api/demo/scenarios` item (docs/03 §6.2). A scripted scenario is always labeled "Scripted";
+         *     `audio_url` is set only when `scenarios/audio/<id>.mp3` exists on the server (audio is never in git).
+         */
         ScenarioOut: {
             /** Id */
             id: string;
@@ -1472,6 +1555,14 @@ export interface components {
             duration_s: number;
             /** Patient Id */
             patient_id: string;
+            /** Recorded */
+            recorded: boolean;
+            /** Recorded At */
+            recorded_at: string | null;
+            /** Label */
+            label: string;
+            /** Audio Url */
+            audio_url: string | null;
         };
         /** SetSpeakerIn */
         SetSpeakerIn: {
@@ -1486,6 +1577,24 @@ export interface components {
             speaker: "patient" | "caregiver";
             /** Relation */
             relation?: string | null;
+        };
+        /**
+         * SiteSignalHealth
+         * @description `health.site_signal` (docs/03 §6.7). `available` is true only when MONITORING_OUT/signal_run.json exists and
+         *     loads; `sap_tag_commit` and `generated_at` then come from its `run` object, otherwise they are null.
+         */
+        SiteSignalHealth: {
+            /** Available */
+            available: boolean;
+            /** Sap Tag Commit */
+            sap_tag_commit: string | null;
+            /** Generated At */
+            generated_at: string | null;
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "SIMULATED";
         };
         /** SponsorInboxItem */
         SponsorInboxItem: {
@@ -1616,6 +1725,58 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * VoiceCheckCall
+         * @description One real browser call against the deployed live backend (V10). Unknown keys in the file pass through.
+         */
+        VoiceCheckCall: {
+            /** Variant */
+            variant?: string | null;
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Checkin Id */
+            checkin_id?: string | null;
+            /** Scenario */
+            scenario?: string | null;
+            /** Disclosure First Turn */
+            disclosure_first_turn?: boolean | null;
+            /** Red Flag Expected */
+            red_flag_expected?: boolean | null;
+            /** Paged */
+            paged?: boolean | null;
+            /** Utterance To Page S */
+            utterance_to_page_s?: number | null;
+            /** Page To Ack S */
+            page_to_ack_s?: number | null;
+            /** Grade */
+            grade?: number | null;
+            /** Rule Id */
+            rule_id?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * VoiceChecksOut
+         * @description `GET /api/eval/voice-checks`: `eval/results/voice_checks.json` plus `data_origin: "MEASURED"`. Served with
+         *     exclude_unset, so the body is the file as written (never pooled with text-mode evaluation results).
+         */
+        VoiceChecksOut: {
+            /** Run At */
+            run_at?: string | null;
+            /** Backend */
+            backend?: string | null;
+            /** Agent Llm */
+            agent_llm?: string | null;
+            /**
+             * Data Origin
+             * @constant
+             */
+            data_origin: "MEASURED";
+            /** Calls */
+            calls?: components["schemas"]["VoiceCheckCall"][];
+        } & {
+            [key: string]: unknown;
         };
         /** WebSession */
         WebSession: {
@@ -2499,6 +2660,26 @@ export interface operations {
             };
         };
     };
+    audit_verify_api_audit_verify_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditVerifyOut"];
+                };
+            };
+        };
+    };
     eval_latest_api_eval_latest_get: {
         parameters: {
             query?: never;
@@ -2517,6 +2698,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    eval_voice_checks_api_eval_voice_checks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceChecksOut"];
                 };
             };
         };
@@ -2904,7 +3105,10 @@ export interface operations {
     };
     replay_scenario_api_demo_replay__scenario_id__post: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Playback multiplier: 1, 2 or 4 (2 = twice real time). Default: REPLAY_SPEED, else 2. */
+                speed?: components["schemas"]["ReplaySpeed"] | null;
+            };
             header?: never;
             path: {
                 scenario_id: string;

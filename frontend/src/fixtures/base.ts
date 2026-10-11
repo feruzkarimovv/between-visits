@@ -46,6 +46,7 @@ export const HEALTH: Health = {
   pager_channel: "console",
   phone_calls_enabled: true,
   browser_calls_enabled: true,
+  site_signal: { available: false, sap_tag_commit: null, generated_at: null, data_origin: "SIMULATED" },
 };
 
 export const STUDY: Study = {
@@ -282,7 +283,16 @@ export const TIMELINES: Record<string, TermTimeline[]> = {
 };
 
 export const SCENARIOS: DemoScenario[] = [
-  { id: "rosa_es_urgent", title: "Rosa, Spanish, extra time, urgent diarrhea", duration_s: 166, patient_id: "pat_rosa" },
+  {
+    id: "rosa_es_urgent",
+    title: "Rosa, Spanish, extra time, urgent diarrhea",
+    duration_s: 166,
+    patient_id: "pat_rosa",
+    recorded: false,
+    recorded_at: null,
+    label: "Scripted",
+    audio_url: null,
+  },
 ];
 
 /** An SAE from an earlier check-in, already sent, so the sponsor inbox isn't empty. */
@@ -411,6 +421,15 @@ export const VALIDATION: ValidationSummary = {
   ],
 };
 
+/**
+ * Hash-chain fields for a fixture audit event (docs/03 §6.6). Fixture hashes are placeholders, not sha256:
+ * fixture mode has no `GET /api/audit/verify`.
+ */
+export function fixtureChain(seq: number): Pick<AuditEvent, "seq" | "prev_hash" | "hash"> {
+  const hex = (n: number) => (n <= 0 ? "0".repeat(64) : n.toString(16).padStart(64, "f"));
+  return { seq, prev_hash: hex(seq - 1), hash: hex(seq) };
+}
+
 export const SEED_AUDIT: AuditEvent[] = [
   {
     id: "aud_seed_plan",
@@ -424,6 +443,7 @@ export const SEED_AUDIT: AuditEvent[] = [
     before: { status: "draft" },
     after: { status: "approved", version: 1 },
     note: null,
+    ...fixtureChain(2),
   },
   {
     id: "aud_seed_sae_sent",
@@ -437,5 +457,6 @@ export const SEED_AUDIT: AuditEvent[] = [
     before: { status: "signed" },
     after: { status: "sent" },
     note: null,
+    ...fixtureChain(1),
   },
 ];

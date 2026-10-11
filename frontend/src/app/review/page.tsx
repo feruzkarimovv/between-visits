@@ -32,11 +32,12 @@ import {
   inputClass,
   cn,
 } from "@/components/ui/primitives";
-import { Chip, DraftStatusChip } from "@/components/chips";
+import { Chip, DraftStatusChip, OriginTag } from "@/components/chips";
 import { GradeBadge } from "@/components/GradeBadge";
 import { EvidenceQuote } from "@/components/EvidenceQuote";
 import { AiLabel } from "@/components/AiLabel";
 import { RelativeTime } from "@/components/RelativeTime";
+import { ExportDownloads } from "@/components/DownloadButton";
 
 export default function ReviewPage() {
   return (
@@ -90,6 +91,7 @@ function ReviewQueue() {
       <PageHeader
         title="Review queue"
         subtitle="Every entry is a draft until someone on the study team confirms it. Evidence shows the patient's own words."
+        actions={<ExportDownloads />}
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-line bg-white p-3">
@@ -215,6 +217,7 @@ function DraftCard({ draft: d }: { draft: DraftEntry }) {
         <h2 className="text-lg font-semibold text-ink">{draftTitle(d)}</h2>
         {d.kind === "AE" ? <GradeBadge grade={d.payload.provisional_grade} /> : null}
         <DraftStatusChip status={d.status} />
+        {d.kind === "AE" && d.status === "confirmed" ? <OriginTag origin={d.origin} /> : null}
         <div className="ml-auto flex flex-wrap items-center gap-x-3 text-sm text-ink-subtle">
           {d.patient ? (
             <Link href={`/patients/${d.patient.id}`} className="hover:underline">

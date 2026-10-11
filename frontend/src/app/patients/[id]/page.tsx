@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Syringe, LineChart } from "lucide-react";
 import { usePatient } from "@/lib/queries";
-import { isApiError } from "@/lib/api";
+import { hasErrorCode } from "@/lib/api";
 import { formatDay, formatDuration, fullName, humanize, parseTs } from "@/lib/format";
 import { CHANNEL_LABELS } from "@/lib/labels";
 import type { CheckIn, PatientDetail } from "@/lib/types";
@@ -27,7 +27,7 @@ export default function PatientPage() {
       </div>
     );
   if (q.isError) {
-    if (isApiError(q.error) && q.error.status === 404)
+    if (hasErrorCode(q.error, "patient_not_found"))
       return (
         <Card>
           <EmptyState title="Patient not found" action={<ButtonLink href="/patients">All patients</ButtonLink>} />

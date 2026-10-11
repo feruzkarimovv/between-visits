@@ -2,7 +2,7 @@
 
 import { AlertTriangle, CheckCircle2, ExternalLink, FlaskConical, Gauge, Info, Mic, ShieldCheck, XCircle } from "lucide-react";
 import { useEval, useValidation, useVoiceChecks } from "@/lib/queries";
-import { isApiError } from "@/lib/api";
+import { hasErrorCode } from "@/lib/api";
 import { formatAbsolute, formatPercent } from "@/lib/format";
 import type {
   Ci95,
@@ -91,7 +91,7 @@ export default function ReportCardPage() {
   const ev = useEval();
   const val = useValidation();
   const voice = useVoiceChecks();
-  const noRun = ev.isError && isApiError(ev.error) && (ev.error.code === "no_eval_run" || ev.error.status === 404);
+  const noRun = ev.isError && hasErrorCode(ev.error, "no_eval_run");
 
   return (
     <>
@@ -521,7 +521,7 @@ function VoiceChecksCard({ q }: { q: VoiceQuery }) {
   // the row is hidden until the file exists (404 no_voice_checks) and while it loads
   if (q.isPending) return null;
   if (q.isError) {
-    if (isApiError(q.error) && (q.error.code === "no_voice_checks" || q.error.status === 404)) return null;
+    if (hasErrorCode(q.error, "no_voice_checks")) return null;
     return (
       <Card>
         <VoiceHeader />
@@ -747,7 +747,7 @@ function ValidationCard({ q }: { q: ReturnType<typeof useValidation> }) {
       {q.isPending ? (
         <LoadingRows rows={2} />
       ) : q.isError ? (
-        isApiError(q.error) && q.error.status === 404 ? (
+        hasErrorCode(q.error, "no_validation_run") ? (
           <EmptyState className="py-6" title="No validation summary yet.">
             Run <code className="font-mono">make validate</code>.
           </EmptyState>

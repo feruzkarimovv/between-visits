@@ -4,16 +4,26 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CalendarCheck, Globe, Phone, PlayCircle, Users, ChevronRight } from "lucide-react";
-import type { CreateCheckInResponse, ReplayResponse, TodayRow } from "@/lib/types";
+import type { CreateCheckInResponse, ReplayResponse, ReplaySpeed, TodayRow } from "@/lib/types";
 import { useApiMutation, useHealth, useScenarios, useTodayCheckins } from "@/lib/queries";
 import { formatDate, fullName, todayInTz } from "@/lib/format";
 import { saveWebSession } from "@/lib/webSession";
 import { useNow } from "@/lib/hooks";
-import { Button, Card, CardHeader, EmptyState, ErrorState, LoadingRows, PageHeader, Table, Td, Th } from "@/components/ui/primitives";
+import { Button, Card, CardHeader, EmptyState, ErrorState, LoadingRows, PageHeader, Table, Td, Th, cn } from "@/components/ui/primitives";
 import { LanguageChip, PaceChip, StatusChip } from "@/components/chips";
 import { RelativeTime } from "@/components/RelativeTime";
 
 const LIVE = new Set(["dialing", "in_progress"]);
+
+/** Replay playback multipliers the API accepts (docs/03 §6.2); 2 is the backend's demo-mode default. */
+const SPEEDS: readonly ReplaySpeed[] = [1, 2, 4];
+const DEFAULT_SPEED: ReplaySpeed = 2;
+const DEMO_CALLS_OFF = "Demo mode: calls are off. Use Replay scenario.";
+
+interface ReplayVars {
+  scenarioId: string;
+  speed: ReplaySpeed;
+}
 
 interface CallVars {
   patientId: string;
@@ -28,9 +38,10 @@ export default function TodayPage() {
   const date = todayInTz(now || undefined);
   const today = useTodayCheckins(date);
   const health = useHealth();
-  const scenarios = useScenarios();
   const demoMode = health.data?.demo_mode === true;
+  const scenarios = useScenarios(demoMode);
   const [scenarioId, setScenarioId] = useState<string>("");
+  const [speed, setSpeed] = useState<ReplaySpeed>(DEFAULT_SPEED);
 
   const call = useApiMutation<CallVars, CreateCheckInResponse>({
     request: (v) => ({
@@ -45,9 +56,12 @@ export default function TodayPage() {
     },
   });
 
-  const replay = useApiMutation<string, ReplayResponse>({
-    request: (id) => ({ path: `/api/demo/replay/${encodeURIComponent(id)}`, init: { method: "POST" } }),
-    success: "Replay started",
+  const replay = useApiMutation<ReplayVars, ReplayResponse>({
+    request: (v) => ({
+      path: `/api/demo/replay/${encodeURIComponent(v.scenarioId)}?speed=${v.speed}`,
+      init: { method: "POST" },
+    }),
+    success: (_r, v) => `Replay started at ${v.speed}x`,
     invalidate: [["checkins"]],
     onSuccess: (r) => router.push(`/checkins/${r.checkin_id}`),
   });
@@ -70,15 +84,15 @@ export default function TodayPage() {
         }
         actions={
           demoMode && scenarioList.length > 0 ? (
-            <div className="flex items-center gap-2 rounded-lg border border-line bg-white p-1.5 pl-3">
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-white p-1.5 pl-3">
               <label htmlFor="scenario" className="text-sm font-medium text-ink-muted">
-                {demoMode ? "Demo mode" : "Replay"}
+                Demo mode
               </label>
               <select
                 id="scenario"
                 value={selectedScenario}
                 onChange={(e) => setScenarioId(e.target.value)}
-                className="h-8 max-w-64 rounded-md border border-line bg-white px-2 text-sm"
+                className="h-8 max-w-64 min-w-0 rounded-md border border-line bg-white px-2 text-sm"
               >
                 {scenarioList.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -86,13 +100,14 @@ export default function TodayPage() {
                   </option>
                 ))}
               </select>
+              <SpeedSelector value={speed} onChange={setSpeed} disabled={replay.isPending} />
               <Button
                 size="sm"
                 variant="primary"
                 icon={<PlayCircle className="size-4" aria-hidden />}
                 loading={replay.isPending}
                 disabled={!selectedScenario}
-                onClick={() => replay.mutate(selectedScenario)}
+                onClick={() => replay.mutate({ scenarioId: selectedScenario, speed })}
               >
                 Replay scenario
               </Button>
@@ -113,11 +128,13 @@ export default function TodayPage() {
           title="Check-ins due today"
           icon={<CalendarCheck className="size-4 text-ink-subtle" aria-hidden />}
           subtitle={
-            demoMode
-              ? "Demo mode: outbound phone calls are off. Use a browser call or replay a recorded scenario."
+            // the backend's reason when browser calls are off (always in demo mode), else how calls run
+            health.data?.browser_calls_note ??
+            (demoMode
+              ? DEMO_CALLS_OFF
               : health.data?.phone_calls_enabled
                 ? "Call by phone, or run the same check-in in the browser."
-                : "Check-ins run in the browser with the same voice agent. Phone calling is off until a phone number is connected."
+                : "Check-ins run in the browser with the same voice agent. Phone calling is off until a phone number is connected.")
           }
         />
         {today.isPending ? (
@@ -172,6 +189,49 @@ export default function TodayPage() {
   );
 }
 
+/** 1x / 2x / 4x replay speed as native radio buttons (arrow keys move the choice). */
+function SpeedSelector({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: ReplaySpeed;
+  onChange: (speed: ReplaySpeed) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div role="radiogroup" aria-labelledby="replay-speed-label" className="flex items-center gap-1.5">
+      <span id="replay-speed-label" className="text-sm font-medium text-ink-muted">
+        Speed
+      </span>
+      <div className="inline-flex h-8 overflow-hidden rounded-md border border-line">
+        {SPEEDS.map((s) => (
+          <label
+            key={s}
+            className={cn(
+              "flex cursor-pointer items-center border-l border-line px-2.5 text-sm font-medium tabular first:border-l-0",
+              "has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-accent-600",
+              value === s ? "bg-accent-700 text-white" : "bg-white text-ink-muted hover:bg-gray-50",
+              disabled && "cursor-not-allowed opacity-55",
+            )}
+          >
+            <input
+              type="radio"
+              name="replay-speed"
+              value={s}
+              checked={value === s}
+              disabled={disabled}
+              onChange={() => onChange(s)}
+              className="sr-only"
+            />
+            {`${s}x`}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Stat({ label, value, tone }: { label: string; value: number | null; tone?: "accent" }) {
   return (
     <div className={`rounded-lg border bg-white px-4 py-3 ${tone === "accent" ? "border-accent-200" : "border-line"}`}>
@@ -202,6 +262,10 @@ function TodayTableRow({
 }) {
   const isLive = LIVE.has(row.status);
   const clickable = !!row.id;
+  // In demo mode every call is off (docs/03 §6.2); outside it, a configuration note can turn browser calls off.
+  const webOff = demoMode || !!webNote;
+  const webReason = demoMode ? "Off in demo mode" : webNote ? "Browser calls off" : null;
+  const webReasonId = `web-off-${row.patient.id}`;
   return (
     <tr
       className={clickable ? "cursor-pointer hover:bg-gray-50" : undefined}
@@ -274,17 +338,23 @@ function TodayTableRow({
                   </Button>
                 </span>
               ) : null}
-              <span title={webNote ?? undefined}>
+              <span className="flex flex-col items-end gap-0.5" title={webOff ? (webNote ?? DEMO_CALLS_OFF) : undefined}>
                 <Button
                   size="sm"
                   variant="secondary"
                   icon={<Globe className="size-4" aria-hidden />}
                   loading={pendingChannel === "web"}
-                  disabled={anyPending || (!demoMode && !!webNote)}
+                  disabled={anyPending || webOff}
+                  aria-describedby={webReason ? webReasonId : undefined}
                   onClick={() => onCall("web")}
                 >
                   Call in browser
                 </Button>
+                {webReason ? (
+                  <span id={webReasonId} className="text-sm whitespace-nowrap text-ink-subtle">
+                    {webReason}
+                  </span>
+                ) : null}
               </span>
             </>
           )}

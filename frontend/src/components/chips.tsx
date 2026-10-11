@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Clock, Languages, Siren, AlertTriangle, PhoneCall, Users } from "lucide-react";
 import type {
   CheckInStatus,
+  DraftEntry,
   DraftStatus,
   EscalationLevel,
   EscalationStatus,
@@ -169,4 +170,18 @@ export function SaeStatusChip({ status }: { status: SaeStatus }) {
   if (status === "sent") return <Chip tone="green">Sent to sponsor</Chip>;
   if (status === "signed") return <Chip tone="blue">Signed</Chip>;
   return <Chip tone="amber">Draft</Chip>;
+}
+
+/**
+ * Origin of a confirmed draft (docs/03 §6.5): `DraftOut.origin`, and the sponsor-defined `ORIGIN` column of ae.csv.
+ * Every serious-event report is built from a confirmed Between Visits AE draft, so it carries the same origin.
+ */
+export const BETWEEN_VISITS_ORIGIN: DraftEntry["origin"] = "between_visits";
+
+export function OriginTag({ origin = BETWEEN_VISITS_ORIGIN }: { origin?: string }) {
+  return (
+    <Chip tone="gray" className="font-mono" title="ORIGIN column in ae.csv: this entry came from a confirmed Between Visits draft">
+      origin: {origin}
+    </Chip>
+  );
 }
