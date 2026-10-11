@@ -7,7 +7,7 @@ ENV_GET = $$(grep -E "^$(1)=" .env 2>/dev/null | head -1 | cut -d= -f2- | sed -E
 # Pinned gitleaks release (WS0 R1); the CI job `gitleaks` downloads and checksum-verifies exactly this version.
 GITLEAKS_VERSION := 8.30.1
 
-.PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo secret-scan up
+.PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo secret-scan up planning-grid
 
 # Clean setup (WS0 R2): Python 3.12 from .python-version; `npm ci` installs exactly frontend/package-lock.json
 # and never rewrites it, so the tree stays clean. Add or upgrade frontend deps with `npm install` in frontend/.
@@ -72,6 +72,10 @@ DEMO_FRONTEND := npm run build && npm run start
 else
 DEMO_FRONTEND := npm run dev
 endif
+
+# S1: pre-tag planning grid (docs/11 §11.5), dev seed only; planning only, not a result
+planning-grid:
+	uv run --project monitoring python monitoring/planning/plan_power.py --seed dev --out monitoring/planning/planning_grid.json
 
 demo:
 	@trap 'kill 0' EXIT; \

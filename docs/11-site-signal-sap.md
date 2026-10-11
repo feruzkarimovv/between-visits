@@ -675,8 +675,8 @@ Choose the **smallest** *f* whose lower bound is ≥ 0.80. If none qualifies, ch
 
 | Value filled at tag time | Value | Gate outcome |
 |---|---|---|
-| `design.patients_per_site` | _filled at tag_ | _passed / shortfall / planning grid not run_ |
-| `planted.gross.f` | _filled at tag_ | _passed / shortfall / planning grid not run_ |
+| `design.patients_per_site` | 40–80 | shortfall: no range passed rule P1, so the rule's fallback 40–80 applies. At 40–80 the share of studies below the 10-site minimum met its limit, but the mean number of computed sites stayed below 15 of 18 (`planning_grid.json` `.p1`, dev seed, planning only, not a result). |
+| `planted.gross.f` | 0.90 | shortfall: no *f* in {0.75, 0.80, 0.85, 0.90} reached a one-sided 80% lower bound of 0.80 for Watch power, so the rule's fallback 0.90 applies. Watch power is capped by how often the planted site is computable at all (`planning_grid.json` `.p2`, dev seed, planning only, not a result). |
 
 The same design and gross *f* are used for the committed study and the blind runs. If the committed study turns out below the 10-site minimum anyway, that result is reported as it is. It is never re-seeded.
 

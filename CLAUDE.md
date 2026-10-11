@@ -52,12 +52,12 @@ make demo         # DEMO_MODE=1: no external keys, replay scenarios
 make up           # production images (docker-compose.prod.yml), DEMO_MODE=1 by default (BV_DEMO_MODE=0: live API),
                   # no Next dev badge; host ports API_PORT/WEB_PORT (default 8000/3000); health `commit` from GIT_COMMIT
 make secret-scan  # gitleaks (pinned 8.30.1) over the full history of every ref + real-number grep (validation/secret-scan.md)
+make planning-grid # S1: pre-tag planning grid (dev seed, docs/11 §11.5); picks the design and the gross planted capture loss
 ```
 
 Planned (Sun Oct 11, `docs/09`); not in the Makefile until the named task lands, then move each line into the block above:
 
 ```bash
-make planning-grid         # S1: pre-tag planning grid (dev seed); picks the gross planted capture loss
 make site-signal           # S6: regenerate monitoring/out/* + validation/site_signal/report.md from the sap-v1 seed (< 60 s)
 make site-signal-validate  # S7: operating characteristics (background, <= 45 min); ARGS="--quick --check" in CI
 make blind-run SEED=...    # S8: command-line blind run; ARGS=--precompute writes the fallback seeds

@@ -157,3 +157,9 @@ fd8d80a717c828416190c67656ee30e2679c542a805742d21b658bd256045a36
 
 # docs/03-api-contracts.md: the example eval_seed value in a JSON example, not a phone number (1 entry, reviewed 2026-10-11)
 779af80e863f2a71454e2cd53bcd8028c82b21a58e39f91813081be954481bf6
+
+# monitoring/uv.lock: digit run inside a 60-hex PyPI URL path segment (1 entry, reviewed 2026-10-11)
+53cc91ef014a890729d9f97ba4b2ac09db42257557c84b5ae690f6fa7f9180f5
+
+# monitoring/tests/test_seed.py: the expected derived eval seed (a uint32) in a seed-derivation test, not a phone number (1 entry, reviewed 2026-10-11)
+69b9fd808fe19f70447815f865eed89b595b0390a9234c7671cf37a87da9ad76

@@ -1,0 +1,275 @@
+# Site Signal pre-registered parameters (docs/11-site-signal-sap.md).
+#
+# Mirrors the SAP parameter table (§11.3) and the planted truth (§11.4). Frozen by the annotated tag
+# sap-v1 together with docs/11, data/signal_rules.json, data/site_queries.json, monitoring/planning/
+# and monitoring/uv.lock; after the tag every change needs a docs/11 §17 row in the same commit.
+#
+# Every number carries a citation (a docs/11 section, a docs/11 §19 reference [n], or a repository
+# file) or the tag ASSUMPTION. Match, evaluability, paging, minimum-data and tier constants are not
+# here: they are read from data/signal_rules.json. Look and Watch thresholds are read from
+# monitoring/out/thresholds.json (written only by calibrate.py after the tag).
+#
+# Everything generated from this file is SIMULATED: capture discordance is a reason to look, not a
+# finding. monitoring/planning/check_params_sap.py checks this file against the §11.3/§11.4 tables.
+
+data_origin: SIMULATED            # docs/11 §2.3, §15 rule 2
+sap_version: sap-v1               # docs/11 §1.2
+
+design:
+  n_sites: 20                     # ASSUMPTION; >= 10 sites per [6] (docs/11 §11.3)
+  site_ids: [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120]  # docs/11 §11.2 step 1 (fictional sites 101-120)
+  live_site: 101                  # docs/11 §11.3, §11.4: live demo site, always honest
+  patients_per_site: [40, 80]     # uniform integer, both ends inclusive; docs/11 §11.5 rule P1 (monitoring/planning/planning_grid.json .chosen: shortfall, fallback range)
+  window_weeks: 36                # ASSUMPTION (docs/11 §11.3)
+  data_cut_day: 252               # ASSUMPTION (docs/11 §11.3); = window_weeks x 7, study day 252 = 2026-09-14
+  study_start_date: "2026-01-05"  # fictional calendar anchor, study day 0 (docs/11 §11.2, §11.3)
+  enrollment_spread_days: 84      # ASSUMPTION (docs/11 §11.3); enrollment day uniform integer on [0, 84]
+  cycle_days: 21                  # every-3-weeks dosing of the example study (docs/05 §2; docs/11 §11.3); first dose on the enrollment day
+  call_days_after_dose: [1, 3, 7] # data/plan.json schedule_days_after_dose (docs/11 §11.3)
+
+roster:
+  source: parametric              # docs/research/synthea.md §6: a Synthea roster is a labeled sensitivity analysis only (S10)
+  synthea_optional: true          # docs/11 §11.2 step 1
+  spanish_share_by_site: {dist: beta, a: 1.2, b: 3.0}   # ASSUMPTION (docs/11 §11.3), mean ~0.29; each patient Spanish-speaking with the site's share
+  age: {dist: normal, mean: 66, sd: 10}                 # ASSUMPTION (docs/11 §11.3), years
+  extra_time:
+    rule: age_gte                 # docs/11 §11.2 step 1: extra-time pace if age >= min_age
+    min_age: 75                   # ASSUMPTION (docs/11 §11.3)
+
+episodes:
+  mu_g2plus_per_patient_window: 1.5   # ASSUMPTION representing a combination regimen (docs/11 §11.3); clinician-reported incidence under PD-1/PD-L1 monotherapy is lower [21] (UNVERIFIED); grid also 0.5
+  term_mix: {Diarrhea: 0.5, Fever: 0.2, Dyspnea: 0.3}    # ASSUMPTION (docs/11 §11.3)
+  g3_share: 0.25                      # ASSUMPTION (docs/11 §11.3); otherwise grade 2
+  mean_duration_calls: 2              # ASSUMPTION (docs/11 §11.3); K ~ Geometric(1/2) on {1, 2, ...} consecutive scheduled calls
+  duration_dist: geometric            # docs/11 §11.2 step 3; starts at the first scheduled call on or after the start day
+  patient_frailty: {dist: gamma, shape: 2.0, scale: 0.5}   # ASSUMPTION (docs/11 §9.1, §11.3), mean 1
+  casemix_sd_log: 0.35                # ASSUMPTION (docs/11 §9.1, §11.3); failure case 0.2
+  casemix_meanlog: 0.0                # ASSUMPTION: m_s = exp(N(0, casemix_sd_log^2)), median 1 (docs/11 gives only the SD)
+  start_day: uniform_over_days_on_study   # docs/11 §11.2 step 3; N_i ~ Poisson(mu * m_s * F_i * x_i), x_i = days on study / data_cut_day
+  overlap: merge_same_term_max_grade      # docs/11 §11.2 step 3: overlapping same-term episodes merge, the higher grade applies from its own start
+
+answer_generation:
+  method: enumerate_item_domain_grade_with_rules_py   # docs/11 §11.2 step 4, §11.3 (rule 2: no thresholds re-coded)
+  grading_items:                  # which item sets each primary term's grade (data/ctcae_rules.json) and which item opens it (data/symptom_items.json followups)
+    Diarrhea: {gate: DIARRHEA_FREQ, graded: DIARRHEA_STOOLS_PER_DAY}
+    Fever: {gate: FEVER_CHILLS, graded: TEMP_HIGHEST}
+    Dyspnea: {gate: SOB_SEV, graded: SOB_EXERTION}      # SOB_SEV is drawn from `secondary` (it can trigger RF_BREATHING)
+  numeric_domains:                # docs/11 §11.2 step 4, §11.3 (covers every band)
+    DIARRHEA_STOOLS_PER_DAY: {min: 0, max: 15, step: 1}
+    TEMP_HIGHEST: {min: 36.5, max: 40.8, step: 0.1, unit: celsius}
+  baseline_stools: {values: [1, 2], p: [0.5, 0.5]}       # ASSUMPTION (docs/11 §11.2 step 4, §11.3): patient baseline stools per day, equal probability
+  secondary:                      # ASSUMPTION (docs/11 §11.3): items that do not set the grade but can trigger a red flag
+    diarrhea_episode:             # every call of a Diarrhea episode (G2 and G3)
+      STOOL_BLOOD: {"yes": 0.05, "no": 0.95}
+      dizzy_on_standing: 0.10     # DIZZINESS_SEV mild or worse with DIZZY_ON_STANDING yes; otherwise DIZZINESS_SEV none
+      dizziness_sev_when_dizzy: {mild: 0.25, moderate: 0.25, severe: 0.25, very_severe: 0.25}   # ASSUMPTION: "mild or worse" spread evenly (does not change paging)
+    dyspnea_g2:
+      SOB_SEV: {mild: 0.30, moderate: 0.50, severe: 0.15, very_severe: 0.05}
+    dyspnea_g3:
+      SOB_SEV: {moderate: 0.30, severe: 0.50, very_severe: 0.20}
+  non_episode_answer: none_level  # docs/11 §11.2 step 4: calls without an episode, and non-primary items, answer at the item's "none" level
+
+site_capture:
+  base_p:                         # Di Maio 2015 [1]: clinicians missed 40.7-74.4% of patient-reported symptomatic toxicities at any grade and 13-50% at the highest severity (ranges from a secondary summary); per-term values ASSUMPTION (docs/11 §11.3)
+    Diarrhea: {2: 0.56, 3: 0.70}
+    Fever: {2: 0.80, 3: 0.90}     # Fever G3 sits slightly above the [1] range because temperature is measured
+    Dyspnea: {2: 0.60, 3: 0.75}
+  between_site_sd_logit: 0.35     # ASSUMPTION (docs/11 §9.1, §11.3); failure case 0.6
+  patient_re_sd_logit: 0.5        # ASSUMPTION (docs/11 §9.1, §11.3)
+  aestdtc_noise_days_sd: 2        # ASSUMPTION (docs/11 §11.3); AESTDTC = start day + round(N(0, 2^2)) days
+  entry_lag_days: {dist: gamma, mean: 8, shape: 2}   # Tufts CSDD 2017, 8 days from visit to entry [20]; entered_on = first dose visit on or after AESTDTC + ceil(lag)
+  other_aes_per_patient_window: 1.5   # ASSUMPTION (docs/11 §11.3); Poisson(1.5 * m_s * F_i * x_i) non-symptomatic rows, comparators only
+  paged_capture_boost_logit: 0    # ASSUMPTION (docs/11 §11.2 step 7): paged episodes get no capture boost
+  capture_unit: latent_episode    # docs/11 §11.2 step 7: each latent episode (before same-term overlaps merge in the patient stream) is entered with its own term, band and start day
+
+patient_stream:
+  call_completion: {dist: beta, mean: 0.85, kappa: 20}   # ASSUMPTION (docs/11 §9.1, §11.3): pi_i ~ Beta(17, 3) per patient
+  mapping_error_per_answer: {dist: beta, a: 2, b: 38}    # ASSUMPTION (docs/11 §11.3), mean 0.05, same in both languages; the text-mode evaluation (n = 20) is too small to estimate error by language
+  mapping_error_step: {ordinal_options: 1, yes_no: flip, stools_per_day: 1, temperature_c: 0.5}   # ASSUMPTION (docs/11 §11.2 step 5, §11.3)
+
+calibration: {r_null: 2000, r_validation: 2000, r_quick: 200}   # precision (docs/11 §11.3, §12.8)
+
+grid:                             # docs/11 §11.3, §12.2
+  n_sites: [12, 20]
+  patients_per_site: [10, 20, 30, 40, 60, 80]   # exact patients per site
+  f: [0.25, 0.50, 0.75, 0.85, 0.90]
+  mu: [0.5, 1.5]
+  reps: 300
+  reps_quick: 40
+  null_reps_per_design: 1000      # docs/11 §12.2 step 1: design-specific calibration, reused across f
+
+failure_case: {between_site_sd_logit: 0.6, casemix_sd_log: 0.2}   # docs/11 §11.3, §12.5 (diligence-dominated heterogeneity)
+
+sensitivity:                      # docs/11 §11.3, §12.6
+  r_null: 300                     # docs/11 §12.6 (ii)
+  r_full_mix: 300                 # docs/11 §12.6 (iii)
+  scenarios:
+    SE1: {match_window_days: 3, lower_tolerance_days: 0}      # data/signal_rules.json match.sensitivity SE1
+    SE2: {match_window_days: 14, lower_tolerance_days: 7}     # data/signal_rules.json match.sensitivity SE2
+    SE3: {mapping_error_multiplier: 2, language: en}
+    SE4: {mapping_error_multiplier: 4, language: en}
+    SE5: {mapping_error_multiplier: 2, language: es}
+    SE6: {mapping_error_multiplier: 4, language: es}
+    SE7: {call_completion_mean: 0.60}
+    SE8: {call_completion_mean: 0.95}
+    SE9: {between_site_sd_logit: 0.2, thresholds: sap-v1}     # misspecified null
+    SE10: {between_site_sd_logit: 0.5, thresholds: sap-v1}
+    SE11: {between_site_sd_logit: 0.6, thresholds: sap-v1}
+    SE12: {patient_re_sd_logit: 0.0, thresholds: sap-v1}
+    SE13: {patient_re_sd_logit: 1.0, thresholds: sap-v1}
+    SE14: {paged_rule: page_proximal}                         # proximity from data/signal_rules.json paged.proximity_days (7)
+    SE15: {capture_boost_logit: 1.0, within_days: 7, n_sites_highest_paging: 5}
+    SE16: {corr_v_logit_pi: 0.5, corr_v_neg_logit_eps: 0.5}   # bivariate normal reporting propensity
+    SE17: {entry_lag_mean_days: 25, n_honest_sites: 1}
+    SE18: {site_mapping_error: {dist: beta, a: 2, b: 18}, n_random_sites: 3}
+    SE19: {casemix_sd_log: 0.6}
+    SE20: {next_visit_plus_days: 19}                          # 95th percentile of the entry-lag Gamma
+    SE21: {overdispersion: multiplicative}                    # z / sqrt(phi) instead of additive tau^2 (docs/11 §8.2)
+
+comparators:                      # docs/11 §10, §11.3; same null studies and thresholds procedure (§9.2-9.3)
+  rate_kri: {exposure: patient_days, min_days: 30, overdispersion: multiplicative}   # gsm kri0001 style [9]; min_patients from data/signal_rules.json
+  simaerep_classic: {r: 1000, visit_med75: true, med75_method: med75_adj, min_pat_pool: 0.2, under_only: true, bh: true, label: "simaerep classic (legacy)"}   # [10, 11]; inframe default not ported
+  ae_report_ratio: {role: ablation, report_only: true}   # docs/11 §10.3; validation and report.md only
+
+planted:                          # docs/11 §11.4 (committed study); roles go to distinct non-101 sites drawn from the stream-0 generator
+  gross:
+    label: gross_under
+    count: 2
+    f: 0.90                       # docs/11 §11.5 rule P2 (monitoring/planning/planning_grid.json .chosen: shortfall, fallback f)
+  under_50:
+    label: under_50               # masked: raw AE rate near the study average
+    count: 1
+    f: 0.50
+    casemix: 2.0                  # m_s := 2.0 (sicker patients)
+  under_25:
+    label: under_25
+    count: 1
+    f: 0.25
+  language_gap:
+    label: language_gap
+    count: 1
+    spanish_share: 0.5
+    spanish_capture_odds_ratio: 0.5   # delta = ln 0.5 for Spanish-speaking patients' episodes
+  decoy_healthy_casemix:
+    label: decoy_healthy_casemix  # honest by the key (the rate-KRI trap)
+    count: 1
+    casemix: 0.5                  # m_s := 0.5
+  honest_low_diligence:
+    label: honest_low_diligence   # honest by the key: low capture can come from honest practice
+    count: 1
+    u_s_between_site_sds: -1.5    # u_s := -1.5 x between_site_sd_logit (-1.5 x 0.35), the 7th percentile of honest sites
+  low_coverage:
+    label: low_coverage           # honest by the key; must be not_computed: low_coverage
+    count: 1
+    call_completion_mean: 0.50
+  small_site:
+    label: small_site             # honest by the key; must be not_computed: insufficient_patients
+    count: 1
+    patients: 6
+  honest:
+    label: honest
+    count: rest                   # every other site, including 101
+
+blind_run:                        # docs/11 §11.3, §13
+  planted_count: {dist: uniform_integer, min: 0, max: 3}
+  f_from: planted.gross.f         # planted sites get the gross f; nothing else is planted
+  thresholds: sap-v1              # fixed monitoring/out/thresholds.json, never recalibrated
+  precomputed_labels: [aurora, basalt, cedar, dune, ember, fjord, glacier, harbor, island, juniper]   # docs/11 §11.3 (the acceptance label demo-42 is deliberately not one of them)
+
+planning:                         # docs/11 §11.5 pre-tag planning grid (dev seed only; planning only, not a result)
+  stream: 3                       # docs/11 §1.3: power grid and per-design null calibration (dev seed, so never an evaluation draw)
+  mu: 1.5                         # docs/11 §11.5 rule P1 (mu is not a lever)
+  p1:
+    ranges: [[15, 30], [20, 40], [30, 60], [40, 80]]   # docs/11 §11.5 rule P1, in this order
+    studies_per_range: 200
+    min_mean_computed_sites: 15   # of the 18 sites that are not designed to be grey
+    grey_by_design: [low_coverage, small_site]
+    max_share_below_min_sites: 0.02
+    fallback: [40, 80]            # if no range passes (shortfall recorded)
+  p2:
+    null_studies: 1000            # docs/11 §11.5 rule P2 step 1
+    studies_per_f: 500            # docs/11 §11.5 rule P2 step 2, common random numbers across f
+    f: [0.75, 0.80, 0.85, 0.90]
+    lower_bound_z: 0.842          # one-sided 80% lower bound p - 0.842 * sqrt(p(1 - p) / 500)
+    min_lower_bound: 0.80
+    fallback_f: 0.90              # if no f qualifies (shortfall recorded)
+  batch_studies: 50               # implementation only (vectorization chunk); results do not depend on it
+
+seeds:                            # docs/11 §1.3
+  dev: 20261011                   # development, unit tests and the pre-tag planning grid only
+  eval: derived_from_sap_v1_tag_and_beacon   # int(sha256(("sap-v1:" + S + ":" + B).encode()).hexdigest()[:8], 16); `python -m bvsignal.seed --show`
+  blind: 'int(sha256(("blind:" + seed_label).encode()).hexdigest()[:8], 16)'   # docs/11 §13
+  beacon:
+    file: monitoring/seed_beacon.json   # written after the tag by `python -m bvsignal.seed --fetch-beacon`
+    delay_seconds: 600            # first round at least 10 minutes after the sap-v1 tagger timestamp (docs/11 §1.3)
+    drand:                        # drand mainnet, default chain [25]
+      info_url: https://api.drand.sh/info
+      round_url: https://api.drand.sh/public/{round}
+      chain_hash: 8990e7a9aaed2ffed73dbd7092123d6f289930540d7651336225dc172e51b2ce
+      genesis_time: 1595431050    # chain parameter published at info_url
+      period_seconds: 30          # chain parameter published at info_url; round r is published at genesis_time + (r - 1) * period_seconds
+    nist:                         # fallback: NIST Randomness Beacon 2.0 [26]
+      pulse_url: https://beacon.nist.gov/beacon/2.0/pulse/time/{timestamp_ms}   # returns the first pulse at or after the timestamp
+      period_seconds: 60          # one pulse per minute
+
+streams:                          # docs/11 §1.3: SeedSequence(eval_seed, spawn_key=(stream, cell_index, role, i))
+  committed_study: 0              # role 0 study, role 2 equity bootstrap
+  calibration: 1
+  null_validation: 2
+  power_grid: 3                   # power grid, per-design null calibration and full-mix power
+  failure_and_sensitivity: 4
+roles: {null_or_committed: 0, planted: 1, resampling: 2}   # docs/11 §1.3
+
+cell_index:                       # docs/11 §1.3: fixed enumeration; adding, cutting or reducing a cell never changes another cell's draws
+  none: 0                         # committed study (stream 0), calibration (stream 1), null validation (stream 2)
+  grid:                           # stream 3; one cell per design; every f of a design shares its cell (common random numbers)
+    - {cell: 1, n_sites: 12, patients_per_site: 10, mu: 0.5}
+    - {cell: 2, n_sites: 12, patients_per_site: 10, mu: 1.5}
+    - {cell: 3, n_sites: 12, patients_per_site: 20, mu: 0.5}
+    - {cell: 4, n_sites: 12, patients_per_site: 20, mu: 1.5}
+    - {cell: 5, n_sites: 12, patients_per_site: 30, mu: 0.5}
+    - {cell: 6, n_sites: 12, patients_per_site: 30, mu: 1.5}
+    - {cell: 7, n_sites: 12, patients_per_site: 40, mu: 0.5}
+    - {cell: 8, n_sites: 12, patients_per_site: 40, mu: 1.5}
+    - {cell: 9, n_sites: 12, patients_per_site: 60, mu: 0.5}
+    - {cell: 10, n_sites: 12, patients_per_site: 60, mu: 1.5}
+    - {cell: 11, n_sites: 12, patients_per_site: 80, mu: 0.5}
+    - {cell: 12, n_sites: 12, patients_per_site: 80, mu: 1.5}
+    - {cell: 13, n_sites: 20, patients_per_site: 10, mu: 0.5}
+    - {cell: 14, n_sites: 20, patients_per_site: 10, mu: 1.5}
+    - {cell: 15, n_sites: 20, patients_per_site: 20, mu: 0.5}
+    - {cell: 16, n_sites: 20, patients_per_site: 20, mu: 1.5}
+    - {cell: 17, n_sites: 20, patients_per_site: 30, mu: 0.5}
+    - {cell: 18, n_sites: 20, patients_per_site: 30, mu: 1.5}
+    - {cell: 19, n_sites: 20, patients_per_site: 40, mu: 0.5}
+    - {cell: 20, n_sites: 20, patients_per_site: 40, mu: 1.5}
+    - {cell: 21, n_sites: 20, patients_per_site: 60, mu: 0.5}
+    - {cell: 22, n_sites: 20, patients_per_site: 60, mu: 1.5}
+    - {cell: 23, n_sites: 20, patients_per_site: 80, mu: 0.5}
+    - {cell: 24, n_sites: 20, patients_per_site: 80, mu: 1.5}
+  sap_v1_design: 25               # stream 3: power at the sap-v1 design with the committed thresholds (docs/11 §12.2)
+  full_mix: 26                    # stream 3: complete §11.4 mix (docs/11 §12.3)
+  failure_case_a: 27              # stream 4: re-calibrated failure-case null and power (docs/11 §12.5 (a))
+  failure_case_b: 28              # stream 4: failure-case null at the sap-v1 thresholds (docs/11 §12.5 (b))
+  sensitivity: {SE1: 29, SE2: 30, SE3: 31, SE4: 32, SE5: 33, SE6: 34, SE7: 35, SE8: 36, SE9: 37, SE10: 38, SE11: 39, SE12: 40, SE13: 41, SE14: 42, SE15: 43, SE16: 44, SE17: 45, SE18: 46, SE19: 47, SE20: 48, SE21: 49}   # stream 4 (docs/11 §12.6)
+  blind: 50                       # reserved; a blind run draws from SeedSequence(seed_int) of its label (docs/11 §13), not from the evaluation seed
+  planning:                       # dev seed only (docs/11 §11.5), stream 3
+    p1_15_30: 51
+    p1_20_40: 52
+    p1_30_60: 53
+    p1_40_80: 54
+    p2: 55                        # role 0: the 1000 null studies; role 1: the 500 planted studies shared by every f
+
+provenance:
+  record_versions: [numpy, scipy] # docs/11 §11.3: numpy does not promise identical random streams across versions; monitoring/uv.lock is committed in the tag commit
+
+signal_rules_sha256: "e121686b8555d9f79dbd0473115706a82daaf8213b84ba33709f2484b8dca275"   # sha256 of data/signal_rules.json at the tag (docs/11 §11.3); `python -m bvsignal.seed --write-frozen`
+
+frozen_inputs:                    # docs/11 §11.3; `python -m bvsignal.seed --write-frozen` fills these, `--check-frozen` verifies them
+  # sha256 of json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8"), where obj is
+  # [{"level": entry["level"], "rule": entry["rule"]} for each entry of data/red_flags.json "red_flags", in file order]
+  red_flags_rule_level_sha256: "ddefb23551b1d8977e47733a2d08b70350d1f02564d80e531f74df2dba3372d3"
+  # sha256 of json.dumps(data/ctcae_rules.json["rules"], sort_keys=True, separators=(",", ":")).encode("utf-8")
+  ctcae_rules_sha256: "199d23700776bfbd09f433a7efe812bfd2b3fe685bd39c4bbe3158a3025120a5"
+  rules_py_sha256: "ea97d075cbae3ff593d94d9d621257a13ba7428f84d7535c7f99668ce3d1103f"      # file sha256 of backend/app/services/rules.py
+  episodes_py_sha256: "ba509b4eb7cdf03b915f1a1facbcff4be8a42db8e196cd3d0364d28196255abe" # file sha256 of backend/app/services/episodes.py (B16)
