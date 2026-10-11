@@ -14,6 +14,8 @@ import {
   ScrollText,
   Activity,
   FlaskConical,
+  Building2,
+  Mailbox,
 } from "lucide-react";
 import { useStudy } from "@/lib/queries";
 import { USE_FIXTURES } from "@/lib/api";
@@ -30,6 +32,8 @@ const NAV = [
   { href: "/plan", label: "Plan", icon: ListChecks },
   { href: "/report-card", label: "Report card", icon: Gauge },
   { href: "/sponsor", label: "Sponsor inbox", icon: Inbox },
+  { href: "/sites", label: "Sites", icon: Building2 },
+  { href: "/site-inbox", label: "Site inbox", icon: Mailbox },
   { href: "/audit", label: "Audit", icon: ScrollText },
 ];
 

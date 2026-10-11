@@ -23,7 +23,7 @@ export function RoleSwitch() {
           onChange={(e) => {
             const role = e.target.value as Role;
             setRole(role);
-            toast.message(`Demo role: ${DEMO_IDENTITIES[role].label} (${DEMO_IDENTITIES[role].user})`);
+            toast.message(`Demo role: ${DEMO_IDENTITIES[role].label} · ${DEMO_IDENTITIES[role].user}`);
             void qc.invalidateQueries();
           }}
           className="h-9 rounded-md border border-line bg-white pr-7 pl-8 text-sm font-medium text-ink"
