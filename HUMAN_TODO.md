@@ -22,3 +22,16 @@ Steps that need a person. Everything around them is done; each item says exactly
    make sync-agent
    ```
    `make demo` (`DEMO_MODE=1`) starts with any secret and needs none of this.
+
+3. **Record the deployed agent config so CI goes green (V9).** CI's step "Deployed agent config matches git" (`python3 agent/check_config_hash.py`) fails until `agent/deployed_snapshot.json` is committed. The two Spanish agents were deployed before D8's wording fix, so sync first, then snapshot. In the main checkout (`.env` with `ELEVENLABS_API_KEY`):
+   ```bash
+   git checkout site-signal-build && git pull --ff-only
+   make sync-agent                          # pushes the D8 Spanish wording to es-standard and es-extra_time
+   make sync-agent ARGS=--snapshot          # read-only (GET only): writes agent/deployed_snapshot.json
+   jq -r '[.variants[].llm]|unique|.[]' agent/deployed_snapshot.json   # expect: claude-sonnet-5-5
+   python3 agent/check_config_hash.py; echo exit=$?                     # expect: OK ... and exit=0
+   git add agent/deployed_snapshot.json
+   git commit -m "WS1-V9: deployed snapshot"
+   git push origin site-signal-build
+   ```
+   From now on, any edit to `agent/prompt.md`, `agent/tools.json`, `agent/agent.template.json`, `agent/variants.json` or the agent-facing files in `data/` (scripts, red flags, plan, study) needs the same `make sync-agent` → `make sync-agent ARGS=--snapshot` → commit of the new snapshot, or CI fails.
