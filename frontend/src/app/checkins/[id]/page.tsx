@@ -7,40 +7,40 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
-  ClipboardCheck,
-  MessageSquareText,
-  Stethoscope,
-  PhoneOff,
+  ArrowRight,
+  AudioLines,
   Bot,
-  User,
-  Radio,
+  ClipboardCheck,
+  Clock,
+  Languages,
   ListChecks,
+  MessageSquareText,
+  PhoneOff,
+  Quote,
+  Radio,
+  Scale,
+  Stethoscope,
+  User,
+  UserCheck,
+  WifiOff,
 } from "lucide-react";
 import { apiFetch, hasErrorCode } from "@/lib/api";
 import { useApiMutation } from "@/lib/queries";
 import { useNow } from "@/lib/hooks";
 import type { Answer, CheckIn, CheckInDetail, DraftEntry, Finding, TranscriptTurn } from "@/lib/types";
 import { formatAbsolute, formatDuration, fullName, humanize, parseTs } from "@/lib/format";
-import { CHANNEL_LABELS, NURSE_TASK_LABELS, itemLabel, valueLabel } from "@/lib/labels";
-import {
-  Button,
-  ButtonLink,
-  Card,
-  CardHeader,
-  EmptyState,
-  ErrorState,
-  Skeleton,
-  cn,
-} from "@/components/ui/primitives";
-import { Chip, DraftStatusChip, LanguageChip, LevelChip, PaceChip, RedFlagChip, StatusChip } from "@/components/chips";
+import { CHANNEL_LABELS, itemLabel, valueLabel } from "@/lib/labels";
+import { Avatar, Button, ButtonLink, Card, CardHeader, EmptyState, ErrorState, Segmented, Skeleton, cn } from "@/components/ui/primitives";
+import { Chip, DraftStatusChip, LevelChip, LiveDot, RedFlagChip } from "@/components/chips";
 import { GradeBadge } from "@/components/GradeBadge";
 import { AiLabel } from "@/components/AiLabel";
-import { EscalationPanel } from "@/components/EscalationPanel";
+import { EscalationPanel, ackSeconds } from "@/components/EscalationPanel";
 import { highlightTurn } from "@/components/EvidenceQuote";
+import { DraftKindIcon, KIND_LABEL, draftTitle } from "@/components/DraftKind";
 
 const WebCallWidget = dynamic(() => import("@/components/WebCallWidget").then((m) => m.WebCallWidget), {
   ssr: false,
-  loading: () => <Skeleton className="h-40 w-full" />,
+  loading: () => <Skeleton className="h-40 w-full rounded-2xl" />,
 });
 
 const LIVE = new Set(["dialing", "in_progress"]);
@@ -87,11 +87,12 @@ export default function CheckInPage() {
 
 function LoadingCheckIn() {
   return (
-    <div className="space-y-4" aria-busy="true">
-      <Skeleton className="h-24 w-full" />
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-        <Skeleton className="h-96" />
-        <Skeleton className="h-96" />
+    <div className="space-y-5" aria-busy="true">
+      <Skeleton className="h-5 w-24" />
+      <div className="h-72 animate-pulse rounded-3xl bg-rail/90" />
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <Skeleton className="h-96 rounded-2xl" />
+        <Skeleton className="h-96 rounded-2xl" />
       </div>
     </div>
   );
@@ -120,27 +121,43 @@ function CheckInView({
   }, [escalations]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2 text-sm">
-        <Link href="/" className="inline-flex items-center gap-1 text-ink-muted hover:text-ink">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        <Link href="/" className="inline-flex items-center gap-1.5 rounded-md font-medium text-ink-muted hover:text-ink">
           <ArrowLeft className="size-4" aria-hidden />
           Today
         </Link>
-        {stale ? <span className="text-amber-800">· Connection lost, retrying… (showing last update)</span> : null}
+        <span className="text-line-strong" aria-hidden>
+          /
+        </span>
+        <span className="text-ink-subtle">Check-in {checkin.id}</span>
+        {stale ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2 py-px font-medium text-amber-900">
+            <WifiOff className="size-3.5" aria-hidden />
+            Connection lost, retrying… (showing last update)
+          </span>
+        ) : null}
       </div>
 
-      <CheckInHeader checkin={checkin} detail={detail} onCancelled={onRefetch} />
+      <CallConsole detail={detail} onCancelled={onRefetch} />
+
+      {checkin.summary_en ? (
+        <div className="bv-enter flex flex-col items-start gap-2 rounded-2xl border border-dashed border-violet-300 bg-gradient-to-r from-violet-50/80 to-white px-5 py-4 sm:flex-row sm:gap-3">
+          <AiLabel className="sm:mt-1">AI summary</AiLabel>
+          <p className="min-w-0 flex-1 text-[15px] leading-7 text-ink">{checkin.summary_en}</p>
+        </div>
+      ) : null}
 
       {checkin.channel === "web" ? (
         <WebCallWidget checkinId={checkin.id} subjectId={patient.subject_id} checkinStatus={checkin.status} onStarted={onRefetch} />
       ) : null}
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         {/* Conversation */}
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader
             title="Conversation"
-            icon={<MessageSquareText className="size-4 text-ink-subtle" aria-hidden />}
+            icon={<MessageSquareText className="size-4" aria-hidden />}
             subtitle={
               effectiveView === "transcript"
                 ? "Full transcript after the call. Click any evidence timestamp to jump here."
@@ -150,29 +167,23 @@ function CheckInView({
             }
             actions={
               hasTranscript ? (
-                <div role="tablist" aria-label="Conversation view" className="flex rounded-md border border-line p-0.5">
-                  {(["transcript", "answers"] as const).map((v) => (
-                    <button
-                      key={v}
-                      role="tab"
-                      aria-selected={effectiveView === v}
-                      onClick={() => setView(v)}
-                      className={cn(
-                        "rounded px-2.5 py-1 text-sm font-medium",
-                        effectiveView === v ? "bg-accent-50 text-accent-800" : "text-ink-muted hover:text-ink",
-                      )}
-                    >
-                      {v === "transcript" ? "Transcript" : "Recorded answers"}
-                    </button>
-                  ))}
-                </div>
+                <Segmented
+                  label="Conversation view"
+                  size="sm"
+                  value={effectiveView}
+                  onChange={(v) => setView(v)}
+                  options={[
+                    { value: "transcript", label: "Transcript" },
+                    { value: "answers", label: "Recorded answers", count: answers.length },
+                  ]}
+                />
               ) : null
             }
           />
           {/* Scrolls inside its own box so the escalation panel and findings stay in view during a call. */}
-          <div className="max-h-[calc(100vh-15rem)] min-h-64 overflow-y-auto overscroll-contain p-4" data-conversation-scroll>
+          <div className="bv-scroll relative max-h-[calc(100vh-14rem)] min-h-72 overflow-y-auto overscroll-contain bg-gradient-to-b from-gray-50/70 to-white p-4 sm:p-5" data-conversation-scroll>
             {effectiveView === "transcript" ? (
-              <TranscriptView turns={transcript} />
+              <TranscriptView turns={transcript} patientName={fullName(patient) || patient.subject_id} patientSeed={patient.id} />
             ) : (
               <AnswerStream answers={answers} checkin={checkin} transcript={transcript} currentQuestion={detail.current_question ?? null} />
             )}
@@ -180,19 +191,19 @@ function CheckInView({
         </Card>
 
         {/* Right column: escalation + findings */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           {sortedEscalations.map((e) => (
             <EscalationPanel key={e.id} escalation={e} fetchedAt={fetchedAt} />
           ))}
           <Card>
             <CardHeader
               title="Findings"
-              icon={<Stethoscope className="size-4 text-ink-subtle" aria-hidden />}
+              icon={<Stethoscope className="size-4" aria-hidden />}
               subtitle="Graded by fixed CTCAE v5.0 rules, not by AI. A clinician confirms every grade."
             />
             <div className="space-y-3 p-4">
               {findings.length === 0 ? (
-                <EmptyState className="py-6" title={live ? "No symptoms graded yet" : "No findings"}>
+                <EmptyState className="py-8" icon={<Scale className="size-6" aria-hidden />} title={live ? "No symptoms graded yet" : "No findings"}>
                   {live ? "Findings appear as soon as an answer is recorded." : "Nothing in this check-in matched a symptom rule."}
                 </EmptyState>
               ) : (
@@ -208,15 +219,35 @@ function CheckInView({
   );
 }
 
-// ---------------------------------------------------------------- header
+// ---------------------------------------------------------------- call console
 
-function CheckInHeader({ checkin, detail, onCancelled }: { checkin: CheckIn; detail: CheckInDetail; onCancelled: () => void }) {
+function ConsoleTag({ icon, children, title }: { icon?: React.ReactNode; children: React.ReactNode; title?: string }) {
+  return (
+    <span title={title} className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.06] px-2.5 py-0.5 text-sm font-medium whitespace-nowrap text-rail-ink">
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+const STATUS_TEXT: Record<string, string> = {
+  dialing: "Dialing",
+  in_progress: "In call",
+  completed: "Call completed",
+  no_answer: "No answer",
+  failed: "Call failed",
+  cancelled: "Cancelled",
+  scheduled: "Scheduled",
+};
+
+function CallConsole({ detail, onCancelled }: { detail: CheckInDetail; onCancelled: () => void }) {
   const now = useNow();
-  const { patient } = detail;
+  const { checkin, patient } = detail;
   const live = LIVE.has(checkin.status);
+  const inCall = checkin.status === "in_progress";
   const started = parseTs(checkin.started_at);
   const elapsed =
-    checkin.status === "in_progress" && started !== null && now
+    inCall && started !== null && now
       ? (now - started) / 1000
       : checkin.duration_s ?? (started !== null && checkin.ended_at ? ((parseTs(checkin.ended_at) ?? started) - started) / 1000 : null);
   const speakerLabel =
@@ -225,6 +256,8 @@ function CheckInHeader({ checkin, detail, onCancelled }: { checkin: CheckIn; det
       : checkin.speaker === "patient"
         ? "Patient answering"
         : "Speaker not confirmed yet";
+  const name = fullName(patient) || patient.subject_id;
+  const current = checkin.interview_state?.current;
 
   const cancel = useApiMutation<string, CheckIn>({
     request: (id) => ({ path: `/api/checkins/${encodeURIComponent(id)}/cancel`, init: { method: "POST" } }),
@@ -234,57 +267,246 @@ function CheckInHeader({ checkin, detail, onCancelled }: { checkin: CheckIn; det
   });
 
   return (
-    <Card className={cn(live && "border-accent-200")}>
-      <div className="flex flex-wrap items-start justify-between gap-4 p-4">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              <Link href={`/patients/${patient.id}`} className="hover:underline">
-                {fullName(patient) || patient.subject_id}
-              </Link>
-            </h1>
-            <span className="font-mono text-base text-ink-muted">{patient.subject_id}</span>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <LanguageChip lang={checkin.language} />
-            <PaceChip pace={checkin.pace} hideStandard={false} />
-            <Chip tone={checkin.speaker === "caregiver" ? "blue" : "gray"} icon={<User className="size-3.5" aria-hidden />}>
-              {speakerLabel}
-            </Chip>
-            {checkin.day_after_dose ? <Chip>Day {checkin.day_after_dose} after dose</Chip> : null}
-            {checkin.channel ? (
-              <Chip icon={<Radio className="size-3.5" aria-hidden />}>{CHANNEL_LABELS[checkin.channel] ?? checkin.channel}</Chip>
+    <section
+      aria-label="Call"
+      className="on-dark relative overflow-hidden rounded-3xl border border-rail-line bg-rail text-rail-ink shadow-pop"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_120%_at_0%_0%,rgb(20_137_122/0.35)_0%,transparent_55%),radial-gradient(60%_90%_at_100%_100%,rgb(94_234_212/0.10)_0%,transparent_60%)]" aria-hidden />
+      <div className="bv-grid pointer-events-none absolute inset-0 [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" aria-hidden />
+
+      <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex min-w-0 items-start gap-4">
+          <span className="relative hidden sm:block">
+            <Avatar name={name} seed={patient.id} size="xl" className="ring-2 ring-white/20" />
+            {inCall ? (
+              <span className="absolute -right-0.5 -bottom-0.5 flex size-5 items-center justify-center rounded-full bg-rail">
+                <LiveDot tone="live" />
+              </span>
             ) : null}
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 className="font-display text-[2.6rem] leading-[1.05] text-white">
+                <Link href={`/patients/${patient.id}`} className="rounded-md underline-offset-4 hover:underline">
+                  {name}
+                </Link>
+              </h1>
+              <span className="font-mono text-base text-rail-muted">{patient.subject_id}</span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <ConsoleTag icon={<Languages className="size-3.5 text-live" aria-hidden />} title={checkin.language === "es" ? "Spanish" : "English"}>
+                {checkin.language === "es" ? "Spanish" : "English"}
+              </ConsoleTag>
+              <ConsoleTag icon={<Clock className="size-3.5 text-live" aria-hidden />}>{checkin.pace === "extra_time" ? "Extra time" : "Standard pace"}</ConsoleTag>
+              <ConsoleTag icon={<User className="size-3.5 text-live" aria-hidden />}>{speakerLabel}</ConsoleTag>
+              {checkin.day_after_dose ? <ConsoleTag>Day {checkin.day_after_dose} after dose</ConsoleTag> : null}
+              {checkin.channel ? (
+                <ConsoleTag icon={<Radio className="size-3.5 text-live" aria-hidden />}>{CHANNEL_LABELS[checkin.channel] ?? checkin.channel}</ConsoleTag>
+              ) : null}
+            </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-3">
-            <StatusChip status={checkin.status} />
-            <span className="font-mono text-3xl font-semibold tabular" aria-label="Call time" title={checkin.started_at ? `Started ${formatAbsolute(checkin.started_at)}` : undefined}>
-              {formatDuration(elapsed ?? 0)}
-            </span>
+
+        <div className="flex flex-row items-center justify-between gap-4 lg:flex-col lg:items-end lg:justify-start">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            {live ? <LiveDot tone="live" /> : <span className={cn("size-2 rounded-full", checkin.status === "completed" ? "bg-green-400" : "bg-rail-muted")} aria-hidden />}
+            <span className={live ? "text-live" : "text-rail-ink"}>{STATUS_TEXT[checkin.status] ?? humanize(checkin.status)}</span>
           </div>
-          {checkin.interview_state?.current && checkin.status === "in_progress" ? (
-            <span className="text-sm text-ink-muted">
-              Now asking: <strong className="text-ink">{itemLabel(checkin.interview_state.current)}</strong>
-            </span>
-          ) : null}
+          <span
+            className="font-mono text-5xl leading-none font-semibold tracking-tight text-white tabular sm:text-6xl"
+            aria-label="Call time"
+            title={checkin.started_at ? `Started ${formatAbsolute(checkin.started_at)}` : undefined}
+          >
+            {formatDuration(elapsed ?? 0)}
+          </span>
           {live ? (
-            <Button size="sm" variant="ghost" loading={cancel.isPending} onClick={() => cancel.mutate(checkin.id)} icon={<PhoneOff className="size-4" aria-hidden />}>
+            <Button size="sm" variant="dark" loading={cancel.isPending} onClick={() => cancel.mutate(checkin.id)} icon={<PhoneOff className="size-4" aria-hidden />}>
               Cancel check-in
             </Button>
           ) : null}
         </div>
       </div>
-      {checkin.summary_en ? (
-        <div className="border-t border-line px-4 py-3">
-          <div className="flex flex-wrap items-start gap-2">
-            <AiLabel>AI summary</AiLabel>
-            <p className="min-w-0 flex-1 text-sm leading-6 text-ink-muted">{checkin.summary_en}</p>
-          </div>
+
+      <div className="relative px-5 sm:px-7">
+        <Waveform active={inCall} />
+        <div className="mt-3 min-h-12">
+          {inCall && current ? (
+            <p className="text-[15px] leading-6">
+              <span className="text-rail-muted">Now asking · </span>
+              <strong className="font-semibold text-white">{itemLabel(current)}</strong>
+              {detail.current_question ? (
+                <span className="mt-0.5 block text-rail-ink/90 italic" lang={checkin.language}>
+                  “{detail.current_question}” <span className="text-rail-muted not-italic">(approved wording)</span>
+                </span>
+              ) : null}
+            </p>
+          ) : checkin.status === "dialing" ? (
+            <p className="text-[15px] text-rail-muted">
+              {checkin.channel === "web" ? "Waiting for the browser call to start." : "Waiting for the patient to pick up."}
+            </p>
+          ) : inCall ? (
+            <p className="text-[15px] text-rail-muted">Disclosing AI, offering a person, confirming identity…</p>
+          ) : (
+            <p className="text-[15px] text-rail-muted">
+              {checkin.status === "completed"
+                ? `Call ended${checkin.ended_at ? ` · ${formatAbsolute(checkin.ended_at)}` : ""}.`
+                : `${STATUS_TEXT[checkin.status] ?? humanize(checkin.status)}.`}
+            </p>
+          )}
         </div>
-      ) : null}
-    </Card>
+      </div>
+
+      <Pipeline detail={detail} />
+    </section>
+  );
+}
+
+/** Decorative voice activity. Deterministic heights so server and client agree. */
+function Waveform({ active }: { active: boolean }) {
+  const bars = 128;
+  return (
+    <div className={cn("flex h-14 items-center gap-[3px] overflow-hidden", active && "bv-wave")} aria-hidden>
+      {Array.from({ length: bars }, (_, i) => {
+        const h = 0.18 + 0.82 * Math.abs(Math.sin(i * 0.61) * Math.cos(i * 0.17 + 0.4));
+        return (
+          <span
+            key={i}
+            className={cn("w-full max-w-1.5 min-w-[2px] flex-1 rounded-full", active ? "bg-live/80" : "bg-white/15")}
+            style={{
+              height: `${Math.round((active ? h : 0.12 + h * 0.18) * 100)}%`,
+              animationDelay: active ? `${-((i * 137) % 1100)}ms` : undefined,
+              animationDuration: active ? `${900 + ((i * 53) % 500)}ms` : undefined,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+type PipeState = "waiting" | "active" | "done" | "alert" | "stopped";
+
+function PipeStep({
+  n,
+  icon,
+  title,
+  state,
+  tone = "live",
+  children,
+}: {
+  n: number;
+  icon: React.ReactNode;
+  title: string;
+  state: PipeState;
+  tone?: "live" | "red" | "amber" | "green";
+  children: React.ReactNode;
+}) {
+  const ring = {
+    waiting: "border-white/15 text-rail-muted",
+    stopped: "border-white/15 text-rail-muted",
+    active: "border-live/60 text-live",
+    done: "border-live/40 bg-live/10 text-live",
+    alert: tone === "red" ? "border-red-400 bg-red-500/20 text-red-200" : "border-amber-300 bg-amber-400/20 text-amber-200",
+  }[state];
+  const done = state === "done" && tone === "green";
+  return (
+    <li className="relative min-w-0 flex-1">
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "relative flex size-10 shrink-0 items-center justify-center rounded-xl border",
+            done ? "border-green-400/50 bg-green-500/15 text-green-300" : ring,
+            state === "active" && "bv-breathe [--bv-glow:rgb(94_234_212/0.35)]",
+            state === "alert" && (tone === "red" ? "bv-breathe [--bv-glow:rgb(248_113_113/0.45)]" : "bv-breathe [--bv-glow:rgb(251_191_36/0.45)]"),
+          )}
+        >
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-mono text-rail-muted">0{n}</span>
+            <span className="font-semibold text-white">{title}</span>
+          </div>
+          <div className="mt-0.5 text-sm leading-5 text-rail-ink/85">{children}</div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function Pipeline({ detail }: { detail: CheckInDetail }) {
+  const { checkin, answers, findings, escalations, drafts, transcript } = detail;
+  const live = LIVE.has(checkin.status);
+  const inCall = checkin.status === "in_progress";
+  const ended = !live;
+
+  // 1 · listen
+  const listenState: PipeState =
+    checkin.status === "dialing" ? "waiting" : inCall ? "active" : checkin.status === "completed" ? "done" : "stopped";
+  const listenText =
+    checkin.status === "dialing"
+      ? "Waiting to connect"
+      : inCall
+        ? `Listening · ${answers.length} answer${answers.length === 1 ? "" : "s"} recorded`
+        : checkin.status === "completed"
+          ? `${answers.length} answer${answers.length === 1 ? "" : "s"}${transcript.length ? ` · ${transcript.length} transcript turns` : ""}`
+          : STATUS_TEXT[checkin.status] ?? humanize(checkin.status);
+
+  // 2 · grade
+  const graded = findings.filter((f) => typeof f.provisional_grade === "number");
+  const top = [...graded].sort((a, b) => (b.provisional_grade ?? 0) - (a.provisional_grade ?? 0))[0];
+  const gradeState: PipeState = findings.length === 0 ? (ended && checkin.status === "completed" ? "done" : "waiting") : (top?.provisional_grade ?? 0) >= 3 ? "alert" : "done";
+  const gradeText =
+    findings.length === 0
+      ? live
+        ? "No symptoms graded yet"
+        : "No symptom matched a rule"
+      : top
+        ? `${top.term} · grade ${top.provisional_grade} (provisional)${findings.length > 1 ? ` · +${findings.length - 1} more` : ""}`
+        : `${findings.length} finding${findings.length === 1 ? "" : "s"} for a clinician to grade`;
+
+  // 3 · decide
+  const openPaged = escalations.filter((e) => e.status === "open" && e.level !== "callback");
+  const openCallbacks = escalations.filter((e) => e.status === "open" && e.level === "callback");
+  const closed = escalations.filter((e) => e.status !== "open");
+  const pending = drafts.filter((d) => d.status === "draft").length;
+  let decideState: PipeState = "waiting";
+  let decideTone: "live" | "red" | "amber" | "green" = "live";
+  let decideText: React.ReactNode;
+  if (openPaged.length) {
+    const emergency = openPaged.some((e) => e.level === "emergency");
+    decideState = "alert";
+    decideTone = emergency ? "red" : "amber";
+    decideText = `${emergency ? "Emergency" : "Urgent"}: nurse paged, waiting for acknowledgment`;
+  } else if (closed.length) {
+    const fastest = closed.map(ackSeconds).filter((s): s is number => s !== null);
+    decideState = "done";
+    decideTone = "green";
+    decideText = fastest.length ? `Nurse acknowledged in ${Math.min(...fastest)} s${pending ? ` · ${pending} draft${pending === 1 ? "" : "s"} to review` : ""}` : "Acknowledged";
+  } else if (openCallbacks.length) {
+    decideState = "active";
+    decideText = "Callback queued for the coordinator";
+  } else if (pending) {
+    decideState = "active";
+    decideText = `${pending} draft${pending === 1 ? "" : "s"} waiting for the study team`;
+  } else {
+    decideText = live ? "No red flags so far" : checkin.status === "completed" && checkin.postcall_status !== "done" ? "Post-call review running…" : "Nothing waiting";
+  }
+
+  return (
+    <ol className="relative mt-5 flex flex-col gap-4 border-t border-white/10 bg-black/20 px-5 py-5 sm:px-7 md:flex-row md:items-start md:gap-6" aria-label="AI listens, rules grade, humans decide">
+      <PipeStep n={1} icon={<AudioLines className="size-5" aria-hidden />} title="AI listens" state={listenState}>
+        {listenText}
+      </PipeStep>
+      <ArrowRight className="hidden size-4 shrink-0 self-center text-white/25 md:block" aria-hidden />
+      <PipeStep n={2} icon={<Scale className="size-5" aria-hidden />} title="Rules grade" state={gradeState} tone="amber">
+        {gradeText}
+      </PipeStep>
+      <ArrowRight className="hidden size-4 shrink-0 self-center text-white/25 md:block" aria-hidden />
+      <PipeStep n={3} icon={<UserCheck className="size-5" aria-hidden />} title="Humans decide" state={decideState} tone={decideTone}>
+        {decideText}
+      </PipeStep>
+    </ol>
   );
 }
 
@@ -320,7 +542,11 @@ function AnswerStream({
 
   if (answers.length === 0) {
     return (
-      <EmptyState className="py-8" icon={<Bot className="size-6" aria-hidden />} title={checkin.status === "dialing" ? "Dialing…" : live ? "Call connected" : "No answers recorded"}>
+      <EmptyState
+        className="py-10"
+        icon={<Bot className="size-6" aria-hidden />}
+        title={checkin.status === "dialing" ? "Dialing…" : live ? "Call connected" : "No answers recorded"}
+      >
         {checkin.status === "dialing"
           ? checkin.channel === "web"
             ? "Press Start call in the browser call panel to begin."
@@ -337,33 +563,34 @@ function AnswerStream({
       {answers.map((a) => {
         const turn = transcript.length ? turnForAnswer(a, transcript) : undefined;
         return (
-          <li key={a.id} className="bv-enter rounded-lg border border-line bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-gray-50 px-3 py-1.5 text-sm">
-              <span className="font-medium text-ink-muted">{itemLabel(a.item_code)}</span>
+          <li key={a.id} className="animate-bubble rounded-xl border border-line bg-white shadow-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3 text-sm">
+              <span className="font-medium text-ink-subtle">{itemLabel(a.item_code)}</span>
               <span className="flex items-center gap-2 text-ink-subtle">
                 {a.reporter === "caregiver" ? <Chip tone="blue">Caregiver</Chip> : null}
                 {a.source === "post_call_extraction" ? <Chip tone="blue">Found after the call</Chip> : null}
                 {a.t_s !== null && a.t_s !== undefined ? (
                   <button
                     type="button"
-                    className="tabular text-accent-700 hover:underline disabled:no-underline"
+                    className="rounded font-mono tabular text-accent-700 enabled:hover:underline disabled:text-ink-subtle"
                     disabled={!turn}
                     onClick={() => turn && highlightTurn(turn.i)}
                   >
                     {formatDuration(a.t_s)}
                   </button>
                 ) : (
-                  <span className="tabular" title={formatAbsolute(a.created_at)}>
+                  <span className="font-mono tabular" title={formatAbsolute(a.created_at)}>
                     {formatAbsolute(a.created_at).split(", ").pop()?.replace(/ [A-Z]{2,4}$/, "")}
                   </span>
                 )}
               </span>
             </div>
-            <div className="flex flex-wrap items-end justify-between gap-3 px-3 py-2.5">
-              <p className="min-w-0 flex-1 text-[15px] leading-6 text-ink" lang={a.quote_lang}>
+            <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-1.5 pb-3.5">
+              <p className="min-w-0 flex-1 text-base leading-7 text-ink" lang={a.quote_lang}>
                 “{a.verbatim_quote}”
               </p>
-              <span className="rounded-md bg-accent-50 px-2 py-0.5 text-sm font-semibold text-accent-900 ring-1 ring-accent-200">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-accent-700 px-2.5 py-1 text-sm font-semibold text-white shadow-card">
+                <ArrowRight className="size-3.5 opacity-70" aria-hidden />
                 {valueLabel(a)}
               </span>
             </div>
@@ -371,24 +598,24 @@ function AnswerStream({
         );
       })}
       {live ? (
-        <li className="flex items-start gap-2 rounded-lg border border-dashed border-line px-3 py-2.5 text-sm text-ink-subtle">
-          <span className="flex gap-1" aria-hidden>
-            <span className="size-1.5 animate-bounce rounded-full bg-ink-subtle [animation-delay:-0.3s]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-ink-subtle [animation-delay:-0.15s]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-ink-subtle" />
+        <li className="flex items-start gap-3 rounded-xl border border-dashed border-accent-300 bg-accent-50/50 px-4 py-3 text-sm">
+          <span className="mt-1.5 flex gap-1" aria-hidden>
+            <span className="size-1.5 animate-bounce rounded-full bg-accent-600 [animation-delay:-0.3s]" />
+            <span className="size-1.5 animate-bounce rounded-full bg-accent-600 [animation-delay:-0.15s]" />
+            <span className="size-1.5 animate-bounce rounded-full bg-accent-600" />
           </span>
           <span className="min-w-0">
             {checkin.interview_state?.current ? (
               <>
-                <span className="font-medium text-ink-muted">Asking: {itemLabel(checkin.interview_state.current)}</span>
+                <span className="font-semibold text-accent-900">Asking: {itemLabel(checkin.interview_state.current)}</span>
                 {currentQuestion ? (
-                  <span className="mt-0.5 block text-ink-subtle italic" lang={checkin.language}>
+                  <span className="mt-0.5 block text-ink-muted italic" lang={checkin.language}>
                     “{currentQuestion}” <span className="not-italic">(approved wording)</span>
                   </span>
                 ) : null}
               </>
             ) : (
-              "Listening…"
+              <span className="text-ink-muted">Listening…</span>
             )}
           </span>
         </li>
@@ -398,7 +625,7 @@ function AnswerStream({
   );
 }
 
-function TranscriptView({ turns }: { turns: TranscriptTurn[] }) {
+function TranscriptView({ turns, patientName, patientSeed }: { turns: TranscriptTurn[]; patientName: string; patientSeed: string }) {
   const done = useRef(false);
   useEffect(() => {
     if (done.current || turns.length === 0) return;
@@ -411,22 +638,39 @@ function TranscriptView({ turns }: { turns: TranscriptTurn[] }) {
   }, [turns.length]);
 
   return (
-    <ol className="space-y-1">
-      {turns.map((t) => (
-        <li
-          key={t.i}
-          id={`turn-${t.i}`}
-          className={cn("grid scroll-mt-24 grid-cols-[3.5rem_1.5rem_minmax(0,1fr)] gap-2 rounded-md px-2 py-2", t.role === "user" && "bg-accent-50/50")}
-        >
-          <span className="pt-0.5 font-mono text-sm text-ink-subtle tabular">{formatDuration(t.t_s)}</span>
-          <span className="pt-0.5 text-ink-subtle" title={t.role === "agent" ? "Agent (AI)" : "Patient / caregiver"}>
-            {t.role === "agent" ? <Bot className="size-4" aria-label="Agent" /> : <User className="size-4" aria-label="Patient" />}
-          </span>
-          <p className={cn("text-[15px] leading-6", t.role === "agent" ? "text-ink-muted" : "font-medium text-ink")} lang={t.lang ?? undefined}>
-            {t.text}
-          </p>
-        </li>
-      ))}
+    <ol className="space-y-2">
+      {turns.map((t) => {
+        const agent = t.role === "agent";
+        return (
+          <li key={t.i} id={`turn-${t.i}`} className={cn("flex scroll-mt-24 gap-3 rounded-xl px-1.5 py-1.5", !agent && "flex-row-reverse")}>
+            {agent ? (
+              <span className="mt-6 flex size-8 shrink-0 items-center justify-center rounded-full bg-ink text-white" title="Agent (AI)">
+                <Bot className="size-4" aria-label="Agent" />
+              </span>
+            ) : (
+              <span className="mt-6" title="Patient / caregiver">
+                <Avatar name={patientName} seed={patientSeed} size="sm" />
+                <span className="sr-only">Patient</span>
+              </span>
+            )}
+            <div className={cn("flex max-w-[85%] min-w-0 flex-col", agent ? "items-start" : "items-end")}>
+              <span className="mb-1 flex items-center gap-2 px-1 text-sm text-ink-subtle">
+                <span className="font-medium">{agent ? "Agent (AI)" : patientName}</span>
+                <span className="font-mono tabular">{formatDuration(t.t_s)}</span>
+              </span>
+              <p
+                className={cn(
+                  "rounded-2xl px-4 py-2.5 text-[15px] leading-6",
+                  agent ? "rounded-tl-md border border-line bg-white text-ink-muted shadow-card" : "rounded-tr-md bg-accent-700 font-medium text-white shadow-card",
+                )}
+                lang={t.lang ?? undefined}
+              >
+                {t.text}
+              </p>
+            </div>
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -438,9 +682,9 @@ function FindingCard({ finding: f, answers, transcript }: { finding: Finding; an
   const high = (f.provisional_grade ?? 0) >= 3;
   const inputs = Object.entries(f.inputs ?? {});
   return (
-    <article className={cn("bv-enter rounded-lg border p-3", high ? "border-amber-300 bg-amber-50/40" : "border-line bg-white")}>
+    <article className={cn("bv-enter rounded-xl border p-4", high ? "border-amber-300 bg-gradient-to-b from-amber-50/80 to-white" : "border-line bg-white")}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-ink">{f.term}</h3>
+        <h3 className="text-lg font-semibold text-ink">{f.term}</h3>
         <div className="flex flex-wrap items-center gap-1.5">
           {f.escalation_level !== "none" ? <LevelChip level={f.escalation_level} /> : null}
           <GradeBadge grade={f.provisional_grade} />
@@ -448,18 +692,18 @@ function FindingCard({ finding: f, answers, transcript }: { finding: Finding; an
       </div>
 
       {termAnswers.length ? (
-        <ul className="mt-2 space-y-1 text-sm">
+        <ul className="mt-3 space-y-2 text-sm">
           {termAnswers.map((a) => {
             const turn = transcript.length ? turnForAnswer(a, transcript) : undefined;
             return (
-              <li key={a.id} className="flex flex-wrap items-baseline gap-x-2">
-                <span className="text-ink-subtle">{itemLabel(a.item_code)}:</span>
+              <li key={a.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span className="text-ink-subtle">{itemLabel(a.item_code)}</span>
                 <strong className="text-ink">{valueLabel(a)}</strong>
                 <button
                   type="button"
                   disabled={!turn}
                   onClick={() => turn && highlightTurn(turn.i)}
-                  className="text-left text-ink-muted italic enabled:hover:text-accent-800 enabled:hover:underline"
+                  className="rounded text-left text-ink-muted italic enabled:hover:text-accent-800 enabled:hover:underline"
                   lang={a.quote_lang}
                 >
                   “{a.verbatim_quote}”
@@ -470,29 +714,31 @@ function FindingCard({ finding: f, answers, transcript }: { finding: Finding; an
         </ul>
       ) : null}
 
-      {inputs.length ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {inputs.map(([k, v]) => (
-            <span key={k} className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-ink-muted">
-              {k} = {String(v)}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="mt-2 text-sm">
+      <div className="mt-3 rounded-lg border border-line bg-gray-50/80 p-3 text-sm">
+        {inputs.length ? (
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            {inputs.map(([k, v]) => (
+              <code key={k} className="rounded-md bg-white px-1.5 py-0.5 font-mono text-sm text-ink-muted ring-1 ring-line">
+                {k} = {String(v)}
+              </code>
+            ))}
+            <ArrowRight className="size-4 text-ink-subtle" aria-hidden />
+            {f.grade_basis === "rule" && f.rule_id ? <span className="font-mono font-medium text-ink">{f.rule_id}</span> : null}
+          </div>
+        ) : null}
         {f.grade_basis === "rule" && f.rule_text ? (
-          <p className="text-ink-muted">
-            <span className="font-medium text-ink">Rule {f.rule_id}</span> (CTCAE v5.0): {f.rule_text}
+          <p className="leading-6 text-ink-muted">
+            {inputs.length ? null : <span className="font-medium text-ink">Rule {f.rule_id} </span>}
+            <span className="font-medium text-ink">CTCAE v5.0:</span> {f.rule_text}
           </p>
         ) : (
-          <p className="text-ink-muted">No CTCAE rule can grade this from phone answers. A clinician assigns the grade.</p>
+          <p className="leading-6 text-ink-muted">No CTCAE rule can grade this from phone answers. A clinician assigns the grade.</p>
         )}
       </div>
 
       {f.red_flag_ids.length ? (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <span className="text-sm text-ink-subtle">Red flags:</span>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-sm text-ink-subtle">Red flags</span>
           {f.red_flag_ids.map((id) => (
             <RedFlagChip key={id} id={id} />
           ))}
@@ -504,12 +750,6 @@ function FindingCard({ finding: f, answers, transcript }: { finding: Finding; an
 
 // ---------------------------------------------------------------- drafts
 
-function draftTitle(d: DraftEntry): string {
-  if (d.kind === "AE") return d.payload.term;
-  if (d.kind === "CM") return d.payload.medication_name;
-  return NURSE_TASK_LABELS[d.payload.category] ?? humanize(d.payload.category);
-}
-
 function DraftsSection({ checkin, drafts }: { checkin: CheckIn; drafts: DraftEntry[] }) {
   const live = LIVE.has(checkin.status);
   const pending = drafts.filter((d) => d.status === "draft").length;
@@ -517,7 +757,7 @@ function DraftsSection({ checkin, drafts }: { checkin: CheckIn; drafts: DraftEnt
     <Card>
       <CardHeader
         title="Drafts created"
-        icon={<ListChecks className="size-4 text-ink-subtle" aria-hidden />}
+        icon={<ListChecks className="size-4" aria-hidden />}
         subtitle="Nothing is final until a person on the study team confirms it."
         actions={
           drafts.length ? (
@@ -529,7 +769,7 @@ function DraftsSection({ checkin, drafts }: { checkin: CheckIn; drafts: DraftEnt
       />
       {drafts.length === 0 ? (
         <EmptyState
-          className="py-6"
+          className="py-8"
           title={
             live
               ? "Drafts are created after the call"
@@ -546,21 +786,30 @@ function DraftsSection({ checkin, drafts }: { checkin: CheckIn; drafts: DraftEnt
               ? "The backend escalated this for a human to review the call. Check Escalations and the transcript."
               : checkin.status === "completed" && checkin.postcall_status !== "done"
                 ? "Draft entries usually appear within a few seconds of the call ending."
-              : "This check-in didn't produce any draft entries."}
+                : "This check-in didn't produce any draft entries."}
         </EmptyState>
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="grid gap-px overflow-hidden rounded-b-2xl sm:grid-cols-2 xl:grid-cols-3">
           {drafts.map((d) => (
-            <li key={d.id} className="bv-enter flex flex-wrap items-center gap-3 px-4 py-2.5">
-              <Chip tone={d.kind === "NURSE_TASK" ? "blue" : "gray"}>{d.kind === "NURSE_TASK" ? "Nurse task" : d.kind}</Chip>
-              <span className="font-medium text-ink">{draftTitle(d)}</span>
-              {d.kind === "AE" ? <GradeBadge grade={d.payload.provisional_grade} /> : null}
-              <span className="text-sm text-ink-subtle">
-                {d.evidence.length} evidence quote{d.evidence.length === 1 ? "" : "s"}
-              </span>
-              <span className="ml-auto">
-                <DraftStatusChip status={d.status} />
-              </span>
+            <li key={d.id} className="bv-enter flex items-start gap-3 bg-white px-5 py-4 outline outline-1 outline-line">
+              <DraftKindIcon kind={d.kind} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 text-sm text-ink-subtle">
+                  {d.kind !== "NURSE_TASK" ? (
+                    <span className="rounded-md bg-gray-100 px-1.5 font-mono text-sm font-medium text-ink-muted ring-1 ring-line">{d.kind}</span>
+                  ) : null}
+                  {KIND_LABEL[d.kind]}
+                </div>
+                <div className="truncate text-[15px] font-semibold text-ink">{draftTitle(d)}</div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {d.kind === "AE" ? <GradeBadge grade={d.payload.provisional_grade} /> : null}
+                  <span className="inline-flex items-center gap-1 text-sm text-ink-subtle">
+                    <Quote className="size-3.5" aria-hidden />
+                    {d.evidence.length} evidence quote{d.evidence.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+              </div>
+              <DraftStatusChip status={d.status} />
             </li>
           ))}
         </ul>
@@ -568,3 +817,4 @@ function DraftsSection({ checkin, drafts }: { checkin: CheckIn; drafts: DraftEnt
     </Card>
   );
 }
+
