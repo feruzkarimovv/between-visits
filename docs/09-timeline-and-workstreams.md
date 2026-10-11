@@ -113,7 +113,7 @@ Details in `docs/11` §1.2–§1.3.
 2. From the tag on, `main` is never rebased or force-pushed. Commits that add evaluation outputs are made on a checkout of `main` after rebasing and are never rebased afterwards.
 3. No commit before the tag contains a file under `monitoring/out/` or `validation/site_signal/`. Before the tag only the S1 files (`seed.py`, `_backend.py`, `plan_power.py`, project skeleton) and B16 (episode builder and its table tests) may be written; simulation and analysis code (`simulate`, `match`, `indicators`, `calibrate`, `run`, `validate`, `blind`) is written after the tag.
 4. The tag sha is published externally within 10 minutes; the evaluation seed is derived from the tag commit and the first public beacon round 10 minutes after the tag. The dev seed (20261011) is used only for development and the pre-tag planning grid. Every evaluation-seed run is logged in `validation/site_signal/run_log.jsonl`.
-5. After the tag, `params.yaml`, `data/signal_rules.json`, the `frozen_inputs` (red-flag and grading rules, `rules.py`, `episodes.py`) and the SAP text change only with an entry in docs/11 "Deviations" (commit and reason).
+5. After the tag, `params.yaml`, `data/signal_rules.json`, the `frozen_inputs` (red-flag ids, rules and levels, the plan's active red flags, the primary-term item logic, grading rules, `rules.py`, `episodes.py`) and the SAP text change only with an entry in docs/11 "Deviations" (commit and reason).
 6. REQ-022 (`monitoring/tests/test_sap_order.py`) checks the order, the seed and the run log in CI (checkout with `fetch-depth: 0` and tags).
 
 ### Working method
@@ -174,7 +174,7 @@ No human action is scheduled between 03:30 and 05:50, so the team can sleep then
 |---|---|---|
 | 02:30 | The planning grid (S1) has not finished | Use the `docs/11` §11.5 fallback (patients per site 30–60, gross *f* 0.90), record "planning grid not run" in §11.5, and continue to the tag. |
 | 03:15 | No SAP review OK from the team lead | Push the tag anyway with the §1.5 change-log line "tagged without human review"; show the diff at the next human touchpoint; review findings become §17 entries. |
-| 03:15 | Neither drand nor the NIST beacon is reachable | Derive the seed with an empty beacon value and record it in docs/11 §17 (`docs/11` §1.3). |
+| Beacon round time + 30 / + 60 min (relative, not a clock time) | drand has not returned the beacon round | `bvsignal.seed --fetch-beacon --wait` keeps retrying drand, uses the NIST pulse only from round time + 30 min and the empty beacon value only from round time + 60 min, and records every failed attempt in `seed_beacon.json`; cite them in docs/11 §17 (`docs/11` §1.3). |
 | 03:30 | V10 has not produced 3 logged real calls | Stop voice work. Label all demo calls "recorded" or "scripted"; limit ElevenLabs claims to what `voice_checks.json` shows; the video uses the recorded replay. |
 | 03:30 | The Render demo/live pair is not up | Use the tunnel for live calls and `make up` locally; keep `render.yaml` and `docs/deploy.md` marked "verified locally only"; retry the deploy at C. |
 | 03:55 | Checkpoint A is not done | Start B anyway on S2–S6 and B16–B17 (no deploy dependency); open A items move to C. |

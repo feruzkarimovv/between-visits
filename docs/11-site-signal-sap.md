@@ -16,7 +16,7 @@ Interfaces are in [`docs/03-api-contracts.md` §5](03-api-contracts.md). Tasks a
 | | |
 |---|---|
 | Version | `sap-v1` (annotated git tag, pushed) |
-| Frozen together | This file, `monitoring/params.yaml`, `data/signal_rules.json`, `data/site_queries.json`, `monitoring/planning/plan_power.py`, `monitoring/planning/planning_grid.json`, `monitoring/uv.lock`. `params.yaml` `frozen_inputs` also pins the hashes of the grading inputs (§11.3). |
+| Frozen together | This file, `monitoring/params.yaml`, `data/signal_rules.json`, `data/site_queries.json`, `monitoring/planning/plan_power.py`, `monitoring/planning/planning_grid.json`, `monitoring/uv.lock`. `params.yaml` `frozen_inputs` also pins the hashes of the grading and paging inputs (§11.3). |
 | Filled at tag time | Design patients per site and gross capture loss *f* (§11.5) |
 | Evaluation seed | Derived from the `sap-v1` commit and a public randomness beacon published after the tag (§1.3); `uv run --project monitoring python -m bvsignal.seed --show` prints it |
 | Data | Both streams of every Site Signal study are **SIMULATED**. Only live and replayed calls at site 101 are **MEASURED** (§2.3). |
@@ -71,7 +71,7 @@ What this plan does **not** claim:
 
    The tag is never moved or deleted. From this point `main` is never rebased or force-pushed. Commits that add evaluation outputs are made on a checkout of `main` after rebasing and are never rebased afterwards, so their ancestry from the tag stays intact.
 6. **External timestamp.** Within 10 minutes of the push, publish the tag sha outside the team's control: a GitHub Release on `sap-v1` (server timestamp) and the sha posted in the Devpost draft or the event's organizer channel. The links go in a §17 clarification. The external timestamp must be earlier than the beacon round time (§1.3); if it is not, §17 says so.
-7. **Beacon.** After the beacon round defined in §1.3 is published, `uv run --project monitoring python -m bvsignal.seed --fetch-beacon` writes `monitoring/seed_beacon.json` (round, randomness, source URL) and `--show` prints the full tag commit sha, the beacon round and the evaluation seed. Commit the beacon file with a §17 clarification.
+7. **Beacon.** From the beacon round time defined in §1.3, `uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait` retries under the §1.3 deadlines and writes `monitoring/seed_beacon.json` (round, randomness, source URL, the selection times and every failed attempt), and `--show` prints the full tag commit sha, the beacon round and the evaluation seed. Commit the beacon file with a §17 clarification that cites its `attempts`.
 8. Only then run the code that produces evaluation output: `calibrate.py`, `run.py`, `validate.py` and `blind.py --precompute`.
 
 **What may be written before the tag.** Only the S1 files (`seed.py`, `_backend.py`, `plan_power.py` and the project skeleton) and B16 (`backend/app/services/episodes.py` and its table tests, which implement §4–§6 exactly and touch no simulated study). Simulation and analysis code (`simulate.py`, `match.py`, `indicators.py`, `calibrate.py`, `run.py`, `validate.py`, `blind.py`) is written after the tag and must implement this SAP. This SAP leaves some choices to the implementation, for example vectorization and file layout. Those choices must not depend on any evaluation output.
@@ -92,10 +92,10 @@ The tag and beacon fix the seed; the external timestamp shows when the tag exist
 | Seed | Definition | Used for |
 |---|---|---|
 | Dev seed | `20261011` (`params.yaml` `seeds.dev`) | Development, unit tests and the pre-tag planning grid only. Outputs made with it are never committed, except `planning_grid.json`. |
-| Evaluation seed | `int(sha256(("sap-v1:" + S + ":" + B).encode()).hexdigest()[:8], 16)`. `S` is the 40-hex output of `git rev-parse sap-v1^{commit}`. `B` is the hex randomness of the first drand mainnet round [25] whose time is at least 10 minutes after the tagger timestamp of `sap-v1`. Fallback if drand is unreachable: the output value of the first NIST beacon pulse [26] at least 10 minutes after the tagger timestamp. If neither is reachable by 03:15, `B` is the empty string and a §17 entry says so. | Everything in `monitoring/out/` and `validation/site_signal/` |
+| Evaluation seed | `int(sha256(("sap-v1:" + S + ":" + B).encode()).hexdigest()[:8], 16)`. `S` is the 40-hex output of `git rev-parse sap-v1^{commit}`. `B` is the hex randomness of the first drand mainnet round [25] whose time is at least 10 minutes after the tagger timestamp of `sap-v1`. Its *round time* follows from the chain parameters pre-registered in `params.yaml` `seeds.beacon.drand`, so it is known without the network. drand is retried at least once a minute from the round time. Fallback: the output value of the first NIST beacon pulse [26] at least 10 minutes after the tagger timestamp, used only if drand has not returned the round by round time + 30 min. `B` is the empty string only if neither has returned it by round time + 60 min. Every failed attempt (UTC time, URL, error) is recorded in `monitoring/seed_beacon.json` `attempts` and cited in §17. All deadlines are relative to the round time; no clock time applies. | Everything in `monitoring/out/` and `validation/site_signal/` |
 | Blind-run seed | `int(sha256(("blind:" + seed_label).encode()).hexdigest()[:8], 16)` | One blind run (§13). Independent of the evaluation seed. |
 
-The beacon value cannot be known when the tag is created, so nobody can choose a favourable seed by re-making the tag commit; the external timestamp (§1.2 step 6) shows the tag existed before the beacon round.
+The beacon value cannot be known when the tag is created, so nobody can choose a favourable seed by re-making the tag commit; the external timestamp (§1.2 step 6) shows the tag existed before the beacon round. Because the fallback deadlines are relative to the round time and every failed attempt is committed with the beacon file, a NIST or empty `B` can be checked to have been forced by the rule rather than chosen. The beacon file is written once and never replaced (§1.4).
 
 Streams. Every replicate is keyed explicitly [18]:
 
@@ -132,6 +132,7 @@ Never allowed: re-seeding, re-tagging, or choosing among several evaluation runs
 | Version | Date | Change |
 |---|---|---|
 | draft | 2026-10-11 (planning round) | First full draft. |
+| draft | 2026-10-11 (SAP review round 1, before the tag) | §4.1–§4.2: exact mapping from a call's answers to *g_k* (absent = 0, ungraded or not asked = null); §11.2 step 5: follow-ups after a gate mapping error. §1.2 step 7, §1.3: beacon fallback deadlines relative to the round time, attempt log in `seed_beacon.json`. §11.2 step 6, §11.3, §15 rule 7: active red flags from `data/plan.json`; `frozen_inputs` also pins red-flag ids, the plan's red-flag list and the primary-term item logic. §15 rule 6, §12.1, §12.9: rounding is for display only; gates use unrounded values. §11.2 steps 4, 7, 8, §11.3: secondary items per call, other-AE entry date, `aeseq`, entry-date formula. |
 | `sap-v1` | at the tag | §11.5 values filled from the planning grid (or the §11.5 fallback); `frozen_inputs` filled; reviewed by the team lead, or "tagged without human review" (§1.2 step 4); frozen. |
 
 ---
@@ -231,13 +232,13 @@ Here *p_s(e)* is site *s*'s probability of capturing episode *e*, given its pati
 | Fatigue, Dizziness | G1 only | Reported, ungraded context. Never an episode. |
 | Nausea, Vomiting, Rash, Confusion | No rule | Reported, ungraded context. Never an episode. |
 
-Under the frozen red-flag rules only Diarrhea G2 and Dyspnea G2 episodes reach *A_s* (§4.4); Fever and grade 3 episodes are all paged. No grade bands are created for terms without rules, and no conversion table from patient-reported answers to CTCAE grades is made. A primary-term answer with `grade_basis = needs_clinician` (no rule matched, for example a missing stool count) gives no information for that term on that call. It neither opens nor closes an episode. These answers are counted per site as "ungraded primary-term reports" in `report.md` only.
+Under the frozen red-flag rules only Diarrhea G2 and Dyspnea G2 episodes reach *A_s* (§4.4); Fever and grade 3 episodes are all paged. No grade bands are created for terms without rules, and no conversion table from patient-reported answers to CTCAE grades is made. A primary-term answer that reports the symptom but has `grade_basis = needs_clinician` (no rule matched, for example a missing stool count) gives no information for that term on that call. It neither opens nor closes an episode. An answer that reports the symptom absent is grade 0 and closes an open episode (§4.2 gives the exact mapping). The ungraded answers are counted per site as "ungraded primary-term reports" in `report.md` only.
 
 ### 4.2 Episode construction
 
 Construction is deterministic and identical in `monitoring/` and the backend: the one implementation is `backend/app/services/episodes.py` (task B16, stdlib only, table-driven tests). The parameters come from `signal_rules.json` `episode`.
 
-For each subject and primary term, completed calls are taken in date order. Only calls with `status = completed` count (§6.3). Let *g_k* be the call's provisional grade for the term. Grade 0 means the patient reported the symptom absent; null means no gradable answer.
+For each subject and primary term, completed calls are taken in date order. Only calls with `status = completed` count (§6.3). Let *g_k* be the call's provisional grade for the term. For a completed call on which the term's items were asked, *g_k* = 0 when `rules.term_present(term, answers)` is false; otherwise *g_k* = `rules.grade(term, answers, baseline).provisional_grade`, which is null when `grade_basis` = `needs_clinician`. A term not asked on the call has *g_k* = null; an item answered `unknown` or `not_measured` counts as not answered, so a term whose only answers are of that kind has *g_k* = null. The simulator and `services/site_signal.py` both derive *g_k* this way. So grade 0 means the patient reported the symptom absent, and null means no gradable answer.
 
 1. **Open (new).** An episode opens at call *k* when *g_k* ≥ 2 and no episode is open. Kind is `new`. The band is *g_k*.
 2. **Continue.** If an episode is open and *g_k* ≥ 2 with *g_k* ≤ its band, call *k* is folded into the same episode (`checkin_ids` grows). A fall from 3 to 2 continues the episode. Its band stays 3.
@@ -269,7 +270,7 @@ The paged-stratum rule (§6.2) interacts with `data/red_flags.json`:
 - Site Signal measures capture of moderate, non-urgent symptoms, not of the most severe ones.
 - There are fewer evaluable episodes per site. The planning grid and the simulation therefore apply the real red-flag rules (§11.2, §11.5), so power is not overstated.
 
-The red-flag and grading inputs are hash-frozen in `params.yaml` `frozen_inputs` (§11.3). A change to them after `sap-v1` is a deviation (§1.4).
+The red-flag and grading inputs are hash-frozen in `params.yaml` `frozen_inputs` (§11.3): the red-flag ids, rules and levels, the plan's active red-flag list (`data/plan.json` `red_flag_ids`, which decides which flags can page), the primary-term item logic and the grading rules. A change to them after `sap-v1` is a deviation (§1.4).
 
 ---
 
@@ -545,14 +546,15 @@ The design follows the ADEMP structure (aims, data-generating mechanisms, estima
 4. **Answers.**
    - On each completed call, each primary term's answer set is drawn by enumerating the item domain, grading every candidate with `rules.grade()`, and sampling uniformly among candidates whose grade equals the latent grade on that call. Calls without an episode answer at the item's "none" level.
    - Numeric domains: stools per day 0–15 in steps of 1; highest temperature 36.5–40.8 °C in steps of 0.1. Baseline stools per day is 1 or 2.
-   - Items that do not set the grade but can trigger a red flag (stool blood, dizziness on standing, dyspnea severity) are drawn from `answer_generation.secondary` (ASSUMPTION, §11.3).
+   - Items that do not set the grade but can trigger a red flag (stool blood, dizziness on standing, dyspnea severity) are drawn from `answer_generation.secondary` (ASSUMPTION, §11.3). Secondary items are drawn independently on every completed call of the episode; on calls without an episode they are at their none level.
    - Non-primary items are answered at "none".
    - Candidate sets are enumerated once per run and cached.
 5. **Mapping error.**
    - Each patient draws *ε_i* ~ Beta(2, 38) (mean 0.05).
    - Each recorded primary-term answer is replaced with probability *ε_i* by an adjacent value: the next option up or down for ordinal items, the other value for yes/no, ±1 stool per day, ±0.5 °C.
+   - When an error changes a gate item, follow-ups follow `data/symptom_items.json` `followups`: a follow-up the new value no longer opens is dropped, and one it newly opens is answered `unknown` (so the term is null on that call).
    - This happens before grading, so errors can create, hide or re-band episodes. Rates are the same in both languages and paces (sensitivity in §12.6).
-6. **Red flags and paging.** `rules.red_flags()` runs on the recorded answers. An `urgent` or `emergency` level on a call puts every episode containing that call in the paged stratum.
+6. **Red flags and paging.** `rules.red_flags()` runs on the recorded answers with `active_ids` = `data/plan.json` `red_flag_ids` (as `plan_power.py` does, and as the live path passes the plan's red flags). An `urgent` or `emergency` level on a call puts every episode containing that call in the paged stratum.
 7. **Site capture.** Each latent episode, not the recorded one, is entered by the site with probability:
 
    ```math
@@ -565,14 +567,15 @@ The design follows the ADEMP structure (aims, data-generating mechanisms, estima
    - *δ* is a planted offset (§11.4).
    - *f_s* is planted capture loss (0 for honest sites).
 
-   A captured episode gives one site row:
+   A captured episode gives one site row (`origin = site`, `symptomatic = true`):
    - `aeterm` is a random synonym of the term;
    - `aetoxgr` is the latent grade;
    - AESTDTC = start day + round(N(0, 2²)) days;
-   - `entered_on` = first dose visit on or after AESTDTC + ⌈Gamma(shape 2, mean 8 days)⌉ (entry lag anchored to [20]).
+   - `entered_on` = (first dose visit on or after AESTDTC) + ⌈lag⌉, lag ~ Gamma(shape 2, mean 8 days) (entry lag anchored to [20]). The first dose visit is the enrollment day when AESTDTC falls before it.
+   - `aeseq` numbers each subject's site rows (symptomatic and other, step 8) 1, 2, … by AESTDTC, then `entered_on`, then symptomatic before other, then latent start day, then generation order. It is the §5 tie-break.
 
    Paged episodes get no capture boost (ASSUMPTION; they are descriptive only).
-8. **Other AEs.** For each patient, Poisson(1.5 · *m_s* · *F_i* · *x_i*) non-symptomatic site rows (`symptomatic = false`), with AESTDTC uniform over time on study. At planted sites each is dropped with probability *f_s*. The comparators use these rows.
+8. **Other AEs.** For each patient, Poisson(1.5 · *m_s* · *F_i* · *x_i*) non-symptomatic site rows, with AESTDTC uniform over time on study. Each other-AE row has `origin = site`, `symptomatic = false` and `entered_on` by the step 7 rule. At planted sites each is dropped with probability *f_s*. The comparators use these rows.
 9. **Evidence.** Each simulated episode takes a quote from `monitoring/quote_bank.json` by term, band and language, with `source = synthetic`. The bank's phrasings and its English translations of Spanish quotes are AI-assisted, so `translation_is_ai` is true and the UI shows an `AiLabel`.
 10. **Output.** A `Study` object, the answer key, and the episode, site-AE and site JSON, with `data_origin = SIMULATED` on every object.
 
@@ -602,7 +605,7 @@ Calendar dates: study day 0 = 2026-01-05 (`design.study_start_date`), so the dat
 | `answer_generation.method` | Enumerate the item domain and grade with `rules.py` | Rule 2: no thresholds re-coded |
 | `answer_generation.numeric_domains` | `DIARRHEA_STOOLS_PER_DAY` [0, 15]; `TEMP_HIGHEST` [36.5, 40.8, 0.1] | Covers every band |
 | `answer_generation.baseline_stools` | {1, 2}, equal probability | ASSUMPTION |
-| `answer_generation.secondary` | Diarrhea episode: `STOOL_BLOOD` yes 0.05; `DIZZINESS_SEV` mild or worse with `DIZZY_ON_STANDING` yes 0.10. Dyspnea G2: `SOB_SEV` mild 0.30, moderate 0.50, severe 0.15, very_severe 0.05. Dyspnea G3: moderate 0.30, severe 0.50, very_severe 0.20. | ASSUMPTION |
+| `answer_generation.secondary` | Diarrhea episode: `STOOL_BLOOD` yes 0.05; `DIZZINESS_SEV` mild or worse with `DIZZY_ON_STANDING` yes 0.10. Dyspnea G2: `SOB_SEV` mild 0.30, moderate 0.50, severe 0.15, very_severe 0.05. Dyspnea G3: moderate 0.30, severe 0.50, very_severe 0.20. Secondary items are drawn independently on every completed call of the episode; on calls without an episode they are at their none level. | ASSUMPTION |
 | `site_capture.base_p` | Diarrhea G2 0.56, G3 0.70; Fever G2 0.80, G3 0.90; Dyspnea G2 0.60, G3 0.75 | Anchored to Di Maio 2015: clinicians missed 40.7–74.4% of patient-reported symptomatic toxicities at any grade and 13–50% at the highest severity [1] (ranges from a secondary summary; per-term values ASSUMPTION). Fever G3 sits slightly above that range because temperature is measured. |
 | `site_capture.between_site_sd_logit` | 0.35 (failure case 0.6) | ASSUMPTION |
 | `site_capture.patient_re_sd_logit` | 0.5 | ASSUMPTION |
@@ -619,7 +622,7 @@ Calendar dates: study day 0 = 2026-01-05 (`design.study_start_date`), so the dat
 | `comparators` | `rate_kri` {patient-days, `min_days` 30}; `simaerep_classic` {r 1000, `visit_med75` true, BH true}; `ae_report_ratio` (ablation, §10.3) | [9, 10, 11] |
 | `blind_run` | `planted_count` uniform integer 0–3; `f` = `planted.gross.f`; 10 `precomputed_labels` (short words such as `aurora`; the example label `demo-42` used in acceptance checks is deliberately not one of them) | §13 |
 | `signal_rules_sha256` | sha256 of `data/signal_rules.json` at the tag | Freeze check |
-| `frozen_inputs` | sha256 of: the canonical JSON (`sort_keys`, no spaces) of the `rule` and `level` fields of every entry in `data/red_flags.json` (sources and citations excluded, so the D8 citation fix is allowed); the canonical JSON of the `rules` array of `data/ctcae_rules.json`; `backend/app/services/rules.py`; `backend/app/services/episodes.py` (if B16 has not landed at the tag, its hash is added by a §17 clarification when it lands, and §4–§6 is its specification) | `calibrate.py`, `run.py`, `validate.py` and `blind.py` refuse to run on a mismatch unless a §17 row cites the new hash |
+| `frozen_inputs` | sha256 of: the canonical JSON (`sort_keys`, no spaces) of the `id`, `rule` and `level` fields of every entry in `data/red_flags.json`, in file order (sources, wording and citations excluded, so the D8 citation fix is allowed) (`red_flags_id_rule_level_sha256`); the canonical JSON of `data/plan.json` `red_flag_ids`, the active red flags that decide paging (§11.2, red flags and paging) (`plan_red_flag_ids_sha256`); the canonical JSON of the `kind`, `term`, `scale`, `unit` and `followups` fields of every item in `data/symptom_items.json` whose `term` is a primary term, with the `options`, `numeric` and `units` fields of the scales those items use (wording excluded; these define the answer domains, the follow-up structure and the mapping-error adjacency) (`symptom_items_logic_sha256`); the canonical JSON of the `rules` array of `data/ctcae_rules.json` (`ctcae_rules_sha256`); `backend/app/services/rules.py` (`rules_py_sha256`); `backend/app/services/episodes.py` (`episodes_py_sha256`; if B16 has not landed at the tag, its hash is added by a §17 clarification when it lands, and §4–§6 is its specification) | `calibrate.py`, `run.py`, `validate.py` and `blind.py` refuse to run on a mismatch unless a §17 row cites the new hash |
 | `seeds` | `dev` 20261011; `eval` derived (§1.3); beacon in `monitoring/seed_beacon.json` | §1.3 |
 | Provenance | Every output records `numpy` and `scipy` versions; `monitoring/uv.lock` is committed in the tag commit | numpy does not promise identical random streams across versions |
 
@@ -703,12 +706,12 @@ CI runs `--quick --check` on the same replicate keys with fewer replicates. Quic
 
 All three indicators and the ablation are reported, at both tiers.
 
-**Acceptance (REQ-023).** With SE_cal the MC SE of the threshold's achieved in-sample rate (`thresholds.json`) and SE_val the MC SE above, both one-sided:
+**Acceptance (REQ-023).** With SE_cal the MC SE of the threshold's achieved in-sample rate (`thresholds.json`) and SE_val the MC SE above, both one-sided, and every quantity unrounded (§15 rule 6):
 
 - Look per-site rate ≤ 0.05 + 2·√(SE_cal² + SE_val²);
 - Watch family-wise rate ≤ 0.10 + 2·√(SE_cal² + SE_val²).
 
-A rate below nominal is reported as "conservative", not as a failure. **Size calibration:** every *E_s* tertile's Look rate is within 0.05 ± 0.02; a failure is reported in `report.md` and `WHAT_IT_GETS_WRONG.md`, never hidden.
+A rate below nominal is reported as "conservative", not as a failure. **Size calibration:** every *E_s* tertile's unrounded Look rate is within 0.05 ± 0.02; a failure is reported in `report.md` and `WHAT_IT_GETS_WRONG.md`, never hidden.
 
 Under a correctly specified null the first two hold by construction. The informative tests are the size check, §12.5 and §12.6.
 
@@ -818,7 +821,7 @@ This gives 29 for *p* = 0.90, 59 for 0.95 and 299 for 0.99.
 
 ### 12.9 `summary.json` content
 
-`summary.json` is the single source of every Site Signal number used anywhere. It holds:
+`summary.json` is the single source of every Site Signal number used anywhere. It stores unrounded values; rounding happens only where a number is displayed (§15 rule 6). It holds:
 
 - `sap_tag_commit`, `eval_seed`, `beacon_round`, `code_commit`, `generated_at`, `numpy_version`, `scipy_version`;
 - `design` (the chosen design, gross *f*, planning gate outcome);
@@ -886,8 +889,8 @@ Pace uses the same formulas with extra-time and standard. In the simulation no p
 3. **Uncertainty.** Every simulated rate carries its MC SE (§12.8). Every fixed-sample proportion carries a Clopper-Pearson 95% CI. Power is always reported at both tiers, including the *f* = 0.25 and 0.50 rows.
 4. **Wording.** Say "capture discordance" and "a reason to look, not a finding". `none` reads "No signal at this sample size". Never "clean", never green. Never "detects under-reporting", "fraud" or "misconduct". The site query wording comes only from `data/site_queries.json`.
 5. **Whole results.** If the committed study is unfavourable, for example a gross site not flagged or a false Watch flag, it is shown as it is. The failure case and the misspecified-null rows are reported next to the favourable rows, never instead of them.
-6. **Rounding.** Proportions to 2 decimal places. MC SE and CI limits to 3. *z* to 2. O/E to 2. *E* and *V* to 1.
-7. **Provenance.** Every output carries `sap_tag_commit`, `eval_seed` and `code_commit`. `code_commit` is the last commit that changed an analysis input: `git log -1 --format=%H -- monitoring/bvsignal monitoring/params.yaml monitoring/uv.lock data/signal_rules.json data/ctcae_rules.json data/red_flags.json backend/app/services/episodes.py backend/app/services/rules.py`. `generated_at` is that commit's time, so committing the outputs (or any later unrelated commit) does not change them. `report.md` links this SAP and states which §17 deviations, if any, apply.
+6. **Rounding.** Proportions to 2 decimal places. MC SE and CI limits to 3. *z* to 2. O/E to 2. *E* and *V* to 1. Rounding applies only where a number is displayed (UI, `report.md`, README, deck, video). JSON outputs (`monitoring/out/*.json` including `thresholds.json`, `validation/site_signal/*.json`) store unrounded float64 values. Tier assignment, threshold calibration (§9.3), the REQ-023 inequalities and the §12.1 size-calibration check use those unrounded values.
+7. **Provenance.** Every output carries `sap_tag_commit`, `eval_seed` and `code_commit`. `code_commit` is the last commit that changed an analysis input: `git log -1 --format=%H -- monitoring/bvsignal monitoring/params.yaml monitoring/uv.lock data/signal_rules.json data/ctcae_rules.json data/red_flags.json data/plan.json data/symptom_items.json backend/app/services/episodes.py backend/app/services/rules.py`. `generated_at` is that commit's time, so committing the outputs (or any later unrelated commit) does not change them. `report.md` links this SAP and states which §17 deviations, if any, apply.
 8. **Next step.** Every results surface states that the only non-circular validation is retrospective analysis of trials with paired patient-reported and clinician-reported (CTCAE) data and site IDs.
 
 ---

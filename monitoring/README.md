@@ -25,13 +25,13 @@ cd monitoring && uv run ruff check .
 | `bvsignal/_backend.py` | Puts `backend/` on `sys.path` and re-exports the rules engine (`grade`, `red_flags`, `level_for`); no `.env`, database or LLM | S1 |
 | `planning/plan_power.py`, `planning/planning_grid.json` | Pre-tag planning grid (SAP §11.5 rules P1 and P2), dev seed, **planning only, not a result** | S1 |
 | `planning/check_params_sap.py` | Checks `params.yaml` against the SAP §11.3 and §11.4 tables and the §11.5 values | S1 |
-| `seed_beacon.json` | Beacon round and randomness, fetched once after the tag | after the tag |
+| `seed_beacon.json` | Beacon round and randomness, the selection times and every failed attempt, fetched once after the tag | after the tag |
 | `bvsignal/{roster,simulate,match,indicators,calibrate,simaerep_classic,equity,run,validate,blind,report}.py`, `out/` | Simulation, analysis and committed outputs | after the `sap-v1` tag (S2–S10) |
 
 ## Seeds and pre-registration order (SAP §1.2, §1.3)
 
 - **Dev seed** `20261011` (`params.yaml` `seeds.dev`): development, unit tests and the planning grid only. Dev-seed outputs are never committed, except `planning/planning_grid.json`.
-- **Evaluation seed**: `int(sha256(("sap-v1:" + S + ":" + B).encode()).hexdigest()[:8], 16)`, where `S` is `git rev-parse sap-v1^{commit}` and `B` is the randomness of the first drand mainnet round at least 10 minutes after the `sap-v1` tagger timestamp (NIST beacon 2.0 fallback; the empty string, with a SAP §17 entry, if neither is reachable).
+- **Evaluation seed**: `int(sha256(("sap-v1:" + S + ":" + B).encode()).hexdigest()[:8], 16)`, where `S` is `git rev-parse sap-v1^{commit}` and `B` is the randomness of the first drand mainnet round at least 10 minutes after the `sap-v1` tagger timestamp (NIST beacon 2.0 fallback only if drand has not returned the round by round time + 30 min; the empty string only if neither has by round time + 60 min; every failed attempt is recorded in `seed_beacon.json` `attempts` and cited in SAP §17).
 - Every replicate draws from `numpy.random.SeedSequence(seed, spawn_key=(stream, cell_index, role, i))`; streams are listed in `params.yaml` `streams` and cells in `cell_index`.
 - Before the tag only the S1 files (and B16, `backend/app/services/episodes.py`) may exist; nothing under `monitoring/out/` or `validation/site_signal/` is committed before the tag.
 
@@ -42,7 +42,7 @@ uv run --project monitoring python -m bvsignal.seed --write-frozen      # write 
 uv run --project monitoring python -m bvsignal.seed --check-frozen      # exit 1 on a mismatch no SAP §17 row cites
 uv run --project monitoring python monitoring/planning/check_params_sap.py   # params.yaml vs the SAP tables
 # after the sap-v1 tag is pushed:
-uv run --project monitoring python -m bvsignal.seed --fetch-beacon [--wait]
+uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait   # retries drand from the round time; NIST from +30 min, empty B from +60 min
 uv run --project monitoring python -m bvsignal.seed --show              # sap_tag_commit=<sha> beacon_round=<n> eval_seed=<int>
 ```
 
