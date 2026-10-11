@@ -61,7 +61,7 @@ Steps that need a person. Everything around them is done; each item says exactly
    ```
    Without this, the same stack runs through the compose inside the colima VM: `colima ssh -- env GIT_COMMIT=$(git rev-parse --short HEAD) docker compose --project-directory "$PWD" -f "$PWD/docker-compose.prod.yml" up --build -d` (stop with the same command and `down`).
 
-6. **Freeze the SAP: review, tag `sap-v1`, publish the timestamp, fetch the beacon (S1; docs/11 §1.2 steps 2-7).** S1 is integrated on `site-signal-build`: §11.5 filled (patients per site 40-80 and gross *f* 0.90, both "shortfall" from the planning grid), `monitoring/params.yaml` frozen-input hashes written, §17 empty. Nothing below can be undone once the tag is pushed (the tag is never moved or deleted), so do the steps in order:
+6. **Freeze the SAP: review, tag `sap-v1`, publish the timestamp, fetch the beacon (S1; docs/11 §1.2 steps 2-7).** S1 is integrated on `site-signal-build`: §11.5 filled (patients per site 40-80 and gross *f* 0.90, both "shortfall" from the planning grid), `monitoring/params.yaml` frozen-input hashes written, §17 empty. **Update:** the §1.5 `sap-v1` row is now filled (commit 9c6e84a), so follow item 11 instead of sub-steps 1-2 here, then sub-steps 3-6. Nothing below can be undone once the tag is pushed (the tag is never moved or deleted), so do the steps in order:
    1. Review the SAP diff (`git diff 607d213..origin/site-signal-build -- docs/11-site-signal-sap.md monitoring/params.yaml`). If the review OK has not arrived by 03:15, tag anyway and write "tagged without human review" in the change-log line.
    2. Fill the docs/11 §1.5 change-log row for `sap-v1` (replace "at the tag" with today's date, and keep either "reviewed by the team lead" or "tagged without human review", whichever applies). Commit it on `site-signal-build`, check it, push it, then fast-forward `main` to exactly that commit. docs/11 §1.2 steps 2-3 put the frozen commit on `main` and the tag on `origin/main`, so a later squash or rebase of the branch can never drop the tag commit (part of the seed) from `main`'s history:
       ```bash
@@ -206,3 +206,44 @@ Steps that need a person. Everything around them is done; each item says exactly
       ```bash
       git add scenarios/rec_*.json && git commit -m "WS1-V11: recorded scenarios rec_en_g2 rec_es_g3_flag" && git push origin site-signal-build
       ```
+
+11. **Finish the `sap-v1` freeze: the §1.5 row is filled, the tag is not made (S1 final; docs/11 §1.2 steps 2-7).** Commit 9c6e84a on `site-signal-build` sets the docs/11 Status line to "frozen by the annotated tag `sap-v1` (§1.5)" and fills the §1.5 `sap-v1` row (2026-10-11; §11.5 P1 shortfall, P2 shortfall; reviewed by agent with a statistician's lens, 4 rounds; "team lead review pending"). This replaces item 6 sub-steps 1-2 (do not add a second change-log commit). `--check-frozen` passes and nothing under `monitoring/out/` or `validation/site_signal/` exists. Nothing is tagged or released yet.
+   1. **Review the SAP diff** (team lead):
+      ```bash
+      cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
+      git diff 607d213..origin/site-signal-build -- docs/11-site-signal-sap.md monitoring/params.yaml
+      ```
+   2. **Optional, only if you signed off before tagging:** before sub-step 3, change the phrase "team lead review pending" in the docs/11 §1.5 `sap-v1` row to "reviewed by the team lead", and commit it before anything goes to `main`:
+      ```bash
+      sed -i '' 's/team lead review pending; frozen\./reviewed by the team lead; frozen./' docs/11-site-signal-sap.md
+      grep -n '^| `sap-v1` |' docs/11-site-signal-sap.md       # check the row
+      git commit -am "SAP v1: team lead review in change log"
+      ```
+      Without a sign-off, leave the row as it is (docs/KICKOFF.md wording).
+   3. **Land the frozen commit on `main`** (docs/11 §1.2 steps 2-3; same rejection handling as item 6 sub-step 2: never force):
+      ```bash
+      uv run --project monitoring python -m bvsignal.seed --check-frozen; echo exit=$?   # expect: frozen inputs: OK, exit=0
+      git push origin site-signal-build
+      git push origin site-signal-build:main      # fast-forward only: never add --force, -f or a leading +
+      git fetch origin
+      test "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)" && echo main-is-the-sap-commit   # expect: main-is-the-sap-commit
+      git ls-tree -r origin/main --name-only | grep -E '^(monitoring/out|validation/site_signal)/'   # must print nothing
+      ```
+   4. **Tag the pushed commit** (docs/11 §1.2 step 5; tag `origin/main`, never a worktree sha):
+      ```bash
+      git fetch origin && git tag -a sap-v1 origin/main -m 'Site Signal SAP v1' && git push origin sap-v1
+      git rev-parse 'sap-v1^{commit}'                                       # the tag sha to publish
+      git merge-base --is-ancestor sap-v1 origin/main && echo tag-on-main   # expect: tag-on-main
+      ```
+   5. **External timestamp within 10 minutes** (docs/11 §1.2 step 6): GitHub > Releases > Draft a new release > tag `sap-v1` > title "Site Signal SAP v1" > Publish release (or `gh release create sap-v1 --title "Site Signal SAP v1" --notes "sap-v1 = <tag sha>"`), and post the tag sha in the Devpost draft or the organizer channel. Keep both links.
+   6. **Beacon** (docs/11 §1.2 step 7), started right after the tag push and left running until it exits:
+      ```bash
+      uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait   # writes monitoring/seed_beacon.json once
+      uv run --project monitoring python -m bvsignal.seed --show                  # tag sha, beacon round, evaluation seed
+      ```
+   7. **Commit the beacon file with a §17 clarification** (Release link, Devpost/organizer link, beacon round and `source`, and the `attempts` summary if not empty), exactly as item 6 sub-step 6:
+      ```bash
+      git add monitoring/seed_beacon.json docs/11-site-signal-sap.md
+      git commit -m "SAP v1: beacon round and external timestamp (docs/11 §17)" && git push origin site-signal-build
+      ```
+   Only after this may S6/S7/S8 produce evaluation output.
