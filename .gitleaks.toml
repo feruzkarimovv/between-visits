@@ -1,0 +1,21 @@
+# gitleaks configuration (WS0 R1). Pinned release: Makefile GITLEAKS_VERSION, CI job `gitleaks`.
+# Run: make secret-scan  (gitleaks over the full history of every ref, then validation/scan_numbers.py)
+# Default rule set, plus an allowlist for the documented placeholders only. Each pattern must match the whole
+# detected secret, so a real value that merely contains a placeholder is still reported. Nothing else is allowlisted:
+# a real key, token or secret is rotated first and then removed, never added here.
+
+title = "Between Visits"
+minVersion = "v8.30.1"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documented placeholders: +1XXXXXXXXXX, fictional +1555 numbers, change-me secrets, bv-change-me ntfy topics"
+regexTarget = "secret"
+regexes = [
+  '''^\+1X{10}$''',
+  '''^\+1555[0-9]{7}$''',
+  '''^change-me[A-Za-z0-9_-]*$''',
+  '''^bv-change-me[A-Za-z0-9_-]*$''',
+]

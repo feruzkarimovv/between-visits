@@ -3,7 +3,41 @@ on:
   push:
   pull_request:
 
+# A newer push to the same ref cancels the run it supersedes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GITLEAKS_VERSION: 8.30.1  # same pin as GITLEAKS_VERSION in the Makefile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install pinned gitleaks release binary (checksum-verified)
+        run: |
+          set -euo pipefail
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          sums="gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          dir="$RUNNER_TEMP/gitleaks" && mkdir -p "$dir" && cd "$dir"
+          curl -fsSL --retry 3 -o "$tarball" "$base/$tarball"
+          curl -fsSL --retry 3 -o "$sums" "$base/$sums"
+          grep -E "^[0-9a-f]{64}  ${tarball}\$" "$sums" | sha256sum --check --strict -
+          tar -xzf "$tarball"
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          test "$(gitleaks version)" = "$GITLEAKS_VERSION" || test "$(gitleaks version)" = "v$GITLEAKS_VERSION"
+          gitleaks version
+      - name: Secret scan (gitleaks full history + real-number grep)
+        run: make secret-scan
+      - name: Number scan self-test (scratch clone, generated non-555 numbers)
+        run: python3 validation/scan_numbers.py --self-test
+
   backend:
     runs-on: ubuntu-latest
     steps:

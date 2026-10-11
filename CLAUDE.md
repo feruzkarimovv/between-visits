@@ -14,7 +14,7 @@ Specs live in `docs/`. Read the relevant ones before changing anything:
 5. **Fail safe:** if anything errors on a path that could involve a red flag, escalate. Never fail silent.
 6. **Evidence on every draft** (verbatim quote in original language + timestamp + source). AI translations and AI drafts are always labeled in the UI.
 7. **Nothing is final without a human**, and every human action writes an `AuditEvent` (append-only).
-8. **Synthetic data only.** Never commit real phone numbers, keys or real patient data. Real numbers live in `.env` and `data/patients.local.json` (gitignored). Refer to the study drug by class only.
+8. **Synthetic data only.** Never commit real phone numbers, keys or real patient data. Real numbers live in `.env` and `data/patients.local.json` (gitignored). Refer to the study drug by class only. The repository is private; changing visibility is a human decision after a fresh secret scan.
 9. **No licensed content in git:** no PRO-CTCAE item wording, no MedDRA codes or hierarchy, no WHODrug. Pages and push notifications carry the subject ID only, never names.
 
 ## Repo map and ownership
@@ -48,12 +48,12 @@ make validate     # build validation/traceability.md + summary.json
 make demo         # DEMO_MODE=1: no external keys, replay scenarios
                   # /api/demo/* exists only under make demo (DEMO_MODE=1); outside it the backend refuses
                   # to start with an empty, placeholder or < 24-character TOOL_SHARED_SECRET
+make secret-scan  # gitleaks (pinned 8.30.1) over the full history of every ref + real-number grep (validation/secret-scan.md)
 ```
 
 Planned (Sun Oct 11, `docs/09`); not in the Makefile until the named task lands, then move each line into the block above:
 
 ```bash
-make secret-scan           # R1: gitleaks over full history + real-number grep
 make up                    # R5: production images (docker-compose.prod.yml), no Next dev badge
 make planning-grid         # S1: pre-tag planning grid (dev seed); picks the gross planted capture loss
 make site-signal           # S6: regenerate monitoring/out/* + validation/site_signal/report.md from the sap-v1 seed (< 60 s)

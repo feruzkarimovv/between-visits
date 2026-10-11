@@ -4,7 +4,10 @@ UV := uv run --project backend
 # .env is read by the backend itself (pydantic-settings); only `tunnel` peeks at it here.
 ENV_GET = $$(grep -E "^$(1)=" .env 2>/dev/null | head -1 | cut -d= -f2- | sed -E "s/[[:space:]]+\#.*//; s/[[:space:]]+$$//")
 
-.PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo
+# Pinned gitleaks release (WS0 R1); the CI job `gitleaks` downloads and checksum-verifies exactly this version.
+GITLEAKS_VERSION := 8.30.1
+
+.PHONY: setup dev backend frontend seed test test-backend test-frontend lint tunnel sync-agent types eval validate demo secret-scan
 
 setup:
 	cd backend && uv sync
@@ -52,6 +55,12 @@ eval:
 
 validate:
 	$(UV) python validation/build_traceability.py $(ARGS)
+
+# gitleaks over the full history of every ref (primary check), then the real-phone-number grep. validation/secret-scan.md
+secret-scan:
+	@command -v gitleaks >/dev/null 2>&1 || { echo "secret-scan: gitleaks not found; install the pinned $(GITLEAKS_VERSION) release (validation/secret-scan.md)" >&2; exit 1; }
+	@v="$$(gitleaks version)"; case "$$v" in $(GITLEAKS_VERSION)|v$(GITLEAKS_VERSION)) ;; *) echo "secret-scan: gitleaks $$v found, pinned $(GITLEAKS_VERSION); install the pinned release (validation/secret-scan.md)" >&2; exit 1;; esac
+	gitleaks git --redact --log-opts="--all" -v . && python3 validation/scan_numbers.py
 
 demo:
 	@trap 'kill 0' EXIT; \
