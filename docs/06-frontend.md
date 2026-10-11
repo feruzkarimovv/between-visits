@@ -73,7 +73,7 @@ Append-only list: time, actor, role, action, entity, before/after diff on expand
 
 ## Components to build once
 
-`StatusChip`, `LevelChip`, `LanguageChip`, `PaceChip`, `GradeBadge` (always shows "provisional"), `EvidenceQuote` (quote + translation + timestamp + source), `AiLabel`, `CountdownClock`, `RelativeTime`, `RoleSwitch`, `EscalationBanner`, `WebCallWidget`, `Sparkline`. *Planned (Site Signal, below):* `TierBadge`, `DataOriginBadge`, `FunnelPlot`, `EpisodeTable`, `SiteQueryComposer`, `BlindRunDialog`, `PowerTable`, `EquityPanel`.
+`StatusChip`, `LevelChip`, `LanguageChip`, `PaceChip`, `GradeBadge` (always shows "provisional"), `EvidenceQuote` (quote + translation + timestamp + source), `AiLabel`, `CountdownClock`, `RelativeTime`, `RoleSwitch`, `EscalationBanner`, `WebCallWidget`, `Sparkline`. *Planned (Site Signal, below):* `TierBadge`, `DataOriginBadge`, `FunnelPlot`, `EpisodeTable`, `SiteQueryComposer`, `BlindRunDialog`, `PowerTable`, `EquityPanel` (BlindRunDialog and EquityPanel not built: NOT_BUILT.md #21, #22).
 
 ## States
 
@@ -92,10 +92,10 @@ What each page must show and who can act is in `docs/10-site-signal.md` §6; pay
 **Nav.** `AppShell` adds **Sites** (`/sites`) and **Site inbox** (`/site-inbox`); `/sae` gets its own nav state. The role switch adds **CRA (sponsor)** (Sam Rivera). On phone width the bottom nav scrolls horizontally without page overflow.
 
 ### `/sites` Site Signal (cra, sponsor; other roles see a "Switch to CRA to view site rankings" notice)
-- Header: `DataOriginBadge` SIMULATED, `sap-v1` short sha and date, "Thresholds fixed from the pre-registered null". Tabs: **Signal** · **How well it works** · **Equity**.
-- **Signal:** `FunnelPlot` (hand-built SVG: x = E, y = O/E, Look and Watch lower-limit curves from `funnel.limits`, one dot per computed site, not-computed sites as hollow gray markers in a strip below the axis, accessible table fallback). Ranked table: site, patients, evaluable, pending, paged, coverage, O/E, `TierBadge`, rate-KRI tier, "simaerep classic (legacy)" tier, open queries. Tier legend with the number of computed sites. Footer from `labels.footer` and `labels.footer_expected_false_look` (number from the API). Buttons **Blind run** (`BlindRunDialog`, demo mode only) and **Reveal answer key** (display labels from `labels.answer_key` only).
+- Header: `DataOriginBadge` SIMULATED, `sap-v1` short sha and date, "Thresholds fixed from the pre-registered null". Tabs: **Signal** · **How well it works** (the Equity tab is not built, #22; the pooled odds ratios are an Equity block inside How well it works, CRA and sponsor only).
+- **Signal:** `FunnelPlot` (hand-built SVG: x = E, y = O/E, Look and Watch lower-limit curves from `funnel.limits`, one dot per computed site, not-computed sites as hollow gray markers in a strip below the axis, accessible table fallback). Ranked table: site, patients, evaluable, pending, paged, coverage, O/E, `TierBadge`, rate-KRI tier, "simaerep classic (legacy)" tier, open queries. Tier legend with the number of computed sites. Footer from `labels.footer` and `labels.footer_expected_false_look` (number from the API). Button **Reveal answer key** (display labels from labels.answer_key only). The Blind run button is not built (cut for time, NOT_BUILT.md #21).
 - **How well it works** (any role): `PowerTable` with power at both tiers for every indicator, the 25% and 50% rows, null false-flag rates with MC SE, the failure case, sensitivity rows and the committed-study confusion labeled "illustration only"; link to `WHAT_IT_GETS_WRONG.md`. No number is typed in a component.
-- **Equity** (Checkpoint C): `EquityPanel` with within-site odds ratios (Spanish vs English, extra time vs standard) and intervals, the "power is low" note, per-site rows, and the **Single-language app** toggle that grays out the sites in the counterfactual list.
+- Not built (cut for time, NOT_BUILT.md #22): **Equity** (Checkpoint C): `EquityPanel` with within-site odds ratios (Spanish vs English, extra time vs standard) and intervals, the "power is low" note, per-site rows, and the **Single-language app** toggle that grays out the sites in the counterfactual list.
 
 ### `/sites/[id]` Site drill-down (cra, sponsor; query actions cra only)
 - Site card: fictional name, region, roster mix, call completion, `TierBadge` with reason.
@@ -110,6 +110,6 @@ Table: subject ID, event term, status, `aware_at`, `CountdownClock` to `due_at`,
 
 ### Changed pages
 - `/` Today: replay speed 1x/2x/4x; "Call in browser" disabled with a reason in demo mode; replay controls only when `health.demo_mode` is true.
-- `/checkins/[id]`: MEASURED badge "Site aware N days before next visit" (Checkpoint C); recorded-scenario label ("Recorded real call; synthetic patient played by a teammate" or "Scripted") and an audio player when `audio_url` is set.
+- `/checkins/[id]`: MEASURED badge "Site aware N days before next visit" (Checkpoint C); recorded-scenario label ("Recorded real call; synthetic patient played by a teammate" or "Scripted") and an audio player when `audio_url` is set. Not built (cut for time, NOT_BUILT.md #23).
 - `/review` and `/sponsor`: "Download AE.csv" / "Download CM.csv"; "origin: between_visits" tag on confirmed AE rows; the sponsor page gets an `h1`.
 - `/report-card`: Clopper-Pearson 95% interval on every proportion; the zero-failure note from `zero_failure_n`; a separate MEASURED "Real voice calls" row from `/api/eval/voice-checks`, never pooled with text mode; a line stating whether the evaluated and deployed agent models match.
