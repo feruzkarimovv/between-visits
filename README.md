@@ -10,11 +10,11 @@ Between Visits is a voice agent that phones cancer-trial patients in the days af
 
 **Deck:** [`docs/pitch/deck.pdf`](docs/pitch/deck.pdf), 10 slides, exported from [`docs/pitch/deck.html`](docs/pitch/deck.html).
 
-**Public demo:** the public demo URL (pending deploy, [`docs/deploy.md`](docs/deploy.md)). Until it is live, run the same demo on your machine with `make demo` ([Quickstart](#quickstart)).
+**Public demo:** https://bv-demo-web.onrender.com (demo mode, synthetic data; Render free instance, so the first load after about 15 idle minutes takes up to a minute). Or run the same demo on your machine with `make demo` ([Quickstart](#quickstart)).
 
 ## Reviewer path (3 minutes)
 
-Open the dashboard at the public demo URL (pending deploy, [`docs/deploy.md`](docs/deploy.md)), or locally: `make demo`, then http://localhost:3000. Both run demo mode (`DEMO_MODE=1`): synthetic patients, a scripted call replayed through the real backend, no API keys, live calls off. You need nothing else. The times below assume the **4x** replay speed.
+Open the dashboard at https://bv-demo-web.onrender.com, or locally: `make demo`, then http://localhost:3000. Both run demo mode (`DEMO_MODE=1`): synthetic patients, a scripted call replayed through the real backend, no API keys, live calls off. You need nothing else. The times below assume the **4x** replay speed.
 
 | Time | What to click | What it proves |
 |---|---|---|
