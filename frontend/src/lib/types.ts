@@ -347,6 +347,17 @@ export interface SiteSignalLabels {
   answer_key: Partial<Record<AnswerKeyLabel, string>>;
 }
 
+/** `GET /api/sites` (docs/03 §5.3): run metadata, labels, funnel and one row per site. */
+export type SitesResponse = Narrow<S["SitesOut"], { labels: SiteSignalLabels }>;
+export type SignalRunMeta = S["SignalRunMeta"];
+export type SiteRow = S["SiteRowOut"];
+export type FunnelPoint = S["FunnelPoint"];
+export type FunnelLimit = S["FunnelLimit"];
+/** `GET /api/site-signal/answer-key` (docs/03 §5.3). Labels are keys; the UI shows `labels.answer_key[key]` only. */
+export type AnswerKeyResponse = S["AnswerKeyOut"];
+/** `GET /api/site-signal/validation`: validation/site_signal/summary.json plus `data_origin` (docs/03 §5.3). */
+export type SiteSignalValidation = S["SiteSignalValidationOut"];
+
 // ---------------------------------------------------------------- audit
 
 export type AuditEvent = S["AuditOut"];

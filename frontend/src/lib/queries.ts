@@ -15,7 +15,10 @@ import type {
   PatientDetail,
   PatientSummary,
   Plan,
+  AnswerKeyResponse,
   SAEReport,
+  SiteSignalValidation,
+  SitesResponse,
   SponsorInboxItem,
   Study,
   TodayRow,
@@ -195,6 +198,42 @@ export function useValidation() {
   return useQuery({
     queryKey: ["validation"],
     queryFn: () => apiFetch<ValidationSummary>("/api/validation/latest"),
+    retry,
+  });
+}
+
+/**
+ * Site Signal committed study (`GET /api/sites`, cra and sponsor). `enabled` is false for other roles, which
+ * see the role notice instead; a 403 `wrong_role` or 503 `site_signal_unavailable` is not retried.
+ */
+export function useSites(enabled = true) {
+  return useQuery({
+    queryKey: ["sites"],
+    queryFn: () => apiFetch<SitesResponse>("/api/sites"),
+    enabled,
+    staleTime: 60_000,
+    retry,
+  });
+}
+
+/** Site Signal operating characteristics (`GET /api/site-signal/validation`, any role); 404 `no_validation_run`. */
+export function useSiteValidation(enabled = true) {
+  return useQuery({
+    queryKey: ["site-signal-validation"],
+    queryFn: () => apiFetch<SiteSignalValidation>("/api/site-signal/validation"),
+    enabled,
+    staleTime: 5 * 60_000,
+    retry,
+  });
+}
+
+/** Committed study's answer key (`GET /api/site-signal/answer-key`, cra and sponsor); fetched only after "Reveal". */
+export function useAnswerKey(enabled: boolean) {
+  return useQuery({
+    queryKey: ["site-signal-answer-key"],
+    queryFn: () => apiFetch<AnswerKeyResponse>("/api/site-signal/answer-key"),
+    enabled,
+    staleTime: 5 * 60_000,
     retry,
   });
 }
