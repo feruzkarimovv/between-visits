@@ -121,7 +121,7 @@ Steps that need a person. Everything around them is done; each item says exactly
 
 8. **Export the real V10 calls as recorded replay scenarios (V11; after V10).** V11 is integrated on `site-signal-build`: `agent/export_scenario.py` and the demo-only route `GET /api/demo/scenarios/{id}/audio`. No recorded scenario exists yet (the demo lists 0 recorded scenarios until this item is done).
    1. **Consent first.** Confirm that the teammate who played each synthetic patient agrees to the call being recorded and exported as a transcript. Use `--audio` only with that consent. Serving the audio from the public demo also needs their written consent; without it, ship transcript-only (leave out `--audio`, or keep the mp3 off the public instance).
-   2. **Setup.** After the V10 calls are logged in `eval/results/voice_checks.json`, work from the main checkout root and take each call's `conversation_id` and `checkin_id` from that file. `ELEVENLABS_API_KEY` must be in `.env`. If the live instance uses a dashboard token, `BV_DASHBOARD_TOKEN` must be set in `.env` or the shell.
+   2. **Setup.** After the V10 calls are logged in `eval/results/voice_checks.json`, work from the main checkout root and take each call's full `conversation_id` and `checkin_id` from where you kept them outside git (item 10 step 5; that file stores only the last 4 characters, which identify the call but cannot be passed to the script). `ELEVENLABS_API_KEY` must be in `.env`. If the live instance uses a dashboard token, `BV_DASHBOARD_TOKEN` must be set in `.env` or the shell.
       ```bash
       export LIVE_API=<live API base URL the calls ran against>   # falls back to PUBLIC_BASE_URL
       ```
@@ -171,3 +171,52 @@ Steps that need a person. Everything around them is done; each item says exactly
       git add docs/11-site-signal-sap.md && git commit -m "SAP v1: organizer timestamp link (docs/11 §17)" && git push origin site-signal-build
       ```
    If the team lead reviews the SAP later, the sign-off and any findings go in their own §17 rows the same way (docs/11 §1.2 step 4).
+
+10. **Make and log the three real V10 calls against the live backend (V10; after item 5).** V10CODE is integrated on `site-signal-build`: `agent/voice_check.py`, its offline test, and `eval/results/voice_checks.json` with 3 `"status": "pending"` rows (the report card's "Real voice calls" row says "pending: no real calls logged yet"). Full procedure: `agent/README.md` § "Real calls against the live backend (V10)". Work from the main checkout root (`cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only`).
+   1. **Checklist first.**
+      - Each teammate who plays a patient agrees, before the call, to recording by ElevenLabs, logging here and a later transcript export (V11).
+      - `bv-live-api` is up with R3 and R4 deployed, `DEMO_MODE=0`, and `TOOL_SHARED_SECRET` equal to the local `.env` value. `curl -fsS $LIVE_API/api/health | jq '{ok, demo_mode, commit}'` shows `"demo_mode": false`. If the live instance is not up: `make tunnel` and use the tunnel URL as `LIVE_API`.
+      - The nurse phone's ntfy app is subscribed to the live `NTFY_TOPIC` and `NTFY_BACKUP_TOPIC`.
+      - Local `.env` has `ELEVENLABS_API_KEY`, plus `BV_DASHBOARD_TOKEN` if the live instance uses one.
+   2. **Point the agents at the live backend:**
+      ```bash
+      export LIVE_API=https://<bv-live-api host>     # or the tunnel URL
+      PUBLIC_BASE_URL=$LIVE_API make sync-agent ARGS="--setup-webhook"
+      ```
+      If it warns about an old tunnel URL, fix the webhook URL in the ElevenLabs dashboard. Put `ELEVENLABS_WEBHOOK_SECRET` (only if a new one was printed) and the contents of `agent/agents.lock.json` (as `AGENTS_LOCK_JSON`) into the `bv-live-api` environment, then redeploy.
+   3. **Deployed config equals git:** `make sync-agent ARGS=--snapshot && python3 agent/check_config_hash.py` must print OK (`voice_check.py` copies `agent_llm` from `agent/deployed_snapshot.json`).
+   4. **Dashboard against the live API:** `cd frontend && NEXT_PUBLIC_API_BASE_URL=$LIVE_API NEXT_PUBLIC_BV_DASHBOARD_TOKEN=<token> npm run dev`, then open http://localhost:3000.
+   5. **Three calls in a row**, each from **Today** → patient row → **Call in browser**. Note each `ci_...` ID from the check-in page URL, and keep the full IDs outside git (the file stores only the last 4 characters; item 8 needs the full IDs).
+      - Call 1 `james_g2_diarrhea` (en-standard, `pat_james`): worst day "five times", no blood, **not** dizzy on standing → expected grade 2, `CTCAE5_DIARRHEA_G2`, no page.
+      - Call 2 `james_g3_diarrhea` (en-standard, `pat_james`, new check-in): worst day "eight times" → expected grade 3, urgent `RF_DIARRHEA_SEVERE`; the nurse taps **Acknowledge** on the phone.
+      - Call 3 `rosa_g3_diarrhea` (es-extra_time, `pat_rosa`): persona P16 answers, including "como siete u ocho veces" (the agent records 8) → expected "del equipo" disclosure, grade 3, urgent page, acknowledged. ("siete veces" alone is 6 over her baseline of 1: grade 2, no page.)
+   6. **Log each call** after it has ended and its page is acknowledged (rerun after a late acknowledgment; the row is updated in place):
+      ```bash
+      uv run --project backend python agent/voice_check.py --checkin-id ci_... --scenario james_g2_diarrhea
+      uv run --project backend python agent/voice_check.py --checkin-id ci_... --scenario james_g3_diarrhea
+      uv run --project backend python agent/voice_check.py --checkin-id ci_... --scenario rosa_g3_diarrhea
+      ```
+      Add `--conversation-id conv_...` if the check-in has no `el_conversation_id`. Add `--backend render-live` or `--backend tunnel` if the host is neither `*.onrender.com` nor ngrok. Never type a measurement into the file by hand, and never rerun a call to replace a bad result.
+   7. **Check, commit and push:**
+      ```bash
+      jq '.calls|length' eval/results/voice_checks.json                                   # 3
+      jq '[.calls[]|select(.red_flag_expected)|{paged, utterance_to_page_s, page_to_ack_s}]' eval/results/voice_checks.json
+      jq '[.calls[]|.disclosure_first_turn]|all' eval/results/voice_checks.json            # true
+      curl -fsS -H "X-BV-Token: $BV_DASHBOARD_TOKEN" $LIVE_API/api/escalations | jq '[.[]|select(.status=="acknowledged" or .status=="resolved")]|length'   # >= 2
+      python3 agent/test_voice_check.py
+      git add eval/results/voice_checks.json agent/deployed_snapshot.json
+      git commit -m "WS1-V10: three real calls against the live backend" && git push origin site-signal-build
+      ```
+      V10 passes when both red-flag calls show `paged: true`, `utterance_to_page_s` <= 10 and a non-null `page_to_ack_s`, and every first turn disclosed. Then do item 8 (V11 export).
+
+11. **Record the V12 hero call (V12; after the freeze and item 10).** Full procedure: `agent/README.md` § "Hero call (V12)".
+   1. With `bv-live-api` at the freeze commit, in a quiet room with a screen recording running:
+      ```bash
+      cd frontend && export NEXT_PUBLIC_API_BASE_URL=$LIVE_API NEXT_PUBLIC_BV_DASHBOARD_TOKEN=<token> && npm run build && npm run start
+      ```
+   2. Make one `es-extra_time` call as Rosa (written consent on file) showing: the disclosure plus the offer of a human, "¿Cómo?" and the slow repeat, "como siete u ocho veces" and the read-back, *Diarrhea · provisional grade 3* with `CTCAE5_DIARRHEA_G3`, the nurse phone buzzing, and the Acknowledge time on the check-in page.
+   3. Log it as an extra real call:
+      ```bash
+      uv run --project backend python agent/voice_check.py --checkin-id ci_... --scenario rosa_hero_call --red-flag-expected yes
+      ```
+   4. Export it with `agent/export_scenario.py --id rec_es_hero` as in item 8 (`--audio` only with written consent), and label the clip "Real call; synthetic patient played by a teammate". The video source clip stays outside git.
