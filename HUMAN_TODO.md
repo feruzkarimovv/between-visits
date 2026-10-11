@@ -117,7 +117,7 @@ Steps that need a person. Everything around them is done; each item says exactly
      grep -n 'pending deploy' README.md    # prints nothing
      git add README.md docs/deploy.md && git commit -m "README: public demo URL" && git push origin site-signal-build
      ```
-   - The demo video and deck lines (`_TODO_ (added at submission)`, README lines 9 and 11) are filled by D16 at submission, not here.
+   - The demo video line (README line 9) is filled at submission (item 12), not here.
 
 8. **Export the real V10 calls as recorded replay scenarios (V11; after V10).** V11 is integrated on `site-signal-build`: `agent/export_scenario.py` and the demo-only route `GET /api/demo/scenarios/{id}/audio`. No recorded scenario exists yet (the demo lists 0 recorded scenarios until this item is done).
    1. **Consent first.** Confirm that the teammate who played each synthetic patient agrees to the call being recorded and exported as a transcript. Use `--audio` only with that consent. Serving the audio from the public demo also needs their written consent; without it, ship transcript-only (leave out `--audio`, or keep the mp3 off the public instance).
@@ -220,3 +220,15 @@ Steps that need a person. Everything around them is done; each item says exactly
       uv run --project backend python agent/voice_check.py --checkin-id ci_... --scenario rosa_hero_call --red-flag-expected yes
       ```
    4. Export it with `agent/export_scenario.py --id rec_es_hero` as in item 8 (`--audio` only with written consent), and label the clip "Real call; synthetic patient played by a teammate". The video source clip stays outside git.
+
+12. **Fill the story numbers, export the deck, record the video and submit (D13-D16; after S7).** Every Site Signal number in `WHAT_IT_GETS_WRONG.md`, `README.md`, `docs/pitch/deck.html` and the `docs/08-demo-and-pitch.md` storyboard is a token until S7 has written `validation/site_signal/summary.json` (and S6/S9 have written `monitoring/out/*.json`).
+   1. **Render the numbers in place and check them,** from the repo root on the integrated branch:
+      ```bash
+      python3 validation/render_numbers.py --in-place WHAT_IT_GETS_WRONG.md README.md docs/pitch/deck.html docs/08-demo-and-pitch.md
+      python3 validation/render_numbers.py --check WHAT_IT_GETS_WRONG.md README.md docs/pitch/deck.html docs/08-demo-and-pitch.md   # check: OK
+      ```
+      If a path is missing or matches more than one row, the render lists every failing token and writes nothing. Fix the path inside the token (never type the number), then run it again. A second teammate ticks the provenance table at the foot of `WHAT_IT_GETS_WRONG.md` against the source files. Then commit the four files with the message `WS4-D16: render Site Signal numbers`.
+   2. **Screenshots** (production build `make demo DEMO_PROD=1`, 125% zoom) into `docs/screenshots/`: `call.png`, `nurse-ack.png`, `review.png`, `sites-funnel.png`, `site-drilldown.png`, `site-inbox.png`, `how-well-it-works.png`, `report-card.png`.
+   3. **Deck PDF:** open `docs/pitch/deck.html` in Chrome, **Print**, Destination **Save as PDF**, Margins **None**, **Background graphics** on, save as `docs/pitch/deck.pdf`, and commit it (the README already links that path).
+   4. **Video:** follow the storyboard and recording checklist in `docs/08-demo-and-pitch.md` (hero call V12, item 11, first). Upload to YouTube as unlisted. Replace README line 9 with `**Demo video:** <YouTube link> (3:00, unlisted).`, then commit and push.
+   5. **Devpost:** text from the README; links to the repository, the video, the deck PDF and the public demo; all contributors; screenshot the confirmation. Then update the lines in `NOT_BUILT.md` § Human steps (R6, V10, V12, D15, D16) that are done.

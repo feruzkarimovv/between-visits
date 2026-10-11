@@ -6,9 +6,9 @@ Between Visits is a voice agent that phones cancer-trial patients in the days af
 
 > Built at HackRU Fall 2026 for Regeneron's "Best Clinical Trial Solution" challenge. Synthetic data only. **Not a medical device**: the agent never gives medical advice, and a human decides everything.
 
-**Demo video:** _TODO_ (added at submission)
+**Demo video:** added at submission (3:00, unlisted; see [`HUMAN_TODO.md`](HUMAN_TODO.md)).
 
-**Deck:** _TODO_ (added at submission)
+**Deck:** [`docs/pitch/deck.pdf`](docs/pitch/deck.pdf), 10 slides, exported from [`docs/pitch/deck.html`](docs/pitch/deck.html).
 
 **Public demo:** the public demo URL (pending deploy, [`docs/deploy.md`](docs/deploy.md)). Until it is live, run the same demo on your machine with `make demo` ([Quickstart](#quickstart)).
 
@@ -26,6 +26,7 @@ Open the dashboard at the public demo URL (pending deploy, [`docs/deploy.md`](do
 | 1:45 | **Serious-event report.** CIOMS-style sections, the AI-drafted narrative labeled as AI, and the countdown to the sponsor deadline. Click **Sign as Dr. Patel**, then **Send to sponsor**. | The investigator signs before anything leaves the site. |
 | 2:15 | **Sponsor inbox** (left nav). The report is there, identified by subject ID only, with the four valid-case checks and *On time* against its 24-hour deadline. | The sponsor handoff works end to end without names or phone numbers. |
 | 2:35 | Optional: **Report card** (evaluation with intervals, see [Results](#results)) and **Audit** (every human action, append-only). | Honest numbers; a tamper-evident audit trail (`GET /api/audit/verify`). |
+| Optional | Switch the role to **CRA · Sam Rivera** and open **Sites**: the SIMULATED badge, the funnel and the ranked table. Open a site at **Look** or **Watch**, read the unmatched episodes with the patients' own words, select some and **Draft site query**, then **Approve and send**. Switch to **Coordinator**, open **Site inbox** and answer with a coded response. Back on **Sites**, open **How well it works**. | [Site Signal](#site-signal): a flag drills down to verbatim evidence, every query is approved by a person and audited, and the method's power and false-flag rates are shown next to it, including what it misses. |
 
 ## Why
 
@@ -55,11 +56,24 @@ flowchart LR
 
 **Agent model:** all four deployed agents run `claude-sonnet-5-5`, with Claude backups `claude-sonnet-5` and `claude-haiku-4-5`, as recorded in [`agent/deployed_snapshot.json`](agent/deployed_snapshot.json) (captured 2026-10-11T06:11:55Z; model and config hashes, agent IDs cut to 4 characters) and pinned in [`agent/variants.json`](agent/variants.json). It is the same model the evaluation below used (`model.agent` in `eval/results/latest.json`). CI (`agent/check_config_hash.py`) fails if the deployed config drifts from git.
 
-## Site Signal (in progress)
+## Site Signal
 
-The sponsor-side layer being built now ([`docs/10-site-signal.md`](docs/10-site-signal.md)). Site Signal compares each site's own AE log with what that site's patients told Between Visits on their between-visit calls, and reports **capture discordance**: rule-graded episodes the patients reported that have no matching entry in the site's AE log, compared with what the other sites capture for the same symptom mix. It runs on a simulated multi-site study (labeled SIMULATED) plus the calls at the demo site (labeled MEASURED). Its flags come only from pre-specified code with no LLM, under a statistical analysis plan frozen in git before any simulated study is generated ([`docs/11-site-signal-sap.md`](docs/11-site-signal-sap.md)), and a human decides whether to act. A flag is a reason to look, not a finding.
+Site Signal is the sponsor-side layer ([`docs/10-site-signal.md`](docs/10-site-signal.md)). It compares each site's own AE log with what that site's patients told Between Visits on their between-visit calls. It reports **capture discordance**: rule-graded episodes the patients reported that have no matching entry in the site's AE log, compared with what the other sites capture for the same symptom mix. A flag is a reason to look, not a finding. Discordance includes legitimate clinical judgment, such as a symptom recorded as medical history.
 
-There are no Site Signal results yet, so this README reports none.
+- **Data.** A simulated 20-site study with planted sites, labeled SIMULATED. The calls at demo site 101 (live or replayed) are labeled MEASURED and are never pooled with it.
+- **Tiers.** **Look** is a per-site 5% tier. **Watch** is a study-wide tier: at most a 10% chance of any false Watch flag per study with no problems. A computed site with no flag reads "No signal at this sample size", and a site with too little data reads "Not computed" with the reason. No tier is ever green.
+- **Comparators on the same data.** A gsm-style AE-rate KRI and simaerep classic (legacy), plus an AE-to-report ratio ablation.
+- **On screen** (role CRA): `/sites` shows the funnel and ranked table. `/sites/[id]` shows the unmatched episodes with each patient's verbatim words. A templated site query is drafted and approved by the CRA, and every step is audited. The coordinator answers in `/site-inbox` with a coded response ("recorded as medical history" and "not an AE per investigator" are normal answers). The **How well it works** tab shows every validation number from `summary.json`.
+- **No LLM on this path.** Flags come only from pre-specified code (`monitoring/`, `backend/app/services/site_signal.py`, `episodes.py`), and a person decides whether to act.
+
+### Pre-registered before any result
+
+The statistical analysis plan ([`docs/11-site-signal-sap.md`](docs/11-site-signal-sap.md)), the parameters (`monitoring/params.yaml`), the signal rules and the query templates were frozen first. They were frozen in git under the annotated tag `sap-v1` (commit `68838978bb305e0f730d30e5cbf3c00bceca5a25`), before any evaluation output existed. The order is:
+
+1. **The tag.** The tag's GitHub Release was published at 2026-10-11T08:38:10Z. That is the external timestamp.
+2. **The seed.** The evaluation seed was then derived from the tag commit and a public randomness beacon published after the tag: drand round 6542582, round time 08:48:00Z (`monitoring/seed_beacon.json`). So nobody could pick a seed before freezing the plan.
+3. **The runs.** Every evaluation run is logged with the sha256 of its outputs (`validation/site_signal/run_log.jsonl`). The outputs record the seed and tag they used: `eval_seed` {{ss:summary:eval_seed:int}} and `sap_tag_commit` `{{ss:summary:sap_tag_commit:text}}` in `summary.json`.
+4. **The checks.** Requirement REQ-022 (`docs/07` §6) states this order as a testable check, and every clarification since the tag is a row in the SAP's §17 Deviations table.
 
 ## Safety by design
 
@@ -121,9 +135,53 @@ By language and pace (`by_language`, `by_pace`), value then 95% interval; – me
 
 Other gaps we report rather than hide: read-back drops when a red flag interrupts an answer (the page goes out first), and the agent paraphrases more when it slows down for extra-time patients. Transcripts for every persona are in `eval/results/transcripts/`; `make eval` reruns the evaluation and `uv run --project backend python eval/score.py --rescore eval/results/latest.json` recomputes the numbers and intervals from the stored per-persona results without any LLM call.
 
-**Real voice calls (measured):** none recorded yet. When they exist, the report card shows them in their own row, never pooled with this text-mode evaluation.
+**Real voice calls (MEASURED):** none yet: `eval/results/voice_checks.json` holds pending rows until the real calls against the deployed live backend are made (task V10). When they exist, the report card shows them in their own row, never pooled with this text-mode evaluation.
+
+### Site Signal (SIMULATED)
+
+Every number in this subsection is SIMULATED and is read from [`validation/site_signal/summary.json`](validation/site_signal/summary.json), the pre-registered validation run (`docs/11` §12). None is typed by hand. `validation/render_numbers.py` fills them from the file, and the provenance table at the end of [`WHAT_IT_GETS_WRONG.md`](WHAT_IT_GETS_WRONG.md) lists the JSON path of each one. Simulated rates carry their Monte Carlo standard error (MC SE).
+
+The table shows how often the discordance indicator flags one planted site that loses a share *f* of its episodes from the AE log. It uses the `sap-v1` design and the frozen thresholds:
+
+| Planted capture loss *f* | Flagged at Look or Watch | Flagged at Watch |
+|---|---|---|
+| 0.25 | {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.25].power // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.25].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.25].mc_se // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.25].mc_se:f3}}) | {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.25].power // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.25].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.25].mc_se // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.25].mc_se:f3}}) |
+| 0.50 | {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.5].power // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.5].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.5].mc_se // power[indicator=discordance,tier=look,n_sites=20,mu=1.5,f=0.5].mc_se:f3}}) | {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.5].power // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.5].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.5].mc_se // power[indicator=discordance,tier=watch,n_sites=20,mu=1.5,f=0.5].mc_se:f3}}) |
+| {{ss:summary:design.gross_f:p2}} (gross loss) | {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.9].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=look,design_row=true,f=0.9].mc_se:f3}}) | {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.9].power:p2}} (MC SE {{ss:summary:power[indicator=discordance,tier=watch,design_row=true,f=0.9].mc_se:f3}}) |
+
+Moderate capture gaps (25% and 50%) are expected to go mostly unflagged at Watch. Look catches more, at the price of false Look flags.
+
+| False flags with no planted site ({{ss:summary:null.r:int}} fresh null studies) | Rate | MC SE | REQ-023 |
+|---|---|---|---|
+| False Look per site (nominal 0.05) | {{ss:summary:null.look_per_site.rate:p2}} | {{ss:summary:null.look_per_site.mc_se:f3}} | {{ss:derived:req023.look.outcome:text}} |
+| Any false Watch per study (nominal 0.10) | {{ss:summary:null.watch_fwer.rate:p2}} (95% CI {{ss:summary:null.watch_fwer.ci95:ci3}}) | {{ss:summary:null.watch_fwer.mc_se:f3}} | {{ss:derived:req023.watch.outcome:text}} |
+
+**The failure case.** Here honest sites differ mainly in how thoroughly they record AEs, not in case mix, and the advantage over a plain AE-rate KRI shrinks.
+
+- **Re-calibrated thresholds, *f* = 0.50.** Discordance flags the planted site at Look or Watch in {{ss:summary:failure_case.a.power[indicator=discordance,tier=look,f=0.5].power:p2}} of studies (MC SE {{ss:summary:failure_case.a.power[indicator=discordance,tier=look,f=0.5].mc_se:f3}}). The AE-rate KRI flags it in {{ss:summary:failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].power:p2}} (MC SE {{ss:summary:failure_case.a.power[indicator=rate_kri,tier=look,f=0.5].mc_se:f3}}).
+- **Frozen thresholds.** The false Look rate becomes {{ss:summary:failure_case.b.null[indicator=discordance].look_per_site.rate:p2}} (MC SE {{ss:summary:failure_case.b.null[indicator=discordance].look_per_site.mc_se:f3}}).
+
+Both streams are simulated, so these numbers show method and power under stated assumptions, not real-world validity. The comparator rows, the misspecified-null rows and the committed study are in [`WHAT_IT_GETS_WRONG.md`](WHAT_IT_GETS_WRONG.md) and on the **How well it works** tab. The only non-circular validation is retrospective. It needs trials that collected patient-reported and clinician-reported (CTCAE) symptoms for the same patients, with site IDs.
 
 The validation pack traces each requirement in [`validation/requirements.yaml`](validation/requirements.yaml) to automated tests and their latest result: [`validation/traceability.md`](validation/traceability.md) (`make validate`).
+
+## What it gets wrong
+
+[`WHAT_IT_GETS_WRONG.md`](WHAT_IT_GETS_WRONG.md) lists the limits with their numbers. In short:
+
+- **Both Site Signal streams are simulated**, and its thresholds come from an assumed null.
+- **Moderate capture gaps are mostly invisible at the Watch tier.**
+- **The advantage over a plain AE-rate KRI depends on assumptions**, which the failure case breaks.
+- **Episode date = call date**, only three terms are graded, and there is no MedDRA.
+- **Speech-recognition error is unmeasured.**
+- **The text-mode evaluation has one known miss (P19).**
+
+## Roadmap
+
+- **[`NOT_BUILT.md`](NOT_BUILT.md)** has one line per item this submission does not build. That covers the 20 backlog items in [`docs/backlog.md`](docs/backlog.md), the cuts made this round, and the steps that need a person.
+- **GitHub issues.** Each line becomes a GitHub issue with the label [`not-built`](https://github.com/feruzkarimovv/between-visits/issues?q=label%3Anot-built).
+- **First priority:** retrospective validation of Site Signal on trials with paired patient- and clinician-reported data (BL-11).
+- **Then:** real-call re-verification with measured speech error (BL-01), the P19 nurse-callback fix (BL-04), phone calls through Twilio (BL-02), a third language (BL-03), and real authentication (BL-18).
 
 ## Quickstart
 
@@ -187,10 +245,12 @@ See [`docs/04-voice-agent.md`](docs/04-voice-agent.md) for the Twilio, ElevenLab
 - **Specs:** [`00-overview`](docs/00-overview.md) (scope, rules) · [`01-architecture`](docs/01-architecture.md) · [`02-data-model`](docs/02-data-model.md) · [`03-api-contracts`](docs/03-api-contracts.md) (source of truth for every interface) · [`04-voice-agent`](docs/04-voice-agent.md) · [`05-clinical-rules`](docs/05-clinical-rules.md) · [`06-frontend`](docs/06-frontend.md) · [`07-eval-and-validation`](docs/07-eval-and-validation.md) · [`08-demo-and-pitch`](docs/08-demo-and-pitch.md) · [`09-timeline-and-workstreams`](docs/09-timeline-and-workstreams.md) · [`10-site-signal`](docs/10-site-signal.md) (Site Signal product requirements) · [`11-site-signal-sap`](docs/11-site-signal-sap.md) (Site Signal statistical analysis plan).
 - **Workstreams:** [`WS0`](docs/workstreams/WS0-readiness.md) readiness · [`WS1`](docs/workstreams/WS1-voice.md) voice · [`WS2`](docs/workstreams/WS2-backend.md) backend · [`WS3`](docs/workstreams/WS3-frontend.md) frontend · [`WS4`](docs/workstreams/WS4-data-eval-story.md) data, evaluation, story · [`WS5`](docs/workstreams/WS5-site-signal.md) Site Signal.
 - **Background:** [`ADR-001`](docs/decisions/ADR-001-site-signal.md) (why Site Signal) · [`site-signal-methods`](docs/research/site-signal-methods.md) · [`synthea`](docs/research/synthea.md) · [`backlog`](docs/backlog.md) (not built).
+- **Honesty pages:** [`WHAT_IT_GETS_WRONG.md`](WHAT_IT_GETS_WRONG.md) (limits, with numbers) · [`NOT_BUILT.md`](NOT_BUILT.md) (not built, with issues) · [`HUMAN_TODO.md`](HUMAN_TODO.md) (steps that need a person).
+- **Pitch:** [`docs/pitch/deck.html`](docs/pitch/deck.html) (deck source) · [`docs/08-demo-and-pitch.md`](docs/08-demo-and-pitch.md) (demo script, video storyboard).
 
 ## Repository map
 
-`backend/` FastAPI + SQLModel: rules, interview engine, agent tools, webhooks, post-call pipeline, review/SAE · `frontend/` Next.js dashboard · `agent/` ElevenLabs agent config-as-code and sync script · `data/` clinical content and seed data (single source of truth) · `eval/` simulated-patient evaluation · `validation/` requirements traceability and secret scan · `scenarios/` demo replays and webhook fixtures · `monitoring/` Site Signal statistics (in progress) · `docs/` specs.
+`backend/` FastAPI + SQLModel: rules, interview engine, agent tools, webhooks, post-call pipeline, review/SAE · `frontend/` Next.js dashboard · `agent/` ElevenLabs agent config-as-code and sync script · `data/` clinical content and seed data (single source of truth) · `eval/` simulated-patient evaluation · `validation/` requirements traceability and secret scan · `scenarios/` demo replays and webhook fixtures · `monitoring/` Site Signal statistics (simulation, matching, indicators, calibration, validation) · `docs/` specs.
 
 ## Data and licenses
 
@@ -209,6 +269,7 @@ See [`docs/04-voice-agent.md`](docs/04-voice-agent.md) for the Twilio, ElevenLab
 - Phone calling (ElevenLabs + Twilio) is implemented but not connected for the hackathon: Twilio's US outbound compliance approval takes days. The demo uses browser calls with the same agent; nurse paging (ntfy) doesn't depend on Twilio.
 - No user authentication: a visible demo role switch sets the role. The private live API takes one shared dashboard token (`X-BV-Token`), which keeps casual traffic off but is not authentication. No EDC/EHR integration; SQLite, one instance.
 - ntfy.sh delivery is best effort; the dashboard acknowledgment and re-page loop are the backstop.
+- Site Signal runs on simulated data only, with thresholds from an assumed null; see [`WHAT_IT_GETS_WRONG.md`](WHAT_IT_GETS_WRONG.md).
 
 ## Security and privacy
 
@@ -217,7 +278,7 @@ See [`docs/04-voice-agent.md`](docs/04-voice-agent.md) for the Twilio, ElevenLab
 
 ## Team
 
-<!-- names, roles -->
+[@feruzkarimovv](https://github.com/feruzkarimovv) (repository owner) and the teammates listed on Devpost.
 
 ## License
 
