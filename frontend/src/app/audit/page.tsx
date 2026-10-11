@@ -1,7 +1,9 @@
 "use client";
 
-import { Fragment, useState } from "react";
-import { ChevronDown, ChevronRight, ScrollText } from "lucide-react";
+import { Fragment, Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { ChevronDown, ChevronRight, ScrollText, X } from "lucide-react";
 import { useAudit } from "@/lib/queries";
 import { formatAbsolute, humanize } from "@/lib/format";
 import { Card, EmptyState, ErrorState, LoadingRows, PageHeader, Table, Td, Th, inputClass, cn } from "@/components/ui/primitives";
@@ -18,7 +20,17 @@ const ROLE_TONE: Record<string, "gray" | "blue" | "violet" | "green" | "accent">
 };
 
 export default function AuditPage() {
-  const q = useAudit();
+  return (
+    <Suspense fallback={<LoadingRows rows={8} />}>
+      <AuditView />
+    </Suspense>
+  );
+}
+
+/** `/audit?entity_id=sq_...` shows one entity's rows (for example a site query's, linked from `/sites/[id]`). */
+function AuditView() {
+  const entityId = useSearchParams().get("entity_id") || undefined;
+  const q = useAudit(entityId);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState("");
   const rows = (q.data ?? []).filter((a) => {
@@ -42,6 +54,15 @@ export default function AuditPage() {
           <input type="search" aria-label="Filter audit events" placeholder="Filter by action, actor or ID" className={cn(inputClass, "w-72")} value={filter} onChange={(e) => setFilter(e.target.value)} />
         }
       />
+      {entityId ? (
+        <p className="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink-muted" role="status">
+          Showing the audit rows for <code className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-ink">{entityId}</code>
+          <Link href="/audit" className="inline-flex items-center gap-1 font-medium text-accent-700 hover:underline">
+            <X className="size-3.5" aria-hidden />
+            Show all events
+          </Link>
+        </p>
+      ) : null}
       <Card>
         {q.isPending ? (
           <LoadingRows rows={8} />

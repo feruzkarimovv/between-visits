@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Quote, PlayCircle } from "lucide-react";
-import type { Evidence } from "@/lib/types";
+import type { EpisodeEvidence, Evidence } from "@/lib/types";
 import { formatDuration } from "@/lib/format";
 import { SOURCE_LABELS } from "@/lib/labels";
 import { AiLabel } from "./AiLabel";
@@ -75,6 +75,52 @@ export function EvidenceQuote({
           <span>{SOURCE_LABELS[evidence.source] ?? evidence.source}</span>
         )}
       </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Site Signal episode evidence (docs/03 §5.3): the verbatim quote in its original language first, then the English
+ * translation behind an `AiLabel` (every translation is an AI translation, REQ-026). Synthetic quotes come from the
+ * monitoring quote bank and have no call to open; live and replay quotes link to their check-in.
+ */
+export function EpisodeEvidenceQuote({ evidence, className }: { evidence: EpisodeEvidence; className?: string }) {
+  const synthetic = evidence.source === "synthetic";
+  const checkinId = evidence.checkin_id;
+  return (
+    <figure className={cn("min-w-0", className)}>
+      <blockquote className="flex gap-1.5">
+        <Quote className="mt-1 size-3.5 shrink-0 text-ink-subtle" aria-hidden />
+        <p className="text-sm leading-6 text-ink" lang={evidence.quote_lang}>
+          <span className="mr-1.5 rounded bg-white px-1 py-px align-middle font-mono text-xs text-ink-subtle ring-1 ring-line">
+            {evidence.quote_lang.toUpperCase()}
+          </span>
+          “{evidence.quote}”
+        </p>
+      </blockquote>
+      {evidence.translation_en ? (
+        <div className="mt-1 ml-5 flex flex-wrap items-start gap-x-2 gap-y-1">
+          {evidence.translation_is_ai ? (
+            <AiLabel>{synthetic ? "AI-assisted translation" : "AI translation, verify"}</AiLabel>
+          ) : (
+            <span className="text-sm font-medium text-ink-subtle">Translation</span>
+          )}
+          <p className="text-sm leading-6 text-ink-muted" lang="en">
+            “{evidence.translation_en}”
+          </p>
+        </div>
+      ) : null}
+      {checkinId && !synthetic ? (
+        <figcaption className="mt-1 ml-5 text-sm">
+          <Link
+            href={`/checkins/${encodeURIComponent(checkinId)}`}
+            className="inline-flex items-center gap-1 font-medium text-accent-700 underline-offset-2 hover:underline"
+          >
+            <PlayCircle className="size-4" aria-hidden />
+            {evidence.t_s !== null && evidence.t_s !== undefined ? `${formatDuration(evidence.t_s)} in call` : "View in check-in"}
+          </Link>
+        </figcaption>
+      ) : null}
     </figure>
   );
 }

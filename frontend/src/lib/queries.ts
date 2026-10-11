@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { apiFetch, errorMessage, isApiError, type ApiInit } from "./api";
+import { apiFetch, errorMessage, hasErrorCode, isApiError, type ApiInit } from "./api";
 import { humanize } from "./format";
 import type {
   AuditEvent,
@@ -17,6 +17,7 @@ import type {
   Plan,
   AnswerKeyResponse,
   SAEReport,
+  SiteDetail,
   SiteSignalValidation,
   SitesResponse,
   SponsorInboxItem,
@@ -227,6 +228,21 @@ export function useSiteValidation(enabled = true) {
   });
 }
 
+/**
+ * Site drill-down (`GET /api/sites/{site_id}`, cra and sponsor): card, signal row, every episode with its evidence,
+ * strata, paged stratum and the site's queries. Polled, so a live call or replay at site 101 shows up as its
+ * MEASURED episode without a reload.
+ */
+export function useSiteDetail(siteId: string, enabled = true) {
+  return useQuery({
+    queryKey: ["site", siteId],
+    queryFn: () => apiFetch<SiteDetail>(`/api/sites/${encodeURIComponent(siteId)}`),
+    enabled: enabled && siteId !== "",
+    refetchInterval: 15_000,
+    retry,
+  });
+}
+
 /** Committed study's answer key (`GET /api/site-signal/answer-key`, cra and sponsor); fetched only after "Reveal". */
 export function useAnswerKey(enabled: boolean) {
   return useQuery({
@@ -258,6 +274,8 @@ export function useApiMutation<TVars, TResult>(opts: {
   success?: string | ((result: TResult, vars: TVars) => string | null);
   invalidate?: QueryKey[];
   onSuccess?: (result: TResult, vars: TVars) => void;
+  /** `error.code` values the caller shows inline (for example 422 `banned_phrase`); these are not toasted. */
+  inlineErrorCodes?: string[];
 }) {
   const qc = useQueryClient();
   return useMutation<TResult, unknown, TVars>({
@@ -272,6 +290,7 @@ export function useApiMutation<TVars, TResult>(opts: {
       for (const key of opts.invalidate ?? []) void qc.invalidateQueries({ queryKey: key });
     },
     onError: (e) => {
+      if (opts.inlineErrorCodes && hasErrorCode(e, ...opts.inlineErrorCodes)) return;
       toast.error(errorMessage(e));
     },
   });

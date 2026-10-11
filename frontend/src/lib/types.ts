@@ -358,6 +358,27 @@ export type AnswerKeyResponse = S["AnswerKeyOut"];
 /** `GET /api/site-signal/validation`: validation/site_signal/summary.json plus `data_origin` (docs/03 §5.3). */
 export type SiteSignalValidation = S["SiteSignalValidationOut"];
 
+/**
+ * Episode status in `GET /api/sites/{site_id}` (docs/03 §5.3): `unmatched` (evaluable, not paged, no matching
+ * site AE; the only status a site query may cite), `matched`, `pending` (entry window still open: greyed, never
+ * missed), `paged` (separate descriptive stratum, never in O or E) and `not_evaluated`.
+ */
+export type EpisodeStatus = S["SiteEpisode"]["status"];
+/** `evidence.source`: Live call / Replay / Synthetic (quote bank). */
+export type EpisodeSource = S["EpisodeEvidence"]["source"];
+/** Verbatim quote in the original language; every translation is an AI translation (REQ-026). */
+export type EpisodeEvidence = Narrow<S["EpisodeEvidence"], { quote_lang: Lang }>;
+export type SiteEpisode = Narrow<S["SiteEpisode"], { evidence: EpisodeEvidence }>;
+export type SiteSignalRow = S["SiteSignalRow"];
+export type SiteCard = S["SiteCard"];
+export type SiteStrata = S["SiteStrata"];
+export type PagedStratum = S["PagedStratum"];
+export type SiteQueryStatus = S["SiteQueryOut"]["status"];
+/** `SiteQueryOut` (docs/03 §5.4). */
+export type SiteQuery = S["SiteQueryOut"];
+/** `GET /api/sites/{site_id}` (docs/03 §5.3). Site 101 lists its MEASURED live episodes first. */
+export type SiteDetail = Narrow<S["SiteDetailOut"], { episodes: SiteEpisode[] }>;
+
 // ---------------------------------------------------------------- audit
 
 export type AuditEvent = S["AuditOut"];
