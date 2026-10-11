@@ -18,7 +18,7 @@ Status values: `todo`, `in progress`, `done`, `done (human step pending)`, `bloc
 
 | Step | Task | Status | Commit | Acceptance output | Blocker |
 |---|---|---|---|---|---|
-| SAP | D11 signal rules and site query data files | todo | | | |
+| SAP | D11 signal rules and site query data files | done | 998ee3b | validate_data.py exit=0 (25 items, 13 red flags, 11 grading rules, 20 personas; site signal OK: 3 primary terms with G2+G3 rules, 10 synonyms, 6 not_computed reasons + 9 answer-key keys labelled, 1 query template, 5 response codes, 15 banned phrases); self-test 13/13 (temp copy with 'under-report' in SQ_UNMATCHED_EPISODES body exits 1); make test exit 0 (111 pytest, ruff, data + self-test, agent-sync, tsc+eslint) | |
 | SAP | B16 shared episode builder | todo | | | |
 | SAP | S1 monitoring project, params, planning grid, `sap-v1` tag | todo | | | |
 | A | R1 full-history secret scan | todo | | | |
