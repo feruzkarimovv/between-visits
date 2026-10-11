@@ -67,7 +67,9 @@ jobs:
 
   # WS5 Site Signal statistics (monitoring/, its own uv project). Full history and tags: test_sap_order.py
   # (REQ-022) checks the sap-v1 tag, its ancestry and the evaluation seed and is never skipped in CI.
-  # S7: the quick check of the committed validation (docs/11 §12) reproduces summary.json quick_hashes.
+  # S7: the quick check of the committed validation (docs/11 §12), which reproduces summary.json quick_hashes, runs in
+  # .github/workflows/site-signal-quick-check.yml on macOS arm64, the platform of the committed runs: on this Linux
+  # runner the power_grid hash did not match (run 38141286952; docs/11 §17 C8).
   monitoring:
     runs-on: ubuntu-latest
     steps:
@@ -84,13 +86,6 @@ jobs:
         run: cd monitoring && uv run ruff check .
       - name: Tests
         run: cd monitoring && uv run pytest -q
-      - name: Site Signal validation quick check (only once validation/site_signal/summary.json is committed)
-        run: |
-          if [ -f validation/site_signal/summary.json ]; then
-            make site-signal-validate ARGS="--quick --check"
-          else
-            echo "::notice title=site-signal-validate skipped::validation/site_signal/summary.json is not committed yet; make site-signal-validate ARGS=\"--quick --check\" runs once it is"
-          fi
 
   frontend:
     runs-on: ubuntu-latest

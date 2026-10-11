@@ -158,6 +158,7 @@ Within sites, the Mantel-Haenszel odds ratio of capture for Spanish-speaking ver
 - **Demo-grade security.** Roles are demo identity headers, with no real authentication (BL-18). It runs on SQLite, one instance. The audit hash chain is tamper-evident only inside the database (BL-19).
 - **Regulatory questions are open (UNVERIFIED).** These include investigator control of patient-reported source data, and what sponsor awareness of an unfiltered patient stream means for safety reporting (BL-20). Site Signal runs in shadow mode only.
 - **The blind run is not built.** No one can yet test the method on a study nobody prepared (`NOT_BUILT.md`).
+- **The power grid is bit-reproducible only on the platform of the committed run.** The CI quick check re-runs the first replicates of every validation stream and compares a hash of the per-replicate results with `summary.json` (`docs/11` §12). On Linux (ubuntu-latest, x86_64) it reproduces the committed study, the null validation and the failure-case and sensitivity streams bit for bit, but not the power grid that the power numbers of section 1 come from (CI run 38141286952). On macOS arm64, where the committed runs were made, all four match, and CI now runs the check there (`docs/11` §17 C8). How far the Linux power-grid results differ, and whether any displayed power value would change, was not measured.
 
 ## The next step, the one that is not circular
 

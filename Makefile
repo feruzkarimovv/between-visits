@@ -92,7 +92,8 @@ site-signal:
 	uv run --project monitoring python -m bvsignal.run $(ARGS)
 
 # S7: Site Signal operating characteristics (docs/11 §12): evaluation seed, logged, refuses a dirty tree; full run in
-# the background (validation/site_signal/*.json). CI: ARGS="--quick --check". Development: ARGS="--seed dev --scale 0.02 --out $$TMPDIR/val"
+# the background (validation/site_signal/*.json). CI (macOS arm64, .github/workflows/site-signal-quick-check.yml):
+# ARGS="--quick --check". Development: ARGS="--seed dev --scale 0.02 --out $$TMPDIR/val"
 .PHONY: site-signal-validate
 site-signal-validate:
 	uv run --project monitoring python -m bvsignal.validate $(ARGS)

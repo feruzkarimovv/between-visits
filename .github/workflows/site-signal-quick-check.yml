@@ -1,0 +1,61 @@
+name: Site Signal quick check
+
+# WS5 S7: the quick check of the committed validation (docs/11 §12): `--quick --check` re-runs the first r_quick /
+# reps_quick replicates of every stream and requires each stream's sha256 to equal summary.json quick_hashes exactly.
+# It runs on macOS arm64, the platform of the committed evaluation runs (validation/site_signal/run_log.jsonl). On
+# ubuntu-latest (x86_64) committed_study, null_validation and failure_and_sensitivity matched but power_grid did not
+# (CI run 38141286952), so the per-replicate power-grid results are not bit-reproducible across platforms
+# (docs/11 §17 C8, WHAT_IT_GETS_WRONG.md §16). Lint and the monitoring test suite stay in ci.yml (job `monitoring`).
+#
+# Its own workflow so that a newer push never cancels a check that is running: with cancel-in-progress false a newer
+# run waits for the running one (only the newest waiting run is kept). The hash depends only on the analysis code,
+# its inputs and the committed outputs, so pushes that touch none of the paths below skip it. macOS minutes count
+# 10x against a private repository's Actions quota.
+on:
+  push:
+    paths:
+      - "monitoring/**"
+      - "validation/site_signal/**"
+      - "data/**"
+      - "backend/app/**"
+      - "Makefile"
+      - ".python-version"
+      - ".github/workflows/site-signal-quick-check.yml"
+  pull_request:
+    paths:  # same list as push
+      - "monitoring/**"
+      - "validation/site_signal/**"
+      - "data/**"
+      - "backend/app/**"
+      - "Makefile"
+      - ".python-version"
+      - ".github/workflows/site-signal-quick-check.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  site-signal-quick-check:
+    runs-on: macos-latest  # arm64 (Apple silicon) runner
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:  # the evaluation seed is derived from the sap-v1 tag (docs/11 §1.3): full history and tags
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Platform (the committed runs were made on macOS arm64)
+        run: |
+          uname -sm
+          sw_vers
+          test "$(uname -m)" = arm64 || { echo "::error::expected an arm64 runner, got $(uname -m)"; exit 1; }
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install (monitoring/uv.lock)
+        run: cd monitoring && uv sync
+      - name: Site Signal validation quick check (docs/11 §12)
+        run: make site-signal-validate ARGS="--quick --check"
