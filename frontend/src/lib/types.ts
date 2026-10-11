@@ -357,6 +357,8 @@ export type FunnelLimit = S["FunnelLimit"];
 export type AnswerKeyResponse = S["AnswerKeyOut"];
 /** `GET /api/site-signal/validation`: validation/site_signal/summary.json plus `data_origin` (docs/03 §5.3). */
 export type SiteSignalValidation = S["SiteSignalValidationOut"];
+/** `GET /api/site-signal/equity` (cra, sponsor): monitoring/out/equity.json (docs/03 §5.3, docs/11 §14). */
+export type SiteSignalEquity = S["EquityOut"];
 
 /**
  * Episode status in `GET /api/sites/{site_id}` (docs/03 §5.3): `unmatched` (evaluable, not paged, no matching

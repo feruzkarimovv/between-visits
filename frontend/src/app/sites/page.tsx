@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BookOpenCheck, Building2, ExternalLink, KeyRound, LineChart, UserRound } from "lucide-react";
-import type { AnswerKeyResponse, SignalTier, SiteRow, SitesResponse, SiteSignalLabels } from "@/lib/types";
-import { useAnswerKey, useHealth, useSiteValidation, useSites } from "@/lib/queries";
+import { BookOpenCheck, Building2, ExternalLink, KeyRound, LineChart, Scale, UserRound } from "lucide-react";
+import type { AnswerKeyResponse, SignalTier, SiteRow, SitesResponse, SiteSignalLabels, SiteSignalValidation } from "@/lib/types";
+import { useAnswerKey, useHealth, useSiteEquity, useSiteValidation, useSites } from "@/lib/queries";
 import { DEMO_IDENTITIES, setRole, useIdentity } from "@/lib/role";
 import { errorMessage, hasErrorCode } from "@/lib/api";
 import { formatDate } from "@/lib/format";
@@ -14,6 +14,8 @@ import { Button, Card, CardHeader, EmptyState, ErrorState, LoadingRows, PageHead
 import { DataOriginBadge } from "@/components/DataOriginBadge";
 import { TierBadge } from "@/components/TierBadge";
 import { FunnelPlot, type NotComputedMarker } from "@/components/FunnelPlot";
+import { CommittedConfusionTable, FailureCaseTable, NullRatesTable, PowerTable, SensitivityTable } from "@/components/PowerTable";
+import { EquityBlock } from "@/components/EquityBlock";
 
 /**
  * `/sites` Site Signal overview (WS3 F12; docs/06 § Site Signal pages, docs/10 §6).
@@ -21,7 +23,8 @@ import { FunnelPlot, type NotComputedMarker } from "@/components/FunnelPlot";
  * `GET /api/site-signal/answer-key` or `GET /api/site-signal/validation`; this file holds no result literals.
  */
 
-const REPO_URL = (process.env.NEXT_PUBLIC_REPO_URL || "").replace(/\/$/, "");
+/** Repository for the WHAT_IT_GETS_WRONG.md and SAP links; NEXT_PUBLIC_REPO_URL overrides the default. */
+const REPO_URL = (process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/feruzkarimovv/between-visits").replace(/\/$/, "");
 
 type Tab = "signal" | "how";
 const TABS: { id: Tab; label: string; icon: typeof LineChart }[] = [
@@ -122,7 +125,7 @@ export default function SitesPage() {
             <SignalTab data={sites.data} />
           )
         ) : (
-          <HowWellItWorksTab />
+          <HowWellItWorksTab canView={canView} />
         )}
       </div>
     </>
@@ -130,14 +133,14 @@ export default function SitesPage() {
 }
 
 /** Coordinators and investigators see this instead of the rankings (docs/10 §6, 403 `wrong_role`). */
-function RoleNotice() {
+function RoleNotice({ title = "Switch to CRA to view site rankings." }: { title?: string }) {
   const qc = useQueryClient();
   const cra = DEMO_IDENTITIES.cra;
   return (
     <Card>
       <EmptyState
         icon={<UserRound className="size-6" aria-hidden />}
-        title="Switch to CRA to view site rankings."
+        title={title}
         action={
           <Button
             variant="primary"
@@ -151,7 +154,8 @@ function RoleNotice() {
           </Button>
         }
       >
-        Site rankings are a sponsor-side monitoring view for the CRA and sponsor roles. Site staff roles do not see them.
+        Site rankings and the equity analysis are sponsor-side monitoring views for the CRA and sponsor roles. Site staff roles
+        do not see them.
       </EmptyState>
     </Card>
   );
@@ -338,11 +342,15 @@ function ComparatorTier({ tier, labels }: { tier: SignalTier; labels: SiteSignal
   return <TierBadge tier={tier} labels={labels} reasonDisplay="tooltip" />;
 }
 
-/** "How well it works": validation provenance from `GET /api/site-signal/validation` (any role). */
-function HowWellItWorksTab() {
+/**
+ * "How well it works" (any role; WS3 F16): every block is rendered from `GET /api/site-signal/validation`
+ * (validation/site_signal/summary.json) and, for CRA and sponsor, the equity block from `GET /api/site-signal/equity`.
+ * No number is typed here or in `PowerTable`; all of it is SIMULATED.
+ */
+function HowWellItWorksTab({ canView }: { canView: boolean }) {
   const q = useSiteValidation();
-  const docsHref = REPO_URL ? `${REPO_URL}/blob/main/docs/11-site-signal-sap.md` : null;
-  const wrongHref = REPO_URL ? `${REPO_URL}/blob/main/WHAT_IT_GETS_WRONG.md` : null;
+  const docsHref = `${REPO_URL}/blob/main/docs/11-site-signal-sap.md`;
+  const wrongHref = `${REPO_URL}/blob/main/WHAT_IT_GETS_WRONG.md`;
 
   if (q.isPending) {
     return (
@@ -367,40 +375,88 @@ function HowWellItWorksTab() {
 
   const v = q.data;
   return (
-    <Card>
-      <CardHeader
-        title="How well it works"
-        icon={<BookOpenCheck className="size-4 text-ink-subtle" aria-hidden />}
-        subtitle="Operating characteristics from simulated studies at the sap-v1 design."
-        actions={<DataOriginBadge origin={v.data_origin} />}
-        className="flex-wrap"
-      />
-      <dl className="grid grid-cols-1 gap-3 p-4 text-sm sm:grid-cols-3">
-        <div>
-          <dt className="text-ink-subtle">sap-v1 tag commit</dt>
-          <dd className="font-mono text-ink">{v.sap_tag_commit.slice(0, 7)}</dd>
+    <div className="space-y-5">
+      <Card>
+        <CardHeader
+          title="How well it works"
+          icon={<BookOpenCheck className="size-4 text-ink-subtle" aria-hidden />}
+          subtitle="Operating characteristics of the three indicators in simulated studies at the sap-v1 design."
+          actions={<DataOriginBadge origin={v.data_origin} />}
+          className="flex-wrap"
+        />
+        <div className="space-y-2 px-4 pt-3 text-sm text-ink-muted">
+          <p>
+            Every number on this tab is <span className="font-semibold text-ink">SIMULATED</span>: both data streams and the
+            planted sites come from the simulation in the pre-registered plan. Capture discordance is a reason to look, not a
+            finding. Rates carry their Monte Carlo standard error (MC SE); numbers are rounded for display only.
+          </p>
+          <p>
+            The only non-circular validation is a retrospective analysis of trials with paired patient-reported and
+            clinician-reported (CTCAE) data and site IDs.
+          </p>
         </div>
-        <div>
-          <dt className="text-ink-subtle">Generated</dt>
-          <dd className="text-ink">{formatDate(v.generated_at)}</dd>
-        </div>
-        <div>
-          <dt className="text-ink-subtle">Limits</dt>
-          <dd className="text-ink">
-            <RepoLink href={wrongHref} path="WHAT_IT_GETS_WRONG.md" />
-          </dd>
-        </div>
-      </dl>
-    </Card>
+        <dl className="grid grid-cols-1 gap-3 p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <dt className="text-ink-subtle">sap-v1 tag commit</dt>
+            <dd className="font-mono text-ink">{v.sap_tag_commit.slice(0, 7)}</dd>
+          </div>
+          <div>
+            <dt className="text-ink-subtle">Code commit</dt>
+            <dd className="font-mono text-ink">{v.code_commit.slice(0, 7)}</dd>
+          </div>
+          <div>
+            <dt className="text-ink-subtle">Generated</dt>
+            <dd className="text-ink">{formatDate(v.generated_at)}</dd>
+          </div>
+          <div>
+            <dt className="text-ink-subtle">What it gets wrong</dt>
+            <dd className="text-ink">
+              <RepoLink href={wrongHref} path="WHAT_IT_GETS_WRONG.md" />
+            </dd>
+          </div>
+        </dl>
+      </Card>
+
+      <PowerTable v={v} />
+      <NullRatesTable v={v} />
+      <FailureCaseTable v={v} />
+      <SensitivityTable v={v} />
+      <CommittedConfusionTable v={v} />
+      {canView ? <EquitySection validation={v} /> : <RoleNotice title="Switch to CRA to view the equity analysis." />}
+    </div>
   );
 }
 
-function RepoLink({ href, path }: { href: string | null; path: string }) {
-  return href ? (
+/** Equity block (cra, sponsor): the cut Equity tab's odds ratios, from `GET /api/site-signal/equity`. */
+function EquitySection({ validation }: { validation: SiteSignalValidation }) {
+  const q = useSiteEquity();
+  if (q.isPending) {
+    return (
+      <Card>
+        <LoadingRows rows={3} />
+      </Card>
+    );
+  }
+  if (q.isError) {
+    if (hasErrorCode(q.error, "wrong_role")) return <RoleNotice title="Switch to CRA to view the equity analysis." />;
+    if (hasErrorCode(q.error, "no_equity_run")) {
+      return (
+        <Card>
+          <EmptyState icon={<Scale className="size-6" aria-hidden />} title="Equity analysis not run yet.">
+            {errorMessage(q.error)}
+          </EmptyState>
+        </Card>
+      );
+    }
+    return <ErrorState error={q.error} onRetry={() => void q.refetch()} retrying={q.isFetching} />;
+  }
+  return <EquityBlock equity={q.data} validation={validation} />;
+}
+
+function RepoLink({ href, path }: { href: string; path: string }) {
+  return (
     <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-accent-700 hover:underline">
       {path} <ExternalLink className="size-3.5" aria-hidden />
     </a>
-  ) : (
-    <code className="font-mono text-sm">{path}</code>
   );
 }

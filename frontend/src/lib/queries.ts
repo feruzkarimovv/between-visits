@@ -21,6 +21,7 @@ import type {
   SiteQuery,
   SiteQueryDetail,
   SiteQueryResponseCode,
+  SiteSignalEquity,
   SiteSignalValidation,
   SitesResponse,
   SponsorInboxItem,
@@ -225,6 +226,17 @@ export function useSiteValidation(enabled = true) {
   return useQuery({
     queryKey: ["site-signal-validation"],
     queryFn: () => apiFetch<SiteSignalValidation>("/api/site-signal/validation"),
+    enabled,
+    staleTime: 5 * 60_000,
+    retry,
+  });
+}
+
+/** Within-site equity analysis (`GET /api/site-signal/equity`, cra and sponsor); 404 `no_equity_run`. */
+export function useSiteEquity(enabled = true) {
+  return useQuery({
+    queryKey: ["site-signal-equity"],
+    queryFn: () => apiFetch<SiteSignalEquity>("/api/site-signal/equity"),
     enabled,
     staleTime: 5 * 60_000,
     retry,
