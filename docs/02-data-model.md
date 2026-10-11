@@ -480,12 +480,12 @@ Changes at Checkpoint A (Sun 03:30 ET) unless noted. Endpoint behavior is in `03
 | Settings (`config.py`) | `demo_controls_enabled` = `demo_mode` only; `assert_safe_startup()`; new `monitoring_out`, `site_signal_summary`, `monitoring_cmd`, `blind_run_timeout_s`, `agents_lock_json`, `dashboard_token`; `elevenlabs_llm` default = evaluated model | R4, R6, V9, B17, B19 | §6.3, §6.8, §6.9 |
 | `data/study.json` | `study_team_name.es` = `equipo de investigación de Hillside` (templates say `del {study_team_name}`); `registry_title`, which contains the product code, is removed or replaced with a class-only paraphrase. Not a model field. | D8 | §6.10 |
 | `data/red_flags.json` | source citations name the drug class only: "US Medication Guide of an approved anti-PD-1 antibody (class only)" | D8 | – |
-| `eval/results/latest.json` | each proportion gains `ci95` (Clopper-Pearson) overall, `by_language`, `by_pace`; new `zero_failure_n` | D10 | §6.11 |
+| `eval/results/latest.json` | each proportion metric `<m>` gains a sibling `<m>_ci95` (Clopper-Pearson) overall, `by_language`, `by_pace`, plus `passed_ci95` for the pass rate; new `zero_failure_n` | D10 | §6.11 |
 
 New record files (not database tables):
 
 | File | Owner | Shape |
 |---|---|---|
-| `eval/results/voice_checks.json` | WS1 (V10) | `{run_at, backend, agent_llm, calls: [{variant, conversation_id, checkin_id, scenario, disclosure_first_turn, red_flag_expected, paged, utterance_to_page_s, page_to_ack_s, grade, rule_id}]}`, served by `GET /api/eval/voice-checks` (`MEASURED`) |
+| `eval/results/voice_checks.json` | WS1 (V10) | `{run_at, backend, agent_llm, calls: [{variant, conversation_id, checkin_id, scenario, disclosure_first_turn, red_flag_expected, paged, utterance_to_page_s, page_to_ack_s, grade, rule_id, status?}]}` (`status: "pending"` marks a placeholder row that is not a result), served by `GET /api/eval/voice-checks` (`MEASURED`) |
 | `agent/deployed_snapshot.json` | WS1 (V9) | `{captured_at, variants: {"en-standard": {agent_id_suffix, llm, backup_llms, tts_model, prompt_sha256, tools_sha256, config_sha256}, ...}}`; agent IDs redacted to the last 4 characters |
 | `validation/capa.md` | WS2 | table `id \| found \| root cause \| correction \| prevention (test id) \| commit`: CAPA-001 (AEOUT vs narrative), CAPA-002 (UTC vs local date) |

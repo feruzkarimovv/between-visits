@@ -832,9 +832,9 @@ Every variable is read in `backend/app/config.py` and listed in `.env.example`.
 
 ### 6.11 Evaluation uncertainty and real-voice evidence (D10, V10)
 
-**`GET /api/eval/latest`.** The shape is unchanged; the file it returns gains fields. `eval/results/latest.json` is rescored without new LLM calls (`eval/score.py --rescore`).
-- Every proportion metric gains `ci95: [lo, hi]`, a Clopper-Pearson exact 95% interval, overall and per stratum (`by_language`, `by_pace`). For example, `red_flag_recall` 8/8 has `ci95` [0.631, 1.0].
-- A new top-level `zero_failure_n: {"0.90": 29, "0.95": 59, "0.99": 299}` gives the number of consecutive red-flag cases with no miss needed to show recall ≥ p at one-sided 95% confidence.
+**`GET /api/eval/latest`.** The shape is unchanged; the file it returns gains fields. `eval/results/latest.json` is rescored without new LLM calls: `uv run --project backend python eval/score.py --rescore eval/results/latest.json` recomputes `overall`, `by_language`, `by_pace`, `gaps_over_5_points` and `zero_failure_n` from the per-persona results stored in `eval/results/transcripts/<id>.json` (personas marked `not_run` stay excluded) and rewrites the file in place; every other field is kept. `make eval` writes the same fields.
+- Every proportion metric `<m>` gains a sibling key `<m>_ci95: [lo, hi]`, a Clopper-Pearson exact two-sided 95% interval, overall and per stratum (`by_language`, `by_pace`). The proportion metrics are `red_flag_recall`, `escalation_accuracy`, `ae_recall`, `ae_precision`, `grade_agreement`, `cm_recall`, `disclosure`, `advice_refusals`, `approved_wording` and `readback_extra_time`; the persona pass rate `passed`/`n` gets `passed_ci95`. Bounds are rounded to 3 decimals, and an exact 0 or 1 is written as an integer. When the denominator is 0 the metric is `null` and so is its `_ci95`. Counts (`false_alarms`, `no_advice_flags`) get no interval. For example, `red_flag_recall` 8/8 has `red_flag_recall_ci95` `[0.631, 1]`, and 19/20 gives `[0.751, 0.999]`.
+- A new top-level `zero_failure_n: {"0.90": 29, "0.95": 59, "0.99": 299}` gives the number of consecutive red-flag cases with no miss needed to show recall ≥ p at one-sided 95% confidence (the smallest *n* with p<sup>n</sup> ≤ 0.05).
 
 **New: `GET /api/eval/voice-checks`** (any role). Returns `eval/results/voice_checks.json` plus `"data_origin":"MEASURED"`. The file records the real browser calls against the deployed live backend. They are never pooled with text-mode evaluation results. If the file is missing, the route returns 404 `no_voice_checks` and the report card hides the row.
 
@@ -847,4 +847,6 @@ Every variable is read in `backend/app/config.py` and listed in `.env.example`.
 
 Values in this example are placeholders that show types and shapes, not results.
 
-The report card compares `latest.json` `model.agent` with `voice_checks.json` `agent_llm` and states plainly whether they match.
+A row prepared before its call is made carries `"status":"pending"` (or `"pending":true`). Pending rows are placeholders, not results: the report card never counts them, and when every row is pending (or `calls` is empty) the "Real voice calls" row says "pending: no real calls logged yet". For the logged calls, the report card shows the disclosure and red-flag paging proportions as k/n with a Clopper-Pearson exact 95% interval computed the same way as in `latest.json`.
+
+The report card compares `latest.json` `model.agent` with `voice_checks.json` `agent_llm` and states plainly whether they match. When the file is absent or has no `agent_llm`, it says that the deployed model is not recorded yet.
