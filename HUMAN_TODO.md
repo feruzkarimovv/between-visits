@@ -248,7 +248,7 @@ Steps that need a person. Everything around them is done; each item says exactly
    git add WHAT_IT_GETS_WRONG.md && git commit -m "WS4-D13: provenance table checked by a second teammate" && git push origin site-signal-build
    ```
 
-14. **Re-export the deck PDF after the F19 screenshots land (FILL; D14; after F19).** Today slides 5 and 7 of `docs/pitch/deck.pdf` show dashed frames with the expected paths, because `docs/screenshots/` does not exist yet. Once `docs/screenshots/{call,nurse-ack,review,sites-funnel,site-drilldown,site-inbox}.png` are committed, from the main checkout root:
+14. **Re-export the deck PDF after the F19 screenshots land (FILL; D14; after F19).** Done in WS3-F19: `docs/screenshots/*.png` are committed (`cd e2e && BASE_URL=... npx playwright test --config screenshots.config.ts`) and `docs/pitch/deck.pdf` was re-exported in the same commit (10 pages; slides 5 and 7 show the screenshots). Re-run the steps below only after new screenshots. Before F19, slides 5 and 7 of `docs/pitch/deck.pdf` showed dashed frames with the expected paths. Once `docs/screenshots/{call,nurse-ack,review,sites-funnel,site-drilldown,site-inbox}.png` are committed, from the main checkout root:
    ```bash
    git checkout site-signal-build && git pull --ff-only
    ls docs/screenshots/*.png
