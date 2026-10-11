@@ -6,6 +6,10 @@
 //
 // Rounding is for display only (docs/11 §15 rule 6): proportions 2 decimals, MC SE and CI limits 3,
 // z, O/E and odds ratios 2. The JSON keeps unrounded float64 values; nothing here feeds a calculation.
+// Rounding is half up on the shortest decimal string (`roundHalfUp`), as validation/render_numbers.py rounds the
+// same values in the documents, so the UI and the documents show the same digits.
+
+import { roundHalfUp } from "./round";
 
 export type Rec = Record<string, unknown>;
 
@@ -61,7 +65,7 @@ export function readRateSe(v: unknown): RateSe | null {
 const DASH = "—";
 
 function fixed(v: number | null | undefined, digits: number): string {
-  return v === null || v === undefined || !Number.isFinite(v) ? DASH : v.toFixed(digits);
+  return v === null || v === undefined || !Number.isFinite(v) ? DASH : roundHalfUp(v, digits);
 }
 
 /** Proportion or per-study mean, 2 decimals (§15 rule 6). */

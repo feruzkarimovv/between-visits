@@ -99,6 +99,7 @@ jobs:
       - run: cd frontend && npm ci
       - run: cd frontend && npm run typecheck
       - run: cd frontend && npm run lint
+      - run: cd frontend && npm test  # display rounding (src/lib/round.test.ts)
       - run: cd frontend && npm run build
 
   # WS0 R9: the README quickstart on a clean runner, ending in a real replay through `make demo`

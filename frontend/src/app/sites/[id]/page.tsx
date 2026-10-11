@@ -10,6 +10,7 @@ import type { PagedStratum, SiteDetail, SiteQuery, SiteSignalLabels, SiteStrata 
 import { useSiteDetail, useSites } from "@/lib/queries";
 import { DEMO_IDENTITIES, setRole, useIdentity } from "@/lib/role";
 import { errorMessage, hasErrorCode } from "@/lib/api";
+import { roundHalfUp } from "@/lib/round";
 import { Button, ButtonLink, Card, CardHeader, EmptyState, ErrorState, Field, LoadingRows, PageHeader, Table, Td, Th } from "@/components/ui/primitives";
 import { DataOriginBadge } from "@/components/DataOriginBadge";
 import { TierBadge } from "@/components/TierBadge";
@@ -26,8 +27,9 @@ function pct(v: number | null | undefined): string {
   return v === null || v === undefined || !Number.isFinite(v) ? "—" : `${Math.round(v * 100)}%`;
 }
 
+/** Half up on the shortest decimal string, as validation/render_numbers.py rounds the same values in the documents. */
 function num(v: number | null | undefined, digits: number): string {
-  return v === null || v === undefined || !Number.isFinite(v) ? "—" : v.toFixed(digits);
+  return v === null || v === undefined || !Number.isFinite(v) ? "—" : roundHalfUp(v, digits);
 }
 
 const STRATUM_LABELS: Record<string, string> = {

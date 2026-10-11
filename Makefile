@@ -42,7 +42,7 @@ test-backend:
 	python3 agent/test_voice_check.py
 
 test-frontend:
-	cd frontend && npm run typecheck && npm run lint
+	cd frontend && npm run typecheck && npm run lint && npm test
 
 # Site Signal statistics suite (WS5): ruff + pytest in the separate monitoring/ uv project
 test-monitoring:

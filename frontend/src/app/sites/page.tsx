@@ -10,6 +10,7 @@ import { useAnswerKey, useHealth, useSiteEquity, useSiteValidation, useSites } f
 import { DEMO_IDENTITIES, setRole, useIdentity } from "@/lib/role";
 import { errorMessage, hasErrorCode } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import { roundHalfUp } from "@/lib/round";
 import { Button, Card, CardHeader, EmptyState, ErrorState, LoadingRows, PageHeader, Table, Td, Th, cn } from "@/components/ui/primitives";
 import { DataOriginBadge } from "@/components/DataOriginBadge";
 import { TierBadge } from "@/components/TierBadge";
@@ -40,8 +41,9 @@ function pct(v: number): string {
   return `${Math.round(v * 100)}%`;
 }
 
+/** Half up on the shortest decimal string, as validation/render_numbers.py rounds the same values in the documents. */
 function num(v: number | null, digits: number): string {
-  return v === null || v === undefined || !Number.isFinite(v) ? "—" : v.toFixed(digits);
+  return v === null || v === undefined || !Number.isFinite(v) ? "—" : roundHalfUp(v, digits);
 }
 
 /** `labels.footer_expected_false_look` with `{expected_false_look}` filled from the run (2 decimals, as in report.md). */
