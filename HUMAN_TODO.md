@@ -60,3 +60,32 @@ Steps that need a person. Everything around them is done; each item says exactly
    docker compose -f docker-compose.prod.yml down
    ```
    Without this, the same stack runs through the compose inside the colima VM: `colima ssh -- env GIT_COMMIT=$(git rev-parse --short HEAD) docker compose --project-directory "$PWD" -f "$PWD/docker-compose.prod.yml" up --build -d` (stop with the same command and `down`).
+
+6. **Freeze the SAP: review, tag `sap-v1`, publish the timestamp, fetch the beacon (S1; docs/11 §1.2 steps 4-7).** S1 is integrated on `site-signal-build`: §11.5 filled (patients per site 40-80 and gross *f* 0.90, both "shortfall" from the planning grid), `monitoring/params.yaml` frozen-input hashes written, §17 empty. Nothing below can be undone once the tag is pushed (the tag is never moved or deleted), so do the steps in order:
+   1. Review the SAP diff (`git diff 607d213..origin/site-signal-build -- docs/11-site-signal-sap.md monitoring/params.yaml`). If the review OK has not arrived by 03:15, tag anyway and write "tagged without human review" in the change-log line.
+   2. Fill the docs/11 §1.5 change-log row for `sap-v1` (replace "at the tag" with today's date, and keep either "reviewed by the team lead" or "tagged without human review", whichever applies), then commit and push it:
+      ```bash
+      cd ~/hackru/between-visits && git checkout site-signal-build && git pull --ff-only
+      # edit docs/11-site-signal-sap.md §1.5, then:
+      git commit -am "SAP v1: change log" && git push origin site-signal-build
+      uv run --project monitoring python -m bvsignal.seed --check-frozen          # expect: frozen inputs: OK
+      git ls-tree -r origin/site-signal-build --name-only | grep -E '^(monitoring/out|validation/site_signal)/'   # must print nothing
+      ```
+   3. Tag exactly that pushed commit and push the tag:
+      ```bash
+      git fetch origin && git tag -a sap-v1 origin/site-signal-build -m 'Site Signal SAP v1'
+      git push origin sap-v1
+      git rev-parse 'sap-v1^{commit}'      # the tag sha to publish
+      ```
+   4. Within 10 minutes of the push, publish the tag sha outside the team's control: on GitHub, Releases > Draft a new release > choose tag `sap-v1` > title "Site Signal SAP v1" > Publish release (or `gh release create sap-v1 --title "Site Signal SAP v1" --notes "sap-v1 = <tag sha>"`), and post the sha in the Devpost draft or the event's organizer channel. Keep both links for the §17 row.
+   5. After the beacon round (the first drand round at least 10 minutes after the tagger time), fetch it and record the seed:
+      ```bash
+      uv run --project monitoring python -m bvsignal.seed --fetch-beacon --wait   # writes monitoring/seed_beacon.json; never overwrites an existing one
+      uv run --project monitoring python -m bvsignal.seed --show                  # tag sha, beacon round, evaluation seed
+      ```
+   6. Add a docs/11 §17 clarification row (Release link, Devpost/organizer link, beacon round; say so if the external timestamp is not earlier than the beacon round) and commit it with the beacon file:
+      ```bash
+      git add monitoring/seed_beacon.json docs/11-site-signal-sap.md
+      git commit -m "SAP v1: beacon round and external timestamp (docs/11 §17)" && git push origin site-signal-build
+      ```
+   Only after this may S6/S7/S8 produce evaluation output (`monitoring/out/`, `validation/site_signal/`).
