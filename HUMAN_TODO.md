@@ -144,4 +144,30 @@ Steps that need a person. Everything around them is done; each item says exactly
       cd frontend && npm run dev      # http://localhost:3000
       ```
       Do not merge to `main` during the calls: each deploy resets the live SQLite state. You can also turn off **`bv-live-api` → Settings → Build & Deploy → Auto-Deploy** for the session. Known gap (F10): the SAE JSON export link is a plain link and cannot send `X-BV-Token`, so it returns 401 on the live instance (`docs/deploy.md` §5).
-   9. **Once it works:** replace the README line "**Live demo:** not deployed yet" with the `bv-demo-web` URL, and remove "verified locally only" from `docs/deploy.md`; commit and push.
+   9. **Once it works:** put the `bv-demo-web` URL into the README (R8 replaced the old "**Live demo:** not deployed yet" line; the exact edits are item 9 below), and remove "verified locally only" from `docs/deploy.md`; commit and push.
+
+8. **Timed README walkthrough (R8 acceptance).** A teammate who did not build the product follows only the README section "Reviewer path (3 minutes)" and must reach the Sponsor inbox in under 3 minutes. Do not help them; start a stopwatch when they open the dashboard.
+   - Once `bv-demo-web` is deployed (item 7): open the `bv-demo-web` URL in an incognito window.
+   - Until then, on a laptop with uv, Node 22 and make, from the repo root:
+     ```bash
+     cp .env.example .env                  # leave every key empty
+     make setup && make seed && make demo  # backend :8000 + dashboard :3000, DEMO_MODE=1
+     ```
+     then open http://localhost:3000.
+   - They follow the table: **Today** → Speed **4x** → **Replay scenario** → Check-in (Urgent panel, "Acknowledged in N s") → **Review 3 drafts** → **Confirm** Diarrhea → role **Investigator · Dr. Patel** → tick **Requires or prolongs hospitalization**, pick a relatedness, **Sign as Dr. Patel** → **Open report** → **Sign as Dr. Patel** → **Send to sponsor** → **Sponsor inbox** shows 101-007 *On time*. Stop the clock there.
+   - Record the time and where they got stuck (if anywhere) in the R8 row of `PROGRESS.md` (Acceptance output), then commit and push:
+     ```bash
+     git add PROGRESS.md && git commit -m "R8: timed README walkthrough" && git push origin site-signal-build
+     ```
+   - If it took 3 minutes or more, note the step that cost the time; the README path gets fixed before submission (D16).
+
+9. **Put the public demo URL into the README after the Render deploy (R8; after item 7).** The README says "the public demo URL (pending deploy, …)" in two places. With the real `bv-demo-web` URL (from item 7, sub-step 5):
+   - README line 13 (starts with "**Public demo:**"): replace the words from "the public demo URL (pending deploy" through the closing parenthesis after the `docs/deploy.md` link with the `bv-demo-web` URL, and change "Until it is live, run" to "To run"; keep the `make demo` and Quickstart link.
+   - README line 17 (first line under "Reviewer path (3 minutes)"): replace the same words, "the public demo URL (pending deploy" through the closing parenthesis after the `docs/deploy.md` link, with the `bv-demo-web` URL.
+   - README "Deploy" section: remove the sentence "So far it is verified locally only." (and the same words at the top of `docs/deploy.md`, as in item 7 sub-step 9; `docs/deploy.md` §4 step 8 still names the old "**Live demo:** not deployed yet" line, update it to say README lines 13 and 17).
+   - Check, then commit and push:
+     ```bash
+     grep -n 'pending deploy' README.md    # prints nothing
+     git add README.md docs/deploy.md && git commit -m "README: public demo URL" && git push origin site-signal-build
+     ```
+   - The demo video and deck lines (`_TODO_ (added at submission)`, README lines 9 and 11) are filled by D16 at submission, not here.
