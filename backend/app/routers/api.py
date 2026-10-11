@@ -1,6 +1,7 @@
 """Dashboard API (/api). Thin: logic lives in app/services/*."""
 
 import json
+from collections.abc import Callable
 from datetime import date
 
 from fastapi import APIRouter, Depends, Header, Query, Request
@@ -14,6 +15,8 @@ from app.db import get_session
 from app.errors import ApiError
 from app.models import AuditEvent, CheckIn, CheckInPlan, DraftEntry, Escalation, Patient, SAEReport, Study
 from app.schemas import (
+    DEFAULT_ROLE,
+    ROLES,
     AuditOut,
     CheckInDetail,
     CheckInListItem,
@@ -35,6 +38,7 @@ from app.schemas import (
     PlanRedFlagOut,
     RejectIn,
     ResolveIn,
+    Role,
     SAEOut,
     SAEPatchIn,
     SponsorInboxItem,
@@ -56,14 +60,39 @@ router = APIRouter(prefix="/api", tags=["api"])
 
 
 class Actor:
-    def __init__(self, user: str, role: str):
+    def __init__(self, user: str, role: Role):
         self.user, self.role = user, role
+
+
+def normalize_role(value: str | None) -> Role:
+    """`X-BV-Role` -> Role. Case-insensitive; a missing or unknown value means coordinator (docs/03 §6.1)."""
+    role = (value or "").strip().lower()
+    return next((r for r in ROLES if r == role), DEFAULT_ROLE)
 
 
 def actor(
     x_bv_user: str | None = Header(default=None), x_bv_role: str | None = Header(default=None)
 ) -> Actor:
-    return Actor(x_bv_user or "Unknown user", (x_bv_role or "coordinator").lower())
+    return Actor(x_bv_user or "Unknown user", normalize_role(x_bv_role))
+
+
+def require_role(*roles: Role, action: str = "use this route") -> Callable[..., Actor]:
+    """Dependency for a role-restricted route (docs/03 §6.1). Any other role gets 403 `wrong_role`.
+
+    Use it in place of `actor`: it returns the same Actor. The role is checked before the route body runs, so a
+    wrong role is 403 even for a missing entity or an invalid body. The Site Signal router reuses it.
+    """
+    if not roles or any(r not in ROLES for r in roles):
+        raise ValueError(f"require_role needs known roles, got {roles!r}")
+    allowed = frozenset(roles)
+    message = f"Only the {' or '.join(roles)} role can {action}."
+
+    def dependency(who: Actor = Depends(actor)) -> Actor:
+        if who.role not in allowed:
+            raise ApiError(403, "wrong_role", message)
+        return who
+
+    return dependency
 
 
 def _get(session: Session, model, id_: str, what: str):  # noqa: ANN001, ANN202
@@ -333,10 +362,9 @@ def reject_draft(draft_id: str, body: RejectIn, who: Actor = Depends(actor), ses
 
 
 @router.post("/drafts/{draft_id}/investigator", response_model=InvestigatorOut)
-def investigator(draft_id: str, body: InvestigatorIn, who: Actor = Depends(actor),
+def investigator(draft_id: str, body: InvestigatorIn,
+                 who: Actor = Depends(require_role("investigator", action="assess seriousness and relatedness")),
                  session: Session = Depends(get_session)) -> InvestigatorOut:
-    if who.role != "investigator":
-        raise ApiError(409, "wrong_role", "Only the investigator role can assess seriousness and relatedness.")
     d = _get(session, DraftEntry, draft_id, "draft")
     report = review.investigator(session, d, body, who.user)
     session.commit()
@@ -359,18 +387,17 @@ def sae_get(sae_id: str, session: Session = Depends(get_session)) -> SAEOut:
 
 
 @router.patch("/sae/{sae_id}", response_model=SAEOut)
-def sae_patch(sae_id: str, body: SAEPatchIn, who: Actor = Depends(actor), session: Session = Depends(get_session)) -> SAEOut:
-    if who.role != "investigator":
-        raise ApiError(409, "wrong_role", "Only the investigator role can edit the serious-event report.")
+def sae_patch(sae_id: str, body: SAEPatchIn,
+              who: Actor = Depends(require_role("investigator", action="edit the serious-event report")),
+              session: Session = Depends(get_session)) -> SAEOut:
     r = sae.edit(session, _get(session, SAEReport, sae_id, "sae"), body.narrative_final, body.payload, who.user, who.role)
     session.commit()
     return sae_out(session, r)
 
 
 @router.post("/sae/{sae_id}/sign", response_model=SAEOut)
-def sae_sign(sae_id: str, who: Actor = Depends(actor), session: Session = Depends(get_session)) -> SAEOut:
-    if who.role != "investigator":
-        raise ApiError(409, "wrong_role", "Only the investigator role can sign the serious-event report.")
+def sae_sign(sae_id: str, who: Actor = Depends(require_role("investigator", action="sign the serious-event report")),
+             session: Session = Depends(get_session)) -> SAEOut:
     r = sae.sign(session, _get(session, SAEReport, sae_id, "sae"), who.user, who.role)
     session.commit()
     return sae_out(session, r)

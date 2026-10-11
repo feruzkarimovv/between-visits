@@ -1,9 +1,17 @@
 """Request/response models for every endpoint in docs/03-api-contracts.md (they define /openapi.json)."""
 
 from datetime import date, datetime
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field
+
+# ---- demo identity (docs/03 §5.1, §6.1) ----------------------------------------------------------------
+
+# `X-BV-Role` values. A missing or unknown header means DEFAULT_ROLE; a role-restricted route answers any other
+# role with 403 `wrong_role` (`require_role` in app/routers/api.py). The role is written to AuditEvent.role.
+Role = Literal["coordinator", "investigator", "sponsor", "cra"]
+ROLES: tuple[Role, ...] = get_args(Role)
+DEFAULT_ROLE: Role = "coordinator"
 
 # ---- agent tools ---------------------------------------------------------------------------------------
 

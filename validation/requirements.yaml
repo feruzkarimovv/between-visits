@@ -71,6 +71,10 @@ requirements:
     title: Safe startup and demo-only controls
     text: Outside DEMO_MODE the backend refuses to start with the default, empty or short tool secret, and /api/demo/* returns 404 unless DEMO_MODE=1.
     risk: medium
+  - id: REQ-018
+    title: Role gating
+    text: "Role-restricted actions return 403 wrong_role for any other role: investigator-only assessment/SAE edit/sign, CRA-only query actions, coordinator-only query responses, cra/sponsor-only Site Signal views."
+    risk: medium
   - id: REQ-020
     title: Parseable, consistent exports
     text: AE/CM CSVs start with the header row, carry ORIGIN=between_visits, and AEOUT agrees with the SAE report outcome.

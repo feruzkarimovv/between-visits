@@ -48,7 +48,7 @@ def test_review_to_sponsor(client, session, fake_pager):
                        "relatedness": "possibly_related"}, headers=INVESTIGATOR).status_code == 409
     assert client.post(f"/api/drafts/{ae['id']}/confirm", json={}, headers=COORD).json()["status"] == "confirmed"
     assert client.post(f"/api/drafts/{ae['id']}/investigator", json={"is_serious": True, "seriousness_criteria": ["hospitalization"],
-                       "relatedness": "possibly_related"}, headers=COORD).status_code == 409
+                       "relatedness": "possibly_related"}, headers=COORD).status_code == 403  # wrong_role (docs/03 §6.1)
     r = client.post(f"/api/drafts/{ae['id']}/investigator", json={"is_serious": True, "seriousness_criteria": ["hospitalization"],
                     "relatedness": "possibly_related", "sign": True}, headers=INVESTIGATOR)
     assert r.status_code == 200
@@ -62,7 +62,7 @@ def test_review_to_sponsor(client, session, fake_pager):
     assert "anti-PD-1" in full["payload"]["suspect_product"]["description"]
 
     assert client.post(f"/api/sae/{sae['id']}/send", headers=COORD).status_code == 409  # must be signed first
-    assert client.post(f"/api/sae/{sae['id']}/sign", headers=COORD).status_code == 409
+    assert client.post(f"/api/sae/{sae['id']}/sign", headers=COORD).status_code == 403  # wrong_role
     assert client.post(f"/api/sae/{sae['id']}/sign", headers=INVESTIGATOR).json()["status"] == "signed"
     assert client.post(f"/api/sae/{sae['id']}/send", headers=COORD).json()["status"] == "sent"
     inbox = client.get("/api/sponsor/inbox").json()
